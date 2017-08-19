@@ -1,0 +1,6 @@
+--langdef=nl
+--langmap=nl:.nl
+
+--regex-nl=/^[ \t]*var[ \t]*([a-z0-9_]+)/\1/v,variable/
+--regex-nl=/def([^:]*::[a-zA-Z0-9_]+)/\1/g,global_function/
+--regex-nl=/^[ \t]*def[ \t]*([a-zA-Z0-9_]+)/\1/l,local_function/

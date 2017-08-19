@@ -1,0 +1,5 @@
+1. Skopiuj nl.vim do ~/.vim/syntax/
+2. Dodaj do ~/.vimrc linijki:
+syntax on
+filetype plugin on
+autocmd BufRead,BufNewFile *.nl set filetype=nl
