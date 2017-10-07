@@ -26,17 +26,29 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 	match (a) case :tct_im {
 	} case :tct_arr(var arr_type) {
 		return ptd_system::is_equal(arr_type, b as :tct_arr);
+	} case :tct_own_arr(var arr_type) {
+		return false; #TODO
 	} case :tct_hash(var hash_type) {
 		return ptd_system::is_equal(hash_type, b as :tct_hash);
+	} case :tct_own_hash(var hash_type) {
+		return false; #TODO
 	} case :tct_rec(var records) {
 		return false if hash::size(b as :tct_rec) != hash::size(records);
 		forh var name, var record (records) {
 			return false unless hash::has_key(b as :tct_rec, name);
 			return false unless ptd_system::is_equal(record, hash::get_value(b as :tct_rec, name));
 		}
+	}case :tct_own_rec(var records) {
+		return false; #TODO
 	} case :tct_ref(var ref_name) {
 		return false unless ref_name eq b as :tct_ref;
 	} case :tct_sim {
+	} case :tct_own_int {
+		return false; #TODO
+	} case :tct_own_string {
+		return false; #TODO
+	} case :tct_own_bool {
+		return false; #TODO
 	} case :tct_var(var vars) {
 		return false if hash::size(b as :tct_var) != hash::size(vars);
 		forh var name, var type (vars) {
@@ -46,6 +58,8 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 			return false unless type is :with_param && to_type is :with_param;
 			return false unless ptd_system::is_equal(to_type as :with_param, type as :with_param);
 		}
+	} case :tct_own_var(var vars) {
+		return false; #TODO
 	} case :tct_empty {
 	} case :tct_void {
 	}
@@ -177,6 +191,12 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		return :tct_im;
 	} case :tct_sim {
 		return :tct_sim if b is :tct_sim;
+	} case :tct_own_int {
+		die; #TODO
+	} case :tct_own_string {
+		die; #TODO
+	} case :tct_own_bool {
+		die; #TODO
 	} case :tct_ref(var ref_name) {
 		die;
 	} case :tct_void {
@@ -185,6 +205,8 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		if (b is :tct_arr) {
 			return tct::arr(cross_type(arr, b as :tct_arr, ref_inf, ref modules, ref errors));
 		}
+	} case :tct_own_arr(var arr) {
+		die; #TODO
 	} case :tct_var(var variants) {
 		var fin = variants;
 		if (b is :tct_var) {
@@ -223,6 +245,8 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			}
 			return tct::var(fin);
 		}
+	} case :tct_own_var(var variants) {
+		die; #TODO
 	} case :tct_rec(var reca) {
 		if (b is :tct_rec) {
 			var recb = b as :tct_rec;
@@ -250,6 +274,8 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			var sum = ptd_system::rec_to_hash(a, ref_inf, ref modules, ref errors);
 			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors));
 		}
+	} case :tct_own_rec(var reca) {
+		die; #TODO
 	} case :tct_hash(var hash) {
 		if (b is :tct_hash) {
 			return tct::hash(cross_type(hash, b as :tct_hash, ref_inf, ref modules, ref errors));
@@ -258,6 +284,8 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			var sum = ptd_system::rec_to_hash(b, ref_inf, ref modules, ref errors);
 			return tct::hash(ptd_system::cross_type(hash, sum, ref modules, ref errors));
 		}
+	} case :tct_own_hash(var hash) {
+		die; #TODO
 	}
 	return :tct_im;
 }
@@ -313,6 +341,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			array::push(ref info->stack, :ptd_arr);
 			return :err(info);
 		}
+	} case :tct_own_arr(var arr_type) {
+		die; #TODO
 	} case :tct_hash(var hash_type) {
 		if (from is :tct_rec && !type_src is :known) {
 			forh var name, var record (from as :tct_rec) {
@@ -331,6 +361,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			array::push(ref info->stack, :ptd_hash);
 			return :err(info);
 		}
+	} case :tct_own_hash(var hash_type) {
+		die; #TODO
 	} case :tct_rec(var records) {
 		if (ref_inf->cast && from is :tct_hash) {
 			var left = from as :tct_hash;
@@ -356,6 +388,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			}
 		}
 		return :ok;
+	} case :tct_own_rec(var records) {
+		die; #TODO
 	} case :tct_ref(var ref_name) {
 		die;
 	} case :tct_void {
@@ -363,6 +397,12 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	} case :tct_sim {
 		return :ok if from is :tct_sim;
 		return mk_err(to, from);
+	} case :tct_own_int {
+		die; #TODO
+	} case :tct_own_string {
+		die; #TODO
+	} case :tct_own_bool {
+		die; #TODO
 	} case :tct_var(var vars) {
 		return mk_err(to, from) unless from is :tct_var;
 		var from_var = from as :tct_var;
@@ -388,6 +428,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			}
 		}
 		return :ok;
+	} case :tct_own_var(var vars) {
+		die; #TODO
 	} case :tct_empty {
 		die;
 	}
@@ -486,16 +528,28 @@ def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : 
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 		get_ref_in_type(arr_type, ref refs);
+	} case :tct_own_arr(var arr_type) {
+		#TODO
 	} case :tct_hash(var hash_type) {
 		get_ref_in_type(hash_type, ref refs);
+	} case :tct_own_hash(var hash_type) {
+		#TODO
 	} case :tct_rec(var records) {
 		forh var name, var record (records) {
 			get_ref_in_type(record, ref refs);
 		}
+	} case :tct_own_rec(var records) {
+		#TODO
 	} case :tct_ref(var ref_name) {
 		hash::set_value(ref refs, ref_name, '');
 	} case :tct_void {
 	} case :tct_sim {
+	} case :tct_own_int {
+		#TODO
+	} case :tct_own_string {
+		#TODO
+	} case :tct_own_bool {
+		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {
 			match (from_type) case :no_param {
@@ -503,6 +557,8 @@ def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : 
 				get_ref_in_type(param, ref refs);
 			}
 		}
+	} case :tct_own_var(var vars) {
+		#TODO
 	} case :tct_empty {
 	}
 }

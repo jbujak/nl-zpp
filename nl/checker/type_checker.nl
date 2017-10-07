@@ -62,12 +62,18 @@ def check_types_imported(type : @tct::meta_type, ref modules : @tc_types::module
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 		check_types_imported(arr_type, ref modules, ref errors);
+	} case :tct_own_arr(var arr_type) {
+		#TODO
 	} case :tct_hash(var hash_type) {
 		check_types_imported(hash_type, ref modules, ref errors);
+	} case :tct_own_hash(var hash_type) {
+		#TODO
 	} case :tct_rec(var records) {
 		forh var name, var record (records) {
 			check_types_imported(record, ref modules, ref errors);
 		}
+	} case :tct_own_rec(var records) {
+		#TODO
 	} case :tct_ref(var ref_name) {
 		var ix = string::index2(ref_name, '::');
 		if (ix >= 0) {
@@ -79,6 +85,12 @@ def check_types_imported(type : @tct::meta_type, ref modules : @tc_types::module
 		}
 	} case :tct_void {
 	} case :tct_sim {
+	} case :tct_own_int {
+		#TODO
+	} case :tct_own_string {
+		#TODO
+	} case :tct_own_bool {
+		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {
 			match (from_type) case :no_param {
@@ -86,6 +98,8 @@ def check_types_imported(type : @tct::meta_type, ref modules : @tc_types::module
 				check_types_imported(param, ref modules, ref errors);
 			}
 		}
+	} case :tct_own_var(var vars) {
+		#TODO
 	} case :tct_empty {
 	}
 }
@@ -1235,10 +1249,18 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 		return 'ptd::void()';
 	} case :tct_sim {
 		return 'ptd::sim()';
+	} case :tct_own_int {
+		return ''; #TODO
+	} case :tct_own_string {
+		return ''; #TODO
+	} case :tct_own_bool {
+		return ''; #TODO
 	} case :tct_ref(var ref_name) {
 		return '@' . ref_name;
 	} case :tct_arr(var arr) {
 		return 'ptd::arr(' . get_print_tct_type_name(arr) . ')';
+	} case :tct_own_arr(var arr) {
+		return ''; #TODO
 	} case :tct_var(var variants) {
 		var ret = 'ptd::var(';
 		forh var field, var tt (variants) {
@@ -1249,14 +1271,20 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 			}
 		}
 		return ret . ')';
+	} case :tct_own_var(var variants) {
+		return ''; #TODO
 	} case :tct_rec(var recs) {
 		var ret = 'ptd::rec(';
 		forh var field, var tt (recs) {
 			ret .= field . ' => ' . get_print_tct_type_name(tt) . ', ';
 		}
 		return ret . ')';
+	} case :tct_own_rec(var recs) {
+		return ''; #TODO
 	} case :tct_hash(var hash) {
 		return 'ptd::hash(' . get_print_tct_type_name(hash) . ')';
+	} case :tct_own_hash(var hash) {
+		return ''; #TODO
 	}
 }
 
@@ -1269,16 +1297,30 @@ def get_print_tct_label(type : @tct::meta_type) : ptd::sim() {
 		return 'ptd::void';
 	} case :tct_sim {
 		return 'ptd::sim';
+	} case :tct_own_int {
+		return ''; #TODO
+	} case :tct_own_string {
+		return ''; #TODO
+	} case :tct_own_bool {
+		return ''; #TODO
 	} case :tct_ref(var ref_name) {
 		return 'ptd::ref';
 	} case :tct_arr(var arr) {
 		return 'ptd::arr';
+	} case :tct_own_arr(var arr) {
+		return ''; #TODO
 	} case :tct_var(var variants) {
 		return 'ptd::var';
+	} case :tct_own_var(var variants) {
+		return ''; #TODO
 	} case :tct_rec(var recs) {
 		return 'ptd::rec';
+	} case :tct_own_rec(var recs) {
+		return ''; #TODO
 	} case :tct_hash(var hash) {
 		return 'ptd::hash';
+	} case :tct_own_hash(var hash) {
+		return ''; #TODO
 	}
 }
 

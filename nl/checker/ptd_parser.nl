@@ -29,17 +29,31 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 	return :err('can parse only function: ' . ov::get_element(ast)) unless ast is :fun_val;
 	var fun_val : @nast::fun_val_t = ast as :fun_val;
 	return :err('can parse only ptd function: ' . fun_val->module . '::' . fun_val->name)
-		unless fun_val->module eq 'ptd';
+		unless fun_val->module eq 'ptd' || fun_val->module eq 'own';
 	var args_size : ptd::sim() = array::len(fun_val->args);
+	var mod_name : ptd::sim() = fun_val->module;
 	var fun_name : ptd::sim() = fun_val->name;
-	if (fun_name eq 'sim') {
-		return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
-		return :ok(tct::sim());
-	} elsif (fun_name eq 'ptd_im') {
-		return :err('im can''t have arguments: ' . args_size) unless args_size == 0;
-		return :ok(tct::tct_im());
-	} elsif (fun_name eq 'void') {
-		return :err('Void type can be used only as a return type of function');
+	if (mod_name eq 'ptd') {
+		if (fun_name eq 'sim') {
+			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::sim());
+		} elsif (fun_name eq 'ptd_im') {
+			return :err('im can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::tct_im());
+		} elsif (fun_name eq 'void') {
+			return :err('Void type can be used only as a return type of function');
+		}
+	} elsif (mod_name eq 'own') {
+		if (fun_name eq 'int') {
+			return :err('own_int can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::own_int());
+		} elsif (fun_name eq 'string') {
+			return :err('own_string can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::own_string());
+		} elsif (fun_name eq 'own_bool') {
+			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::own_bool());
+		}
 	}
 	return :err('''none'' type can be used only in ''var'' type') if fun_name eq 'none';
 	return :err('expected one argument in ' . fun_name . ' function call') unless array::len(fun_val->args) == 1;
@@ -47,13 +61,25 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 	if (fun_name eq 'rec') {
 		return :err('rec must have hash: ' . ov::get_element(fun_arg)) unless fun_arg->value is :hash_decl;
 		try var ret = parse_hash(fun_arg);
-		return :ok(tct::rec(ret));
+		if (mod_name eq 'ptd') {
+			return :ok(tct::rec(ret));
+		} else {
+			return :ok(tct::own_rec(ret));
+		}
 	} elsif (fun_name eq 'hash') {
 		try var ret = ptd_parser::try_value_to_ptd(fun_arg);
-		return :ok(tct::hash(ret));
+		if (mod_name eq 'ptd') {
+			return :ok(tct::hash(ret));
+		} else {
+			return :ok(tct::own_hash(ret));
+		}
 	} elsif (fun_name eq 'arr') {
 		try var ret = ptd_parser::try_value_to_ptd(fun_arg);
-		return :ok(tct::arr(ret));
+		if (mod_name eq 'ptd') {
+			return :ok(tct::arr(ret));
+		} else {
+			return :ok(tct::own_arr(ret));
+		}
 	} elsif (fun_name eq 'var') {
 		return :err('var must have hash' . args_size) unless args_size == 1;
 		return :err('var must have hash: ' . ov::get_element(fun_arg)) unless fun_arg->value is :hash_decl;
@@ -70,7 +96,11 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 			try var ret = ptd_parser::try_value_to_ptd(hash_elem->val);
 			hash::set_value(ref elems, hash_elem->key->value as :hash_key, ret);
 		}
-		return :ok(tct::var(elems));
+		if (mod_name eq 'ptd') {
+			return :ok(tct::var(elems));
+		} else {
+			return :ok(tct::own_var(elems));
+		}
 	} else {
 		return :err('it is not type function : ' . fun_name);
 	}

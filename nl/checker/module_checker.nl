@@ -216,12 +216,18 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 		check_types_imported(arr_type, ref state);
+	} case :tct_own_arr(var arr_type) {
+		#TODO
 	} case :tct_hash(var hash_type) {
 		check_types_imported(hash_type, ref state);
+	} case :tct_own_hash(var hash_type) {
+		#TODO
 	} case :tct_rec(var records) {
 		forh var name, var record (records) {
 			check_types_imported(record, ref state);
 		}
+	} case :tct_own_rec(var records) {
+		#TODO
 	} case :tct_ref(var ref_name) {
 		var ix = string::index2(ref_name, '::');
 		if (ix >= 0) {
@@ -233,6 +239,12 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 		}
 	} case :tct_void {
 	} case :tct_sim {
+	} case :tct_own_int {
+		#TODO
+	} case :tct_own_string {
+		#TODO
+	} case :tct_own_bool {
+		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {
 			match (from_type) case :no_param {
@@ -240,6 +252,8 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 				check_types_imported(param, ref state);
 			}
 		}
+	} case :tct_own_var(var vars) {
+		#TODO
 	} case :tct_empty {
 	}
 }

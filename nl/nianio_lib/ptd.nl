@@ -61,7 +61,14 @@ def ptd::meta_type() {
 				name => ptd::sim()
 			}),
 			ptd_sim => ptd::none(),
-			ptd_im => ptd::none()
+			ptd_im => ptd::none(),
+			own_rec => ptd::hash(@ptd::meta_type),
+			own_hash => @ptd::meta_type,
+			own_arr => @ptd::meta_type,
+			own_var => ptd::hash(ptd::var({with_param => @ptd::meta_type, no_param => ptd::none()})),
+			own_int => ptd::none(),
+			own_string => ptd::none(),
+			own_bool => ptd::none(),
 		});
 }
 
