@@ -359,6 +359,9 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 		match (func->access) case :pub {
 			print_to_header(ref state, fun_header . ';' . string::lf());
 			print_to_header(ref state, get_func_ptr_header(func, state->mod_name) . ';' . string::lf());
+			if (func->defines_type) {
+				print_to_header(ref state, get_func_type_struct(func, state->mod_name) . ';' . string::lf());
+			}
 		} case :priv {
 			println(ref state, fun_header . ';');
 		}
@@ -774,3 +777,9 @@ def create_sim_to_memory(obj : ptd::sim(), memory : ptd::sim()) : ptd::sim() {
 	}
 }
 
+def get_func_type_struct(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
+	var ret = '';
+	ret .= 'struct ' . get_function_name(func, mod_name) . '0struct';
+	ret .= '{}';
+	return ret;
+}
