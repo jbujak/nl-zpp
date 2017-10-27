@@ -96,7 +96,7 @@ def nast::fun_def_t() {
 			cmd => @nast::cmd_t,
 			access => ptd::var({priv => ptd::none(), pub => ptd::none()}),
 			args => ptd::arr(@nast::fun_def_arg_t),
-                        defines_type => @boolean_t::type
+			defines_type => @boolean_t::type
 		});
 }
 
