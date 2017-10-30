@@ -1,0 +1,10 @@
+*cache*
+tags
+test_all
+ide.txt
+main
+nl_logs
+obj
+bin
+
+_site/
