@@ -716,6 +716,10 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print(ref state, 'goto label_' . goto);
 	} case :clear(var reg) {
 		print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
+	} case :var_decl(var decl) {
+		match (decl->type) case :tct_own_int {
+			print(ref state, 'INT ' . decl->name . ';' . string::lf());
+		}
 	}
 	print(ref state, ';' . string::lf());
 }
