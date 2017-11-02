@@ -73,7 +73,9 @@
 		\frametitle{Stworzenie strony projektu}
 		\begin{itemize}
 			\item\textcolor{green}{Zrobione}
-			\item https://jbujak.github.io/nl-zpp/ 
+			\begin{itemize}
+				\item https://jbujak.github.io/nl-zpp/ 
+			\end{itemize}
 		\end{itemize}
 	\end{frame}
 	
@@ -81,9 +83,11 @@
 		\frametitle{Przygotowanie wsparcia dla Continuous Integration}
 		\begin{itemize}
 			\item\textcolor{yellow}{Częściowo zrobione}
-			\item Jest budowanie projektu jednym poleceniem
-			\item Są testy automatyczne przy każdym pełnym budowaniu projektu
-			\item Pozostało skonfigurowanie Travisa
+			\begin{itemize}
+				\item Jest budowanie projektu jednym poleceniem
+				\item Są testy automatyczne przy każdym pełnym budowaniu projektu
+				\item Pozostało skonfigurowanie Travisa
+			\end{itemize}
 		\end{itemize}
 	\end{frame}
 	
@@ -91,10 +95,12 @@
 		\frametitle{Wyznaczenie i wykonanie pierwszych zadań}
 		\begin{itemize}
 			\item \textcolor{green}{Zrobione}
-			\item Oznaczenie w drzewie AST funkcji, które definiują typ -- Michał Borkowski
-			\item Przeniesienie tej informacji do nlasm -- Marek Puzyna
-			\item Wygenerowanie pustej struktury dla każdego zdefiniowanego typu -- Jakub Bujak
-			\item Przygotowanie testów sprawdzających powyższe -- Marian Dziubiak
+			\begin{itemize}
+				\item Oznaczenie w drzewie AST funkcji, które definiują typ -- Michał Borkowski
+				\item Przeniesienie tej informacji do nlasm -- Marek Puzyna
+				\item Wygenerowanie pustej struktury dla każdego zdefiniowanego typu -- Jakub Bujak
+				\item Przygotowanie testów sprawdzających powyższe -- Marian Dziubiak
+			\end{itemize}
 		\end{itemize}
 		\pause
 		\textbf{Wszystkie zadania zostały wykonane}
@@ -103,28 +109,36 @@
 	\begin{frame}
 		\frametitle{Przygtowanie środowiska pracy}
 		\begin{itemize}
-		 \item\textcolor{green}{Zrobione}
-		 \item Repozytorium kodu: git
-		 \item Repozytorium zadań i błędów: GitHub issues
-		 \item Wspieranie code review:
+			\item\textcolor{green}{Zrobione}
 			\begin{itemize}
-			\item Push block na masterze
-			\item Możliwość mergowania pull requesta dopiero po pomyślnym review
+				\item Repozytorium kodu: git
+				\item Repozytorium zadań i błędów: GitHub issues
+				\item Wspieranie code review:
+					\begin{itemize}
+					\item Push block na masterze
+					\item Możliwość mergowania pull requesta dopiero po pomyślnym review
+					\end{itemize}
+				\item Wspieranie komunikacji grupy: GitHub wiki
+				\item Dostęp do powyższych: github.com/jbujak/nl-zpp
 			\end{itemize}
-		\item Wspieranie komunikacji grupy: GitHub wiki
-		\item Dostęp do powyższych: github.com/jbujak/nl-zpp
 		\end{itemize}
 	\end{frame}
 	
 	\begin{frame}
 		\frametitle{Lista zadań i plany na najbliższy tydzień}
 		\begin{itemize}
-			\item{\textbf{Dokończyć konfigurację Travisa}}
-			\item{\textbf{Dodać kompilację intów NianioLanga do intów C}}
-			\item{\textbf{Dodać obsługę intów w type checkerze}}
-			\item{Przystosować type checker do współpracy z resztą nowych typów}
-			\item{Umożliwić kompilację tablic, rekordów i reszty typów prostych do struktur C}
-			\item{Zaimplementować podstawowe operacje na skompilowanych strukturach}
+			\item{Na najbliższy tydzień}
+			\begin{itemize}
+				\item{\textbf{Dokończyć konfigurację Travisa}}
+				\item{\textbf{Dodać kompilację intów NianioLanga do intów C}}
+				\item{\textbf{Dodać obsługę intów w type checkerze}}
+			\end{itemize}
+			\item{Do zrobienia ogólnie}
+			\begin{itemize}
+				\item{Przystosować type checker do współpracy z resztą nowych typów}
+				\item{Umożliwić kompilację tablic, rekordów i reszty typów prostych do struktur C}
+				\item{Zaimplementować podstawowe operacje na skompilowanych strukturach}
+			\end{itemize}
 		\end{itemize}
 	\end{frame}
 \end{document}
