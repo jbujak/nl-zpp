@@ -73,17 +73,17 @@
 		\frametitle{Stworzenie strony projektu}
 		\begin{itemize}
 			\item\textcolor{green}{Zrobione}
-			\item\textcolor{red}{Nie zrobione}
-			\item TODO
+			\item https://jbujak.github.io/nl-zpp/ 
 		\end{itemize}
 	\end{frame}
 	
 	\begin{frame}
-		\frametitle{Skonfigurowanie Continuous Integration}
+		\frametitle{Przygotowanie wsparcia dla Continuous Integration}
 		\begin{itemize}
-			\item\textcolor{green}{Zrobione}
-			\item\textcolor{red}{Nie zrobione}
-			\item TODO
+			\item\textcolor{yellow}{Częściowo zrobione}
+			\item Jest budowanie projektu jednym poleceniem
+			\item Są testy automatyczne przy każdym pełnym budowaniu projektu
+			\item Pozostało skonfigurowanie Travisa
 		\end{itemize}
 	\end{frame}
 	
@@ -91,10 +91,10 @@
 		\frametitle{Wyznaczenie i wykonanie pierwszych zadań}
 		\begin{itemize}
 			\item \textcolor{green}{Zrobione}
-			\item Oznaczenie funkcji, które definiują typ w drzewie AST -- Michał Borkowski
+			\item Oznaczenie w drzewie AST funkcji, które definiują typ -- Michał Borkowski
 			\item Przeniesienie tej informacji do nlasm -- Marek Puzyna
-			\item Wygenerowanie pustej struktury dla każdego typu -- Jakub Bujak
-			\item Przygotowanie testów -- Marian Dziubiak
+			\item Wygenerowanie pustej struktury dla każdego zdefiniowanego typu -- Jakub Bujak
+			\item Przygotowanie testów sprawdzających powyższe -- Marian Dziubiak
 		\end{itemize}
 		\pause
 		\textbf{Wszystkie zadania zostały wykonane}
@@ -111,7 +111,6 @@
 			\item Push block na masterze
 			\item Możliwość mergowania pull requesta dopiero po pomyślnym review
 			\end{itemize}
-		\item Wspieranie automatycznego budowania: TODO
 		\item Wspieranie komunikacji grupy: GitHub wiki
 		\item Dostęp do powyższych: github.com/jbujak/nl-zpp
 		\end{itemize}
@@ -120,10 +119,11 @@
 	\begin{frame}
 		\frametitle{Lista zadań i plany na najbliższy tydzień}
 		\begin{itemize}
-			\item{\textbf{Zadanie 1 na najbliższy tydzień TODO}}
-			\item{\textbf{Zadanie 2 na najbliższy tydzień TODO}}
-			\item{Przystosować type checker do współpracy z nowymi typami}
-			\item{Umożliwić kompilację typów prostych, tablic i rekordów do struktur C}
+			\item{\textbf{Dokończyć konfigurację Travisa}}
+			\item{\textbf{Dodać kompilację intów NianioLanga do intów C}}
+			\item{\textbf{Dodać obsługę intów w type checkerze}}
+			\item{Przystosować type checker do współpracy z resztą nowych typów}
+			\item{Umożliwić kompilację tablic, rekordów i reszty typów prostych do struktur C}
 			\item{Zaimplementować podstawowe operacje na skompilowanych strukturach}
 		\end{itemize}
 	\end{frame}
