@@ -1,4 +1,5 @@
 import re
+import sys
 
 def main():
     print("\nGENERATED STRUCTS TESTS:")
@@ -7,18 +8,22 @@ def main():
     contents = file_.read()
 
     testnum = 1
+    fail = False
 
     def test(title, fun):
-        nonlocal testnum
+        nonlocal testnum, fail
         print("\nTest {} - {}".format(testnum, title))
         if fun():
             print("PASSED\n");
         else:
             print("FAILED\n");
+            fail = True
         testnum = testnum + 1       
 
 
     test("Empty struct", lambda: re.search(r"\s*struct\s*test_generated_struct0empty_struct0struct\s*\{\s*\};", contents))
     test("Empty function is not a struct", lambda: not re.search(r"\s*struct\s*test_generated_struct0empty_function0struct\s*\{\s*\};", contents))
 
-main()
+    return (1 if fail else 0)
+
+sys.exit(main())
