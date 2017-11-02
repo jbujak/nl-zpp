@@ -203,6 +203,8 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 		result = print_goto(goto);
 	} case :clear(var reg) {
 		result = print_register_setter(reg, 'null') . ';';
+	} case :var_decl(var decl) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }

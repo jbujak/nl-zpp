@@ -249,6 +249,8 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			last_label .= '_G';
 		} case :clear(var reg) {
 			clear_reg(ref block, reg, nr);
+		} case :var_decl(var decl) {
+			die;
 		}
 		++nr;
 	}

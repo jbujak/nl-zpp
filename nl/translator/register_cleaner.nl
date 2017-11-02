@@ -184,6 +184,8 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(ptd::sim())) : 
 			new_cmd = :goto(goto);
 		} case :clear(var clear) {
 			new_cmd = :clear(map{clear});
+		} case :var_decl(var decl) {
+			die;
 		}
 		new_cmds []= {
 			annotation => recalculate_annotation(cmd->annotation, map),
@@ -289,6 +291,8 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 		} case :goto(var goto) {
 		} case :clear(var clear) {
 			regs{clear} = true;
+		} case :var_decl(var decl) {
+			die;
 		}
 	}
 	return regs;
