@@ -120,7 +120,7 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 			name => '',
 			cmd => {debug => get_debug_from_begin(state), cmd => :nop},
 			access => :priv,
-			defines_type => false
+			defines_type => :no,
 		};
 	eat(ref state, 'def');
 	try ret->name = eat_text(ref state);
@@ -141,8 +141,9 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 	match (ptd_parser::fun_def_to_ptd(ret->cmd)) case :err(var err) {
 		#here we either have an error (will be checked again in the type checker, so no worries)
 		#or the function doesn't define a type
+		ret->defines_type = :no;
 	} case :ok(var ok) {
-		ret->defines_type = true;
+		ret->defines_type = :yes(ok);
 	}
 	return :ok(ret);
 }
