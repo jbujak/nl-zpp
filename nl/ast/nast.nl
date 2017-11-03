@@ -125,6 +125,7 @@ def nast::variable_declaration_t() {
 	return ptd::rec({
 			name => ptd::sim(),
 			type => @nast::variable_type_t,
+			tct_type => ptd::var({none => ptd::none(), type => @tct::meta_type}),
 			value => ptd::var({value => @nast::value_t, none => ptd::none()})
 		});
 }
