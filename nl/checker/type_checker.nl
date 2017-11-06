@@ -86,7 +86,6 @@ def check_types_imported(type : @tct::meta_type, ref modules : @tc_types::module
 	} case :tct_void {
 	} case :tct_sim {
 	} case :tct_own_int {
-		#TODO
 	} case :tct_own_string {
 		#TODO
 	} case :tct_own_bool {
@@ -1250,7 +1249,7 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_sim {
 		return 'ptd::sim()';
 	} case :tct_own_int {
-		return ''; #TODO
+		return 'own::int()';
 	} case :tct_own_string {
 		return ''; #TODO
 	} case :tct_own_bool {
@@ -1298,7 +1297,7 @@ def get_print_tct_label(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_sim {
 		return 'ptd::sim';
 	} case :tct_own_int {
-		return ''; #TODO
+		return 'own::int';
 	} case :tct_own_string {
 		return ''; #TODO
 	} case :tct_own_bool {

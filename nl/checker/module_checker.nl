@@ -240,7 +240,6 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 	} case :tct_void {
 	} case :tct_sim {
 	} case :tct_own_int {
-		#TODO
 	} case :tct_own_string {
 		#TODO
 	} case :tct_own_bool {

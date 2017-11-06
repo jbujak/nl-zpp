@@ -44,7 +44,6 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 		return false unless ref_name eq b as :tct_ref;
 	} case :tct_sim {
 	} case :tct_own_int {
-		return false; #TODO
 	} case :tct_own_string {
 		return false; #TODO
 	} case :tct_own_bool {
@@ -192,7 +191,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 	} case :tct_sim {
 		return :tct_sim if b is :tct_sim;
 	} case :tct_own_int {
-		die; #TODO
+		return :tct_own_int if b is :tct_own_int;
 	} case :tct_own_string {
 		die; #TODO
 	} case :tct_own_bool {
@@ -398,7 +397,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok if from is :tct_sim;
 		return mk_err(to, from);
 	} case :tct_own_int {
-		die; #TODO
+		return mk_err(to, from);
 	} case :tct_own_string {
 		die; #TODO
 	} case :tct_own_bool {
@@ -545,7 +544,6 @@ def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : 
 	} case :tct_void {
 	} case :tct_sim {
 	} case :tct_own_int {
-		#TODO
 	} case :tct_own_string {
 		#TODO
 	} case :tct_own_bool {
