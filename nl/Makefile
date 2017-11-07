@@ -2,7 +2,7 @@ all: old compiler tester
 
 compiler: compiler_nl compiler_gcc
 
-tester: tester_nl tester_gcc
+tester: tester_nl tester_gcc tester_gcc_pytest
 
 OBJDIR=obj
 OUT=mk_cache.exe
@@ -54,6 +54,9 @@ tester_nl:
 
 tester_gcc:
 	gcc ${CFLAGS} -o test_all test_all.c ${CACHETEST}/*.c ${NATIVE}/*.c -I${CACHETEST} -I${NATIVE} ${LINKS}
+
+tester_gcc_pytest:
+	python3 test/test_generated_struct.py
 
 tester_nl_js:
 	./${OUT} nianio_lib test --strict --o ${CACHETEST} --js --O2 --namespace instadb --profile
