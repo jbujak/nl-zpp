@@ -1,0 +1,92 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Cotygodniowa prezentacja
+		
+		09.11.2017
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co miało być zrobione}
+		\begin{itemize}
+		 \item Dokończyć konfigurację Travisa
+		 \item Dodać kompilację intów NianioLanga do intów C
+		 \item Dodać obsługę intów w type checkerze
+		 \item Przygotować spis wymagań
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Sprecyzowanie wymagań}
+		\begin{itemize}
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Osoba odpowiedzialna -- Jakub Bujak
+				\item Celem projektu jest dodanie do języka nowych typów w sposób umożliwiający kompilowanie
+				intów, stringów, tablic i rekordów do odpowiednich typów C
+				\item Po zmodyfikowaniu kompilatora należy przygotować benchmarki, które sprawdzą przyrost wydajności
+				przy użyciu nowych typów
+				\item Sprawdzenie poprawności wykonania ma nastąpić przez uruchomienie w środowisku produkcyjnym
+				programu skompilowanego nowych kompilatorem przy zmianie typów części zmiennych na nowe
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Dokończenie konfiguracji Travisa}
+		\begin{itemize}
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Projekt jest budowany i testowany przy każdym pull requeście
+				\item Nie można merge'ować niebudującego się PR
+				\item Osoba odpowiedzialna -- Marian Dziubiak
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Kompilacja intów NianioLanga do intów C}
+		\begin{itemize}
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Przeniesienie pełnej informacji o typach do AST -- Jakub Bujak
+				\item Dodanie polecenia deklaracji zmiennej do nlasm -- Marian Dziubiak
+				\item Generowanie deklaracji zmiennej w C -- Marek Puzyna
+			\end{itemize}
+			\item\textcolor{red}{Do zrobienia}
+			\begin{itemize}
+				\item Integracja poszczególnych części i testy
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Dodanie obsługi intów w type checkerze}
+		\begin{itemize}
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Osoba odpowiedzialna -- Michał Borkowski
+				\item Możliwość przypisania inta tylko na inta (brak wsparcia dla starych typów prostych)
+				\item Dzięki temu można będzie wyrzucić z języka poprzedni typ prosty -- \texttt{ptd::sim()}
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Plany na najbliższy tydzień}
+		\begin{itemize}
+			\item Integracja i testowanie kompilacji intów
+			\item Implementacja podstawowych operacji na intach -- odczyt/zapis i działania arytmetyczne
+		\end{itemize}
+	\end{frame}
+\end{document}
