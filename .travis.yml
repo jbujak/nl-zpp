@@ -12,3 +12,8 @@ install:
 
 script:
     - make
+
+branches:
+  except:
+  - presentation
+  - gh-pages
