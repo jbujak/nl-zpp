@@ -120,7 +120,7 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 			name => '',
 			cmd => {debug => get_debug_from_begin(state), cmd => :nop},
 			access => :priv,
-			defines_type => false
+			defines_type => :no,
 		};
 	eat(ref state, 'def');
 	try ret->name = eat_text(ref state);
@@ -141,8 +141,9 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 	match (ptd_parser::fun_def_to_ptd(ret->cmd)) case :err(var err) {
 		#here we either have an error (will be checked again in the type checker, so no worries)
 		#or the function doesn't define a type
+		ret->defines_type = :no;
 	} case :ok(var ok) {
-		ret->defines_type = true;
+		ret->defines_type = :yes(ok);
 	}
 	return :ok(ret);
 }
@@ -476,7 +477,7 @@ def parse_variant_decl(ref state : @nparser::state_t) : @nast::variant_decl_t {
 
 def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::variable_declaration_t, err => ptd::sim()}) {
 	eat(ref state, 'var');
-	var ret : @nast::variable_declaration_t = {name => '', type => :none, value => :none};
+	var ret : @nast::variable_declaration_t = {name => '', type => :none, tct_type => :none, value => :none};
 	if (ntokenizer::is_type(ref state->state, :word)) {
 		ret->name = ntokenizer::eat_type(ref state->state, :word);
 	} else {
@@ -485,6 +486,8 @@ def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::varia
 	if (try_eat(ref state, ':')) {
 		try var tmp = parse_type(ref state);
 		ret->type = :type(tmp);
+		try var tct_type = ptd_parser::try_value_to_ptd(tmp);
+		ret->tct_type = :type(tct_type);
 	}
 	if (try_eat(ref state, '=')) {
 		try var tmp = parse_expr(ref state);
@@ -495,7 +498,7 @@ def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::varia
 
 def parse_var_decl_sim(ref state : @nparser::state_t) : @nast::variable_declaration_t {
 	eat(ref state, 'var');
-	var ret = {name => '', type => :none, value => :none};
+	var ret = {name => '', type => :none, tct_type => :none, value => :none};
 	if (ntokenizer::is_type(ref state->state, :word)) {
 		ret->name = ntokenizer::eat_type(ref state->state, :word);
 	} else {

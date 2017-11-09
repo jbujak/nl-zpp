@@ -339,7 +339,7 @@ def print_cmd_array(arr : ptd::arr(@nast::cmd_t), ref state : @translator::state
 
 def print_try_ensure(try_ensure : @nast::try_ensure_t, is_try : @nast::bool_t, ref state : @translator::state_t) {
 	match (try_ensure) case :decl(var decl) {
-		print_var_decl({name => decl->name, type => decl->type, value => :none}, ref state);
+		print_var_decl({name => decl->name, type => decl->type, tct_type => :none, value => :none}, ref state);
 	} case :lval(var lval) {
 	} case :expr(var expr) {
 	}

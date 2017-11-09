@@ -5,7 +5,6 @@
 
 use ptd;
 use nast;
-use boolean_t;
 use tct;
 
 def nlasm::result_t() {
@@ -32,7 +31,7 @@ def nlasm::function_t() {
 			args_type => @nlasm::args_type,
 			commands => @nlasm::cmds_t,
 			name => ptd::sim(),
-			defines_type => @boolean_t::type
+			defines_type => ptd::var({no => ptd::none(), yes => @tct::meta_type}),
 		});
 }
 

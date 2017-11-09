@@ -359,8 +359,9 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 		match (func->access) case :pub {
 			print_to_header(ref state, fun_header . ';' . string::lf());
 			print_to_header(ref state, get_func_ptr_header(func, state->mod_name) . ';' . string::lf());
-			if (func->defines_type) {
+			match (func->defines_type) case :yes(var type) {
 				print_to_header(ref state, get_func_type_struct(func, state->mod_name) . ';' . string::lf());
+			} case :no {
 			}
 		} case :priv {
 			println(ref state, fun_header . ';');

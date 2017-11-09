@@ -6,7 +6,7 @@
 use hash;
 use ptd;
 use singleton;
-use boolean_t;
+use tct;
 
 def nast::intepreter_evaluate_max_steps() {
 	return 500000;
@@ -96,7 +96,7 @@ def nast::fun_def_t() {
 			cmd => @nast::cmd_t,
 			access => ptd::var({priv => ptd::none(), pub => ptd::none()}),
 			args => ptd::arr(@nast::fun_def_arg_t),
-			defines_type => @boolean_t::type
+			defines_type => ptd::var({no => ptd::none(), yes => @tct::meta_type}),
 		});
 }
 
@@ -125,6 +125,7 @@ def nast::variable_declaration_t() {
 	return ptd::rec({
 			name => ptd::sim(),
 			type => @nast::variable_type_t,
+			tct_type => ptd::var({none => ptd::none(), type => @tct::meta_type}),
 			value => ptd::var({value => @nast::value_t, none => ptd::none()})
 		});
 }
