@@ -4,10 +4,17 @@ title: {{ site.name }}
 ---
 
 <div id="home">
-  <h1>Blog Posts</h1>
-  <ul class="posts">
-    {% for post in site.posts %}
-      <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></li>
+    {% for post in paginator.posts %}
+	<article>
+	<h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
+	{{ post.content }}
+	</article>
     {% endfor %}
-  </ul>
+    {% if paginator.previous_page %}
+	 <a href="{{ paginator.previous_page_path }}">Poprzednia</a>
+    {% endif %}
+	<span class="page_number ">Strona: {{ paginator.page }} / {{ paginator.total_pages }}</span>
+    {% if paginator.next_page %}
+	<a href="{{ paginator.next_page_path }}">Następna</a>
+     {% endif %}
 </div>
