@@ -92,8 +92,16 @@ def nlasm::order_t() {
 			prt_lbl => @nlasm::label_t,
 			if_goto => ptd::rec({dest => @nlasm::label_t, src => @nlasm::reg_t}),
 			goto => @nlasm::label_t,
-			clear => @nlasm::reg_t
+			clear => @nlasm::reg_t,
+			var_decl => @nlasm::var_decl_t
 		});
+}
+
+def nlasm::var_decl_t() {
+	return ptd::rec({
+		name => ptd::sim(), 
+		type => @tct::meta_type
+	});
 }
 
 def nlasm::label_t() {

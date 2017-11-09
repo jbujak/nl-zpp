@@ -516,6 +516,8 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 				}
 			}
 		}
+	} case :var_decl(var decl) {
+		die;
 	}
 	handle_new_declarations(ref state);
 }
@@ -582,6 +584,8 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 		return false unless (arg is :TRUE || arg is :FALSE);
 	} case :goto(var goto) {
 	} case :clear(var reg) {
+	} case :var_decl(var decl) {
+		die;
 	}
 	return true;
 }

@@ -250,6 +250,8 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		print(ref state, 'undef(');
 		print_register(reg, ref state);
 		print(ref state, ');');
+	} case :var_decl(var decl) {
+		die;
 	}
 	print(ref state, string::lf());
 }

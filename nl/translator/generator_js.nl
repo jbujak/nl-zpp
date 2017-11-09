@@ -242,6 +242,8 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 		result = print_goto(goto);
 	} case :clear(var reg) {
 		result = print_register_to_assign(reg) . 'null;';
+	} case :var_decl(var decl) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }
