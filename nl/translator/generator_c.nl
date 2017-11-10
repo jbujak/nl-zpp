@@ -738,11 +738,11 @@ def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl
 		die;
 	} case :tct_ref(var val) {
 	} case :tct_sim {
-	} case :tct_own_int {
+	} case :tct_int {
 		print(ref state, 'INT ' . decl->name . ';' . string::lf());
-	} case :tct_own_string {
+	} case :tct_string {
 		die;
-	} case :tct_own_bool {
+	} case :tct_bool {
 		die;
 	} case :tct_empty {
 	} case :tct_void {

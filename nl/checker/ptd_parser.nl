@@ -45,14 +45,14 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 		}
 	} elsif (mod_name eq 'own') {
 		if (fun_name eq 'int') {
-			return :err('own_int can''t have arguments: ' . args_size) unless args_size == 0;
-			return :ok(tct::own_int());
+			return :err('int can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::int());
 		} elsif (fun_name eq 'string') {
-			return :err('own_string can''t have arguments: ' . args_size) unless args_size == 0;
-			return :ok(tct::own_string());
-		} elsif (fun_name eq 'own_bool') {
+			return :err('string can''t have arguments: ' . args_size) unless args_size == 0;
+			return :ok(tct::string());
+		} elsif (fun_name eq 'bool') {
 			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
-			return :ok(tct::own_bool());
+			return :ok(tct::bool());
 		}
 	}
 	return :err('''none'' type can be used only in ''var'' type') if fun_name eq 'none';

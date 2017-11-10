@@ -30,16 +30,12 @@ def tct::sim() : @tct::meta_type {
 	return :tct_sim;
 }
 
-def tct::own_int() : @tct::meta_type {
-	return :tct_own_int;
+def tct::int() : @tct::meta_type {
+	return :tct_int;
 }
 
-def tct::own_string() : @tct::meta_type {
-	return :tct_own_string;
-}
-
-def tct::own_bool() : @tct::meta_type {
-	return :tct_own_bool;
+def tct::string() : @tct::meta_type {
+	return :tct_string;
 }
 
 def tct::none() {
@@ -67,6 +63,7 @@ def tct::tct_im() : @tct::meta_type {
 }
 
 def tct::bool() : @tct::meta_type {
+	#TODO return :tct_bool;
 	return tct::var({FALSE => tct::none(), TRUE => tct::none()});
 }
 
@@ -122,9 +119,9 @@ def tct::meta_type() {
 			tct_own_var => ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})),
 			tct_ref => ptd::sim(),
 			tct_sim => ptd::none(),
-			tct_own_int => ptd::none(),
-			tct_own_string => ptd::none(),
-			tct_own_bool => ptd::none(),
+			tct_int => ptd::none(),
+			tct_string => ptd::none(),
+			tct_bool => ptd::none(),
 			tct_empty => ptd::none(),
 			tct_void => ptd::none(),
 			tct_im => ptd::none()

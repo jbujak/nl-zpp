@@ -85,10 +85,10 @@ def check_types_imported(type : @tct::meta_type, ref modules : @tc_types::module
 		}
 	} case :tct_void {
 	} case :tct_sim {
-	} case :tct_own_int {
-	} case :tct_own_string {
+	} case :tct_int {
+	} case :tct_string {
 		#TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {
@@ -1248,11 +1248,11 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 		return 'ptd::void()';
 	} case :tct_sim {
 		return 'ptd::sim()';
-	} case :tct_own_int {
+	} case :tct_int {
 		return 'own::int()';
-	} case :tct_own_string {
+	} case :tct_string {
 		return ''; #TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		return ''; #TODO
 	} case :tct_ref(var ref_name) {
 		return '@' . ref_name;
@@ -1296,11 +1296,11 @@ def get_print_tct_label(type : @tct::meta_type) : ptd::sim() {
 		return 'ptd::void';
 	} case :tct_sim {
 		return 'ptd::sim';
-	} case :tct_own_int {
+	} case :tct_int {
 		return 'own::int';
-	} case :tct_own_string {
+	} case :tct_string {
 		return ''; #TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		return ''; #TODO
 	} case :tct_ref(var ref_name) {
 		return 'ptd::ref';
