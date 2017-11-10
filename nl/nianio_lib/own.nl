@@ -8,18 +8,6 @@ def own::rec(h : ptd::hash(@ptd::meta_type)) : @ptd::meta_type {
 	return :own_rec(h);
 }
 
-def own::int() : @ptd::meta_type {
-	return :own_int;
-}
-
-def own::string() : @ptd::meta_type {
-	return :own_string;
-}
-
-def own::bool() : @ptd::meta_type {
-	return :own_bool;
-}
-
 def own::hash(h : @ptd::meta_type) : @ptd::meta_type {
 	return :own_hash(h);
 }

@@ -43,10 +43,10 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 	} case :tct_ref(var ref_name) {
 		return false unless ref_name eq b as :tct_ref;
 	} case :tct_sim {
-	} case :tct_own_int {
-	} case :tct_own_string {
+	} case :tct_int {
+	} case :tct_string {
 		return false; #TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		return false; #TODO
 	} case :tct_var(var vars) {
 		return false if hash::size(b as :tct_var) != hash::size(vars);
@@ -190,11 +190,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		return :tct_im;
 	} case :tct_sim {
 		return :tct_sim if b is :tct_sim;
-	} case :tct_own_int {
-		return :tct_own_int if b is :tct_own_int;
-	} case :tct_own_string {
+	} case :tct_int {
+		return :tct_int if b is :tct_int;
+	} case :tct_string {
 		die; #TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		die; #TODO
 	} case :tct_ref(var ref_name) {
 		die;
@@ -396,11 +396,11 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	} case :tct_sim {
 		return :ok if from is :tct_sim;
 		return mk_err(to, from);
-	} case :tct_own_int {
+	} case :tct_int {
 		return mk_err(to, from);
-	} case :tct_own_string {
+	} case :tct_string {
 		die; #TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		die; #TODO
 	} case :tct_var(var vars) {
 		return mk_err(to, from) unless from is :tct_var;
@@ -543,10 +543,10 @@ def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : 
 		hash::set_value(ref refs, ref_name, '');
 	} case :tct_void {
 	} case :tct_sim {
-	} case :tct_own_int {
-	} case :tct_own_string {
+	} case :tct_int {
+	} case :tct_string {
 		#TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {

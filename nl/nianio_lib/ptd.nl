@@ -20,6 +20,18 @@ def ptd::sim() : @ptd::meta_type {
 	return :ptd_sim;
 }
 
+def ptd::int() : @ptd::meta_type {
+	return :ptd_int;
+}
+
+def ptd::string() : @ptd::meta_type {
+	return :ptd_string;
+}
+
+def ptd::bool() : @ptd::meta_type {
+	return :ptd_bool;
+}
+
 def ptd::none() {
 	return :ptd_var_none;
 }
@@ -61,14 +73,14 @@ def ptd::meta_type() {
 				name => ptd::sim()
 			}),
 			ptd_sim => ptd::none(),
+			ptd_int => ptd::none(),
+			ptd_string => ptd::none(),
+			ptd_bool => ptd::none(),
 			ptd_im => ptd::none(),
 			own_rec => ptd::hash(@ptd::meta_type),
 			own_hash => @ptd::meta_type,
 			own_arr => @ptd::meta_type,
 			own_var => ptd::hash(ptd::var({with_param => @ptd::meta_type, no_param => ptd::none()})),
-			own_int => ptd::none(),
-			own_string => ptd::none(),
-			own_bool => ptd::none(),
 		});
 }
 

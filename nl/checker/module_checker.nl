@@ -239,10 +239,10 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 		}
 	} case :tct_void {
 	} case :tct_sim {
-	} case :tct_own_int {
-	} case :tct_own_string {
+	} case :tct_int {
+	} case :tct_string {
 		#TODO
-	} case :tct_own_bool {
+	} case :tct_bool {
 		#TODO
 	} case :tct_var(var vars) {
 		forh var name, var from_type (vars) {
