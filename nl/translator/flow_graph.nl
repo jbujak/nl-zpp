@@ -250,7 +250,7 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 		} case :clear(var reg) {
 			clear_reg(ref block, reg, nr);
 		} case :var_decl(var decl) {
-			die;
+			#TODO
 		}
 		++nr;
 	}
