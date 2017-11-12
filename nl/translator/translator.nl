@@ -126,6 +126,10 @@ def print_variant(variant : @nast::variant_t, destination : @nlasm::reg_t, ref s
 
 def print_var_decl(var_decl : @nast::variable_declaration_t, ref state : @translator::state_t) : @nlasm::reg_t {
 	var reg = new_declaration(var_decl->name, ref state);
+	match (var_decl->tct_type) case :none {
+	} case :type(var tct_type) {
+		print(ref state, :var_decl({name => var_decl->name, type => tct_type}));
+	}
 	match (var_decl->value) case :none {
 	} case :value(var value) {
 		print_val(value, reg, ref state);

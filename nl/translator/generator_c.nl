@@ -725,25 +725,19 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 
 def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl_t){
 	match (decl->type) case :tct_rec(var meta) {
-		die;
 	} case :tct_own_rec(var meta) {
 		die;
 	} case :tct_hash(var meta) {
-		die;
 	} case :tct_own_hash(var meta) {
 		die;
 	} case :tct_arr(var meta) {
-		die;
 	} case :tct_own_arr(var meta) {
 		die;
 	} case :tct_var(var param) {
-		die;
 	} case :tct_own_var(var param) {
 		die;
 	} case :tct_ref(var val) {
-		die;
 	} case :tct_sim {
-		die;
 	} case :tct_own_int {
 		print(ref state, 'INT ' . decl->name . ';' . string::lf());
 	} case :tct_own_string {
@@ -751,11 +745,8 @@ def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl
 	} case :tct_own_bool {
 		die;
 	} case :tct_empty {
-		die;
 	} case :tct_void {
-		die;
 	} case :tct_im {
-		die;
 	}
 }
 
