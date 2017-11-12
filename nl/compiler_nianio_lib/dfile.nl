@@ -69,7 +69,7 @@ def eat_non_ws(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd:
 	var l = state->len;
 	if (state->pos >= l) {
 		error = true;
-		return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected scalar';
+		return 'pos ' . state->pos . ': expected scalar';
 	}
 	loop {
 		var char = get_char(ref state);
@@ -80,7 +80,7 @@ def eat_non_ws(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd:
 	}
 	if (ret eq '') {
 		error = true;
-		return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected scalar';
+		return 'pos ' . state->pos . ': expected scalar';
 	}
 	return ret;
 }
@@ -93,7 +93,7 @@ def parse_scalar(ref state : @dfile::state_t, ref error : @boolean_t::type) : pt
 		loop {
 			if (state->pos >= state->len) {
 				error = true;
-				return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected "';
+				return 'pos ' . state->pos . ': expected "';
 			}
 			var char = get_char(ref state);
 			++state->pos;
@@ -131,7 +131,7 @@ def match_s(ref state : @dfile::state_t, pattern : ptd::sim()) : @boolean_t::typ
 }
 
 def dfile::state_t() {
-	return ptd::rec({str => ptd::arr(ptd::sim()), len => ptd::int(), pos => ptd::int()});
+	return ptd::rec({str => ptd::arr(ptd::sim()), len => ptd::sim(), pos => ptd::sim()});
 }
 
 def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_im() {
@@ -147,7 +147,7 @@ def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_
 			eat_ws(ref state);
 			if (!match_s(ref state, '=>')) {
 				error = true;
-				return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected =>';
+				return 'pos ' . state->pos . ': expected =>';
 			}
 			var value = parse(ref state, ref error);
 			return value if error;
@@ -155,7 +155,7 @@ def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_
 			eat_ws(ref state);
 			if (!match_s(ref state, ',')) {
 				error = true;
-				return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected ,';
+				return 'pos ' . state->pos . ': expected ,';
 			}
 			eat_ws(ref state);
 		}
@@ -170,7 +170,7 @@ def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_
 			array::push(ref arr, value);
 			if (!match_s(ref state, ',')) {
 				error = true;
-				return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected ,';
+				return 'pos ' . state->pos . ': expected ,';
 			}
 			eat_ws(ref state);
 		}
@@ -186,14 +186,14 @@ def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_
 			eat_ws(ref state);
 			if (!match_s(ref state, ')')) {
 				error = true;
-				return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected )';
+				return 'pos ' . state->pos . ': expected )';
 			}
 			return ov::mk_val(key, val);
 		}
 		eat_ws(ref state);
 		if (!match_s(ref state, ')')) {
 			error = true;
-			return 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected )';
+			return 'pos ' . state->pos . ': expected )';
 		}
 		eat_ws(ref state);
 		return ov::mk(key);
@@ -217,7 +217,7 @@ def dfile::try_sload(str_im) : ptd::var({ok => ptd::ptd_im(), err => ptd::sim()}
 	eat_ws(ref state);
 	if (!error && state->pos != state->len) {
 		error = true;
-		val = 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected eof';
+		val = 'pos ' . state->pos . ': expected eof';
 	}
 	if (error) {
 		val = ptd::ensure(ptd::sim(), val);
@@ -263,11 +263,11 @@ def sprint_hash_key(ref state : @dfile::state_out, str) : ptd::void() {
 	}
 }
 
-def get_ind(ind : ptd::int()) : ptd::sim() {
+def get_ind(ind : ptd::sim()) : ptd::sim() {
 	return string::char_times(string::tab(), ind);
 }
 
-def sprint_hash(ref state : @dfile::state_out, obj : ptd::ptd_im(), indent : ptd::int(), is_debug : @boolean_t::type) :
+def sprint_hash(ref state : @dfile::state_out, obj : ptd::ptd_im(), indent : ptd::sim(), is_debug : @boolean_t::type) : 
 		ptd::void() {
 	sp(ref state, '{' . string::lf());
 	var keys = hash::keys(obj);
@@ -293,7 +293,7 @@ def handle_debug(ref state : @dfile::state_out, obj) : @boolean_t::type {
 	}
 }
 
-def sprint(ref state : @dfile::state_out, obj : ptd::ptd_im(), indent : ptd::int(), is_debug : @boolean_t::type) :
+def sprint(ref state : @dfile::state_out, obj : ptd::ptd_im(), indent : ptd::sim(), is_debug : @boolean_t::type) : 
 		ptd::void() {
 	return if is_debug && handle_debug(ref state, obj);
 	if (nl::is_sim(obj)) {

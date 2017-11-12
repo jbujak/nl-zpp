@@ -12,7 +12,7 @@ CACHETEST=cache_test
 CFLAGS=-std=c99 -O0 -ggdb
 LINKS=-lm
 
-NLDIR=ast checker compiler nianio_lib parser pretty_printer translator compiler_base
+NLDIR=ast checker compiler compiler_nianio_lib parser pretty_printer translator compiler_base
 NATIVE=native_lib_c
 
 CDIR=${CACHEDIR} ${NATIVE}

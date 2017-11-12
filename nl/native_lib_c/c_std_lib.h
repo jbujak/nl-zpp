@@ -42,3 +42,4 @@ ImmT c_std_lib0exec(ImmT func, ImmT *arr);
 
 ImmT c_std_lib0string_decode_utf16(ImmT ___nl__str, ImmT ___nl__a);
 ImmT c_std_lib0string_encode_utf16(ImmT ___nl__str);
+ImmT c_std_lib0int_to_string(INT n);
