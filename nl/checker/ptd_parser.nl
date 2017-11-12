@@ -42,9 +42,7 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 			return :ok(tct::tct_im());
 		} elsif (fun_name eq 'void') {
 			return :err('Void type can be used only as a return type of function');
-		}
-	} elsif (mod_name eq 'own') {
-		if (fun_name eq 'int') {
+		} elsif (fun_name eq 'int') {
 			return :err('int can''t have arguments: ' . args_size) unless args_size == 0;
 			return :ok(tct::int());
 		} elsif (fun_name eq 'string') {
