@@ -435,9 +435,9 @@ def check_rep(as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref var
 	@tc_types::errors_t) : ptd::void() {
 	var count_type : @tc_types::type = check_val(as_rep->count, ref modules, ref vars, ref errors);
 	add_error(ref errors, 'rep argument should be a number instead of ' . get_print_tct_type_name(count_type->type))
-		unless ptd_system::is_accepted(count_type, tct::sim(), ref modules, ref errors);
+		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors);
 	var vars_op : @tc_types::vars_t = vars;
-	add_var_decl_with_type_and_check(as_rep->iter, {type => tct::sim(), src => :speculation}, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(as_rep->iter, {type => tct::int(), src => :speculation}, ref vars_op, ref errors);
 	break_continue_block(as_rep->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
@@ -560,7 +560,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		}
 		ret->type = tct::var(ret_variants);
 	} case :const(var as_const) {
-		ret->type = tct::sim();
+		ret->type = tct::int();
 	} case :arr_decl(var arr_decl) {
 		if (array::len(arr_decl) == 0) {
 			ret->type = tct::arr(tct::empty());
@@ -654,12 +654,12 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 			return unary_op_dec_inc(unary_op->val, 'incorrect type of argument operator ''' . unary_op->op . ''' : ', 
 					ref modules, ref vars, ref errors);
 		} else {
-			if (!ptd_system::is_accepted(type, tct::sim(), ref modules, ref errors)) {
+			if (!ptd_system::is_accepted(type, tct::int(), ref modules, ref errors)) {
 				add_error(ref errors, 'incorrect type of argument operator ''' . unary_op->op . ''' : ' . 
 					get_print_tct_type_name(type->type));
 			}
 		}
-		ret->type = tct::sim();
+		ret->type = tct::int();
 	} case :fun_label(var fun_label) {
 		check_function_exists(fun_label->module, fun_label->name, ref modules, ref errors);
 		ret->type = tct::func();
@@ -744,10 +744,10 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 def unary_op_dec_inc(type : @nast::value_t, err_str : ptd::sim(), ref modules : @tc_types::modules_t, ref vars : 
 		@tc_types::vars_t, ref errors : @tc_types::errors_t) : @tc_types::type {
 	var vtype = check_val(type, ref modules, ref vars, ref errors);
-	if (!ptd_system::is_accepted(vtype, tct::sim(), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(vtype, tct::int(), ref modules, ref errors)) {
 		add_error(ref errors, err_str . get_print_tct_type_name(vtype->type));
 	}
-	vtype->type = tct::sim();
+	vtype->type = tct::int();
 	var err_left_len = array::len(errors->errors);
 	var left_type : @tc_types::type = get_type_left_side_equation(type, ref modules, ref vars, ref errors);
 	if (array::len(errors->errors) - err_left_len > 0){
@@ -798,8 +798,8 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::tct_im(),
 			a => [
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
-				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::int(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'array::join', {
@@ -817,7 +817,7 @@ def get_special_functions() : @tc_types::special_functions {
 			]
 		});
 	hash::set_value(ref f, 'array::len', {
-			r => tct::sim(),
+			r => tct::int(),
 			a => [{mod => :none, type => tct::arr(tct::tct_im()), name => ''}]
 		});
 	hash::set_value(ref f, 'array::sort', {
@@ -858,7 +858,7 @@ def get_special_functions() : @tc_types::special_functions {
 			]
 		});
 	hash::set_value(ref f, 'hash::size', {
-			r => tct::sim(),
+			r => tct::int(),
 			a => [{mod => :none, type => tct::hash(tct::tct_im()), name => ''}]
 		});
 	hash::set_value(ref f, 'hash::values', {
@@ -886,13 +886,13 @@ def get_special_functions() : @tc_types::special_functions {
 		});
 	hash::set_value(ref f, 'dfile::ssave', {r => tct::sim(), a => [{mod => :none, type => tct::tct_im(), name => ''}]});
 	hash::set_value(ref f, 'string::lf', {r => tct::sim(), a => []});
-	hash::set_value(ref f, 'string::length', {r => tct::sim(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'string::length', {r => tct::int(), a => [{mod => :none, type => tct::sim(), name => ''}]});
 	hash::set_value(ref f, 'string::substr', {
 			r => tct::sim(),
 			a => [
 				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::int(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'string::replace', {
@@ -903,8 +903,8 @@ def get_special_functions() : @tc_types::special_functions {
 				{mod => :none, type => tct::sim(), name => ''}
 			]
 		});
-	hash::set_value(ref f, 'string::chr', {r => tct::sim(), a => [{mod => :none, type => tct::sim(), name => ''}]});
-	hash::set_value(ref f, 'string::ord', {r => tct::sim(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'string::chr', {r => tct::sim(), a => [{mod => :none, type => tct::int(), name => ''}]});
+	hash::set_value(ref f, 'string::ord', {r => tct::int(), a => [{mod => :none, type => tct::sim(), name => ''}]});
 	hash::set_value(ref f, 'string::split', {
 			r => tct::arr(tct::sim()),
 			a => [{mod => :none, type => tct::sim(), name => ''}, {mod => :none, type => tct::sim(), name => ''}]
@@ -915,6 +915,12 @@ def get_special_functions() : @tc_types::special_functions {
 				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''}
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::int_to_string', {
+			r => tct::sim(),
+			a => [
+				{mod => :none, type => tct::int(), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'c_singleton::sigleton_do_not_use_without_approval', {
@@ -1200,7 +1206,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 				get_print_tct_type_name(left_type2->type));
 			return ret_type;
 		}
-		if (!ptd_system::is_accepted(right_type, tct::sim(), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(right_type, tct::int(), ref modules, ref errors)) {
 			add_error(ref errors, 'array index should be number');
 		}
 		left_type2->type = left_type2->type as :tct_arr if left_type2->type is :tct_arr;
@@ -1249,7 +1255,7 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_sim {
 		return 'ptd::sim()';
 	} case :tct_int {
-		return 'own::int()';
+		return 'ptd::int()';
 	} case :tct_string {
 		return ''; #TODO
 	} case :tct_bool {
@@ -1297,7 +1303,7 @@ def get_print_tct_label(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_sim {
 		return 'ptd::sim';
 	} case :tct_int {
-		return 'own::int';
+		return 'ptd::int';
 	} case :tct_string {
 		return ''; #TODO
 	} case :tct_bool {

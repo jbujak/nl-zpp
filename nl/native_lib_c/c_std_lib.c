@@ -359,3 +359,7 @@ ImmT c_std_lib0string_decode_utf16(ImmT ___nl__str, ImmT ___nl__a) {
 	c_rt_lib0clear((ImmT*)&sI);
 	return c_rt_lib0ov_arg_new(c_rt_lib0string_new("ok"), c_rt_lib0string_new_alloc((char*)utf8, set, size));
 }
+
+ImmT c_std_lib0int_to_string(INT n) {
+	return c_rt_lib0int_to_string(n);
+}

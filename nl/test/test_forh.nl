@@ -7,6 +7,7 @@ use hash;
 use nassert;
 use array;
 use ptd;
+use c_std_lib;
 
 def test_forh::test() {
 	var test = [];
@@ -34,11 +35,13 @@ def test_forh::test() {
 	hash{'arr'}[i] += i rep var i (100000);
 	var long = {};
 	rep var i (20000) {
-		long{i} = true;
-		nassert::a(long{i}, true);
+		var i_str = c_std_lib::int_to_string(i);
+		long{i_str} = true;
+		nassert::a(long{i_str}, true);
 	}
 	rep var i (20000) {
-		hash::delete(ref long, i);
+		var i_str = c_std_lib::int_to_string(i);
+		hash::delete(ref long, i_str);
 	}
 	nassert::a(hash::size(long), 0);
 

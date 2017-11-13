@@ -215,7 +215,7 @@ def ptd::cast_error_t(){
 	return ptd::arr(ptd::var({
 		path => ptd::var({
 			hash_key => ptd::sim(),
-			array_index => ptd::int(),
+			array_index => ptd::sim(),
 			rec_key => ptd::sim(),
 			variant_value => ptd::sim(),
 			type_ref => ptd::ptd_im(),
@@ -227,7 +227,7 @@ def ptd::cast_error_t(){
 			rec_expected => @ptd::imm_kind_t,
 			sim_expected => @ptd::imm_kind_t,
 			variant_expected => @ptd::imm_kind_t,
-			rec_size => ptd::int(),
+			rec_size => ptd::sim(),
 			no_key => ptd::sim(),
 			unknown_case => ptd::sim(),
 			has_value => ptd::sim(),

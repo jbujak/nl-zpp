@@ -397,6 +397,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok if from is :tct_sim;
 		return mk_err(to, from);
 	} case :tct_int {
+		return :ok if from is :tct_int;
 		return mk_err(to, from);
 	} case :tct_string {
 		die; #TODO

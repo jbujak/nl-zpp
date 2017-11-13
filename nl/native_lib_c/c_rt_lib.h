@@ -154,6 +154,7 @@ ImmT c_rt_lib0string_ord(ImmT sI);
 ImmT c_rt_lib0string_length(ImmT sI);
 ImmT c_rt_lib0concat_new(ImmT left, ImmT right);
 ImmT c_rt_lib0concat_add(ImmT left, ImmT right);
+ImmT c_rt_lib0int_to_string(INT n);
 
 ImmT c_rt_lib0fast_concat(ImmT *left, ImmT right);
 

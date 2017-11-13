@@ -1603,6 +1603,13 @@ ImmT c_rt_lib0gen_imm(ImmT imm){
 	return imm;
 }
 
+ImmT c_rt_lib0int_to_string(INT n) {
+	char str[20];
+	sprintf(str, "%lld", n);
+	ImmT res = c_rt_lib0string_new(str);
+	return res;
+}
+
 void inc_ref(ImmT dI) {
 	checktype(dI);
 	++((NlData*)dI)->refs;

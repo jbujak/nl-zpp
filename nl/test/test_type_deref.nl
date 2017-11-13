@@ -33,8 +33,8 @@ def t2() {
 
 def test_type_deref::t1() {
 	return ptd::rec({
-		x => ptd::sim(),
-		y => ptd::sim(),
+		x => ptd::int(),
+		y => ptd::int(),
 	});
 }
 
@@ -51,7 +51,7 @@ def check(a) {
 	a = a;
 }
 
-def check_ref2(ref t : ptd::sim()) {
+def check_ref2(ref t : ptd::int()) {
 	var w = t;
 	w;
 }
