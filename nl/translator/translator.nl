@@ -74,7 +74,8 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 					args_type => [],
 					commands => [],
 					name => function->name,
-					defines_type => function->defines_type
+					defines_type => function->defines_type,
+					variables => []
 				},
 				loop_label => {break => {label => '', logic => logic}, continue => {label => '', logic => logic}}
 			};
@@ -128,7 +129,7 @@ def print_var_decl(var_decl : @nast::variable_declaration_t, ref state : @transl
 	var reg = new_declaration(var_decl->name, ref state);
 	match (var_decl->tct_type) case :none {
 	} case :type(var tct_type) {
-		print(ref state, :var_decl({name => var_decl->name, type => tct_type}));
+		array::push(ref state->result->variables, {type => tct_type, register => reg});
 	}
 	match (var_decl->value) case :none {
 	} case :value(var value) {
