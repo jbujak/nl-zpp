@@ -452,9 +452,20 @@ def print_function_block(ref state : @generator_c::state_t, func : @nlasm::funct
 	state->fun_args = func->args_type;
 	move_args_to_register(ref state);
 	println(ref state, get_fun_name('', '__const__init', state->mod_name) . '();');
-	for(var i = array::len(func->args_type); i < func->reg_size; ++i) {
-		println(ref state, arg_t() . get_reg(ref state, i) . ' = NULL;');
+	
+	var fun_vars = {};
+	fora var v (func->variables) {
+		hash::set_value(ref fun_vars, v->register, v);
 	}
+	
+	for(var i = array::len(func->args_type); i < func->reg_size; ++i) {
+		if (hash::has_key(fun_vars, i)) {
+			print_declaration(ref state, hash::get_value(fun_vars, i));
+		} else {
+			println(ref state, arg_t() . get_reg(ref state, i) . ' = NULL;');
+		}
+	}
+	
 	fora var cmd (func->commands) {
 		match (cmd->annotation) case :none {
 			print_cmd(ref state, cmd);
@@ -718,12 +729,13 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :clear(var reg) {
 		print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
 	} case :var_decl(var decl) {
-		print_declaration(ref state, decl);
 	}
 	print(ref state, ';' . string::lf());
 }
 
 def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl_t){
+	var target_type_name = arg_t();
+	var default_value = 'NULL';
 	match (decl->type) case :tct_rec(var meta) {
 	} case :tct_own_rec(var meta) {
 		die;
@@ -739,7 +751,8 @@ def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl
 	} case :tct_ref(var val) {
 	} case :tct_sim {
 	} case :tct_int {
-		print(ref state, 'INT ' . decl->name . ';' . string::lf());
+		target_type_name = 'INT ';
+		default_value = '0';
 	} case :tct_string {
 		die;
 	} case :tct_bool {
@@ -748,6 +761,7 @@ def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl
 	} case :tct_void {
 	} case :tct_im {
 	}
+	println(ref state, target_type_name . get_reg(ref state, decl->register) . ' = ' . default_value .';');
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {

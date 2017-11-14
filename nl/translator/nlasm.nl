@@ -32,6 +32,7 @@ def nlasm::function_t() {
 			commands => @nlasm::cmds_t,
 			name => ptd::sim(),
 			defines_type => ptd::var({no => ptd::none(), yes => @tct::meta_type}),
+			variables => ptd::arr(@nlasm::var_decl_t),
 		});
 }
 
@@ -99,8 +100,8 @@ def nlasm::order_t() {
 
 def nlasm::var_decl_t() {
 	return ptd::rec({
-		name => ptd::sim(), 
-		type => @tct::meta_type
+		type => @tct::meta_type,
+		register => @nlasm::reg_t
 	});
 }
 

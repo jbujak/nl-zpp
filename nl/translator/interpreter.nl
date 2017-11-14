@@ -107,7 +107,7 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 	known_exec_func : ptd::hash(@interpreter::known_exec_func_t)) : @interpreter::state_t {
 	return {
 			rstate => :error('nie wywolano funkcji'),
-			func => {annotation => :none, access => :priv, reg_size => 0, args_type => [], commands => [], name => '', defines_type => :no},
+			func => {annotation => :none, access => :priv, reg_size => 0, args_type => [], commands => [], name => '', defines_type => :no, variables => []}, #defines_type and variables fields not used
 			labels => labels,
 			functions => functions,
 			stack => [],

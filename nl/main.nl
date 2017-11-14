@@ -15,8 +15,14 @@ def main::main() {
 		arr => [{field => 1}, {field => 2}],
 	};
 
-	var i : ptd::int() = 1;
+	var i : ptd::int();
+	i = 4;
+	i = i + i;
+	var j : ptd::int();
+	j = 9;
+	j = j * i;
 
 	rec->arr[1]->field = 3;
 	nl::print(rec->arr[1]->field);
+	nl::print(j);
 }
