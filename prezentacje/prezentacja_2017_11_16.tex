@@ -1,0 +1,115 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Cotygodniowa prezentacja
+		
+		16.11.2017
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co miało być zrobione}
+		\begin{itemize}
+		 \item Usunięcie \texttt{ptd::sim()}
+		 \item Integracja intów
+		 \item Implementacja przypisań na intach
+		 \item Implementacja operacji arytmetycznych na intach
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Usunięcie \texttt{ptd::sim()}}
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Jakub Bujak
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Wydzielenie intów z \texttt{ptd::sim()}
+				\item Typowanie stałych liczbowych jako intów
+				\item Poprawki do biblioteki standardowej -- konieczność utworzenia kopii na potrzeby kompilatora
+				\item Przed tą zmianą instukcja \texttt{var a = '1' + 2} była poprawna
+			\end{itemize}
+			\item\textcolor{red}{Nie zrobione}
+			\begin{itemize}
+				\item Całkowite usunięcie \texttt{ptd::sim()} -- niemożliwe zanim nie dodamy stringów
+			\end{itemize}
+
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Implementacja operatorów na intach}
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Michał Borkowski
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Definicja operatorów działających na intach w bibliotece C
+				\item Dodanie generowania nowych operatorów przez przez kompilator
+				\item Dodanie obsługi intów w istniejącym systemie rejestrów
+			\end{itemize}
+			\item\textcolor{red}{Do zrobienia}
+			\begin{itemize}
+				\item Przy bardziej skompilowanych wyrażeniach generowany jest niepoprawny kod C
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Implementacja operatorów na intach -- przykład}
+		NianioLang:\newline
+		\texttt{var i : ptd::int() = 1;}\newline
+		\texttt{i = i + i;}\newline
+		\newline
+		C:\newline
+		\texttt{INT nl1;}\newline
+		\texttt{INT nl2;}\newline
+		\texttt{move(nl2, const(59));}\newline
+		\texttt{copy(nl1,nl2);}\newline
+		\texttt{clear(nl2);}\newline
+		\texttt{move(nl2, int0add(nl1,nl1));}\newline
+		\texttt{copy(nl1, nl2);}\newline
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Implementacja przypisań na intach}
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Marek Puzyna
+			\item\textcolor{green}{Zrobione}
+			\begin{itemize}
+				\item Przypisanie stałej na inta
+				\item \texttt{var a : ptd::int() = 1;}
+			\end{itemize}
+			\item\textcolor{red}{Do zrobienia}
+			\begin{itemize}
+				\item Przypisanie inta na inta
+				\item \texttt{var a : ptd::int() = 1;}\newline
+				\texttt{var b : ptd::int() = a;}
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{indeksowanie tablic intami}
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Marian Dziubiak
+			\item\textcolor{yellow}{W trakcie}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Plany na najbliższy tydzień}
+		\begin{itemize}
+			\item Modyfikacja przydzielania rejestrów, tak żeby uniknąć niepoprawnych typów w kodzie C
+			\item Dokończenie zadań z tego tygodnia
+			\item Dodanie indeksowania tablic intami
+		\end{itemize}
+	\end{frame}
+\end{document}
