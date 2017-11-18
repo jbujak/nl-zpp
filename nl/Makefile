@@ -76,7 +76,7 @@ clean:
 	rm -rf ./test_all ${BINEXEC}
 
 main: main.nl
-	./${OUT} nianio_lib main.nl --deref --strict --o ${CACHEDIR} --c --O2 --profile
+	./${OUT} nianio_lib main.nl --deref --strict --o ${CACHETEST} --c --O2 --profile
 
 main_exe: main.nl
-	gcc ${CFLAGS} -o main main_c.c ${CACHEDIR}/*.c ${NATIVE}/*.c -I${CACHEDIR} -I${NATIVE} ${LINKS}
+	gcc ${CFLAGS} -o main main_c.c ${CACHETEST}/*.c ${NATIVE}/*.c -I${CACHETEST} -I${NATIVE} ${LINKS}
