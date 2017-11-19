@@ -1111,6 +1111,7 @@ ImmT c_rt_lib0array_pop(ImmT *___ref___arrI) {
 	return NULL;
 }
 
+/* TODO remove */
 ImmT c_rt_lib0int_new(INT i) {
 	if(i==0){
 		inc_ref(_int_0);
@@ -1123,6 +1124,11 @@ ImmT c_rt_lib0int_new(INT i) {
 	NlInt *ret = (NlInt *)alloc_mem(sizeof(NlInt));
 	nl_data_init(ret, ___TYPE_INT);
 	ret->i = i;
+	return ret;
+}
+
+INT* c_rt_lib0int_new_zpp(INT i) {
+	INT* ret = (INT *)alloc_mem(sizeof(INT));
 	return ret;
 }
 

@@ -10,19 +10,13 @@ def main::type() {
 }
 
 def main::main() {
-	var rec : @main::type;
-	rec = {
-		arr => [{field => 1}, {field => 2}],
-	};
-
 	var i : ptd::int();
-	i = 4;
-	i = i + i;
+	i = 44;
 	var j : ptd::int();
-	j = 9;
+
+	j = 99;
+	i = i + i;
 	j = j * i;
 
-	rec->arr[1]->field = 3;
-	nl::print(rec->arr[1]->field);
 	nl::print(j);
 }

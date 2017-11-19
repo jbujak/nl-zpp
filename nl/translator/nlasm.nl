@@ -83,8 +83,8 @@ def nlasm::order_t() {
 			ov_as => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim()}),
 			return => @nlasm::return,
 			die => @nlasm::reg_t,
-			move => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t}),
-			load_const => ptd::rec({dest => @nlasm::reg_t, val => ptd::ptd_im()}),
+			move => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => @nlasm::reg_type}),
+			load_const => ptd::rec({dest => @nlasm::reg_t, val => ptd::ptd_im(), type => @nlasm::reg_type}),
 			get_frm_idx => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, idx => @nlasm::reg_t}),
 			set_at_idx => ptd::rec({src => @nlasm::reg_t, idx => @nlasm::reg_t, val => @nlasm::reg_t}),
 			get_val => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, key => ptd::sim()}),
@@ -138,3 +138,11 @@ def nlasm::call_t() {
 		});
 }
 
+def nlasm::reg_type() {
+	return ptd::var({
+		im => ptd::none(),
+		int => ptd::none(),
+		string => ptd::none(),
+		bool => ptd::none(),
+	});
+}

@@ -539,6 +539,13 @@ def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
 		var modules = translate(asts, ref const_state);
 		profile::end('translate to nlasm');
 
+		if (hash::has_key(asts, 'main')) {
+			c_fe_lib::string_to_file('asts.df', dfile::ssave(asts->main));
+		}
+		if (hash::has_key(modules, 'main')) {
+			c_fe_lib::string_to_file('nlasm.df', dfile::ssave(modules->main));
+		}
+
 		profile::begin('save files');
 		generate_modules_to_files(modules, nianio_files, opt_cli->cache_path, ref generator_state, opt_cli->language);
 		profile::end('save files');

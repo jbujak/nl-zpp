@@ -131,11 +131,13 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(ptd::sim())) : 
 			new_cmd = :move({
 				dest => map{move->dest},
 				src => map{move->src},
+				type => move->type,
 			});
 		} case :load_const(var l) {
 			new_cmd = :load_const({
 				dest => map{l->dest},
 				val => l->val,
+				type => l->type,
 			});
 		} case :get_frm_idx(var idx) {
 			new_cmd = :get_frm_idx({

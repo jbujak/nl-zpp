@@ -109,7 +109,7 @@ def push_load_const(ref cmds : ptd::arr(@nlasm::cmd_t), const : @post_processing
 	array::push(ref cmds, {
 			debug => old_cmd->debug,
 			annotation => :const([dest]),
-			cmd => :load_const({dest => dest, val => as_const->value})
+			cmd => :load_const({dest => dest, val => as_const->value, type => :im})
 		});
 }
 

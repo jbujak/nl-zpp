@@ -677,13 +677,40 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print(ref state, 'nl_die_arg(' . get_reg(ref state, dd) . ')');
 	} case :move(var move) {
 		return if move->dest eq '';
-		var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
-		print(ref state, get_fun_lib('copy', arg));
+		match (move->type) case :im {
+			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
+			print(ref state, get_fun_lib('copy', arg));
+		} case :int {
+			var src_ptr = get_typed_pointer_to_reg(ref state, move->src, 'INT');
+			print(ref state, get_reg(ref state, move->dest) . ' = ' . get_lib_fun('int_new_zpp') . '(*' . src_ptr . ')');
+		} case :string {
+			#TODO string
+			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
+			print(ref state, get_fun_lib('copy', arg));
+		} case :bool {
+			#TODO bool
+			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
+			print(ref state, get_fun_lib('copy', arg));
+		}
 	} case :load_const(var const) {
 		return if const->dest eq '';
-		print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
-		generate_imm(ref state, const->val);
-		print(ref state, ')');
+		match (const->type) case :im {
+			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
+			generate_imm(ref state, const->val);
+			print(ref state, ')');
+		} case :int {
+			print(ref state, get_reg(ref state, const->dest) . ' = ' . get_lib_fun('int_new_zpp') . '(' . const->val . ')');
+		} case :string {
+			#TODO string
+			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
+			generate_imm(ref state, const->val);
+			print(ref state, ')');
+		} case :bool {
+			#TODO bool
+			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
+			generate_imm(ref state, const->val);
+			print(ref state, ')');
+		}
 	} case :get_frm_idx(var get) {
 		var r = get_fun_lib('array_get', [get_reg(ref state, get->src), get_reg(ref state, get->idx)]);
 		print(ref state, get_assign(ref state, get->dest, r));
@@ -751,8 +778,6 @@ def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl
 	} case :tct_ref(var val) {
 	} case :tct_sim {
 	} case :tct_int {
-		target_type_name = 'INT ';
-		default_value = '0';
 	} case :tct_string {
 		die;
 	} case :tct_bool {
@@ -826,4 +851,8 @@ def get_func_type_struct(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd
 	ret .= 'struct ' . get_function_name(func, mod_name) . '0struct';
 	ret .= '{}';
 	return ret;
+}
+
+def get_typed_pointer_to_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t, c_type : ptd::sim()) : ptd::sim() {
+	return '((' . c_type . '*)' . get_reg(ref state, reg) . ')';
 }
