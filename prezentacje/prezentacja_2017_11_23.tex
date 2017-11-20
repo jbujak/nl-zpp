@@ -1,0 +1,145 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Cotygodniowa prezentacja
+		
+		16.11.2017
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co miało być zrobione}
+		\begin{itemize}
+			\item Modyfikacja przydzielania rejestrów, tak żeby uniknąć niepoprawnych typów w kodzie C
+			\item Dodanie indeksowania tablic intami
+			\item Dokończenie zadań z zeszłego tygodnia:
+			\begin{itemize}
+				\item Integracja intów
+				\item Implementacja przypisań na intach
+				\item Implementacja operacji arytmetycznych na intach
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Modyfikacja rejestrów -- główny cel tygodnia}
+		\begin{itemize}
+			\item Bardzo duża zmiana
+			\item Spowodowała ponad 400 błędów kompilacji
+			\item A wygląda tak niewinnie:\newline
+			\begin{Verbatim}[commandchars=\\\{\}]
+def nlasm::reg_t() \{
+\color{red}-       return ptd::sim();
+\color{green}+       return ptd::var(\{
+\color{green}+               im => ptd::sim(),
+\color{green}+               int => ptd::sim(),
+\color{green}+               string => ptd::sim(),
+\color{green}+               bool => ptd::sim()
+\color{green}+       \});
+\}
+			\end{Verbatim}
+		\pause
+		\item Tylko co się tutaj stało?
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Rejestry nlasm}
+		\textit{nlasm -- język pośredni podczas kompilacji NianioLanga}
+		\begin{itemize}
+		 \item Formalnie maszyna rejestrowa
+		 \item Mamy do dyspozycji nieskończenie wiele rejestrów i podstawowe operacje na nich
+		 \item Przykładowy program dla \texttt{var x = 11 + 22}:
+		 \begin{Verbatim}
+registers => [0, 1, 2]
+cmds => [load_const(dest => 1, val => 11),
+         load_const(dest => 2, val => 22),
+         bin_op(dest => 0, left => 1,
+                right => 2, op => '+')]
+		 \end{Verbatim}
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}[fragile]
+		\frametitle{Przydzielanie rejestrów}
+		\begin{itemize}
+		\item Każda zmienna otrzymuje własny rejestr
+		\item Kiedy zmienna wychodzi z zasięgu, jej rejestr jest zwalniany\pause
+		\begin{Verbatim}[commandchars=\\\{\}]
+\{                           \color{teal}#reg = 0\pause
+	var a;              \color{teal}#reg = 1, a: 0\pause
+	\{        
+		var b;      \color{teal}#reg = 2, a: 0, b: 1\pause
+	\}                   \color{teal}#reg = 1, a: 0\pause
+	var c;              \color{teal}#reg = 2, a: 0, c: 1\pause
+\}                           \color{teal}#reg = 0\pause
+		\end{Verbatim}
+		\item Problem pojawia się, kiedy zmienne \texttt{b} i \texttt{c} są różnych typów
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Rozwiązanie}
+		\begin{itemize}
+			\item \sout{Wszyskie rejestry \texttt{void*}}
+			\item \textbf{Oddzielna pula rejestrów dla każdego typu}
+			\item Wymaga dodania do rejestru informacji o typie
+			\item Przepisanie mechanizmu przydzielania rejestrów
+			\item Naprawienie wszystkich miejsc w kodzie, gdzie założono że rejestr jest liczbą
+			\item Praca kiepsko się zrównolegla między członków zespołu
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Efekt -- Przed}
+		\begin{Verbatim}
+void* ___nl__0 = NULL;
+void* ___nl__1 = NULL;
+#line 5 // var i = 11;
+c_rt_lib0move(&___nl__1,___get_global_const(57));
+c_rt_lib0copy(&___nl__0, ___nl__1);
+c_rt_lib0clear(&___nl__1);
+
+#line 6 // i = i + i;
+c_rt_lib0move(&___nl__1, c_rt_lib0add(___nl__0, ___nl__0));
+c_rt_lib0copy(&___nl__0, ___nl__1);
+c_rt_lib0clear(&___nl__1);
+c_rt_lib0clear(&___nl__0);
+	\end{Verbatim}
+
+	\end{frame}
+
+	\begin{frame}[fragile]
+		\frametitle{Efekt -- Po}
+		\begin{Verbatim}
+INT ___nl__int__0 = 0;
+INT ___nl__int__1 = 0;
+#line 5 // var i = 11;
+___nl__int__1 = 11;
+___nl__int__0 = ___nl__int__1;
+
+#line 6 // i = i + i
+___nl__int__1 = ___nl__int__0 + ___nl__int__0;
+___nl__int__0 = ___nl__int__1;
+	\end{Verbatim}
+
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Plany na najbliższy tydzień}
+		\begin{itemize}
+		\item Nic
+		\end{itemize}
+	\end{frame}
+\end{document}
