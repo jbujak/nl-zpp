@@ -48,7 +48,7 @@ def evaluate_const_in_function(func : @nlasm::function_t, module : ptd::sim(), m
 def evaluate_const_in_blocks(ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, func : 
 	@nlasm::function_t, module : ptd::sim(), interpreter_state : @interpreter::state_t) {
 	var regs = [];
-	rep var i (func->reg_size) {
+	rep var i (func->reg_size->im) { #TODO non-im
 		array::push(ref regs, :no);
 	}
 	var state = [];
@@ -70,10 +70,10 @@ def check_sub_val(ref const : @post_processing_t::reg_val_const, reg : @post_pro
 
 def evaluate_const(func : @nlasm::function_t, module : ptd::sim(), ins_nr : ptd::sim(), ref const : 
 	@post_processing_t::reg_val_const, ref registers : ptd::arr(@post_processing_t::reg_val_const), state : 
-	@interpreter::state_t, const_dest : ptd::arr(ptd::sim())) : ptd::void() {
+	@interpreter::state_t, const_dest : ptd::arr(@nlasm::reg_t)) : ptd::void() {
 	if (const is :no) {
 		fora var dest (const_dest) {
-			registers[dest] = :no unless dest eq '';
+			registers[dest as :im] = :no unless nlasm::is_empty(dest); #TODO non-im
 		}
 		return;
 	}
@@ -91,25 +91,25 @@ def evaluate_const(func : @nlasm::function_t, module : ptd::sim(), ins_nr : ptd:
 	if (res is :err) {
 		const = :no;
 		fora var dest (const_dest) {
-			registers[dest] = :no unless dest eq '';
+			registers[dest as :im] = :no unless nlasm::is_empty(dest); #TODO non-im
 		}
 	} else {
 		var new_regs = res as :ok;
 		rep var dest_nr (array::len(const_dest)) {
 			var dest = const_dest[dest_nr];
-			registers[dest] = :yes({nr => 10000 * as_yes->nr + dest_nr, value => new_regs[dest]}) unless dest eq '';
+			registers[dest as :im] = :yes({nr => 10000 * as_yes->nr + dest_nr, value => new_regs[dest as :im]}) unless nlasm::is_empty(dest); #TODO non-im
 		}
 	}
 }
 
-def push_load_const(ref cmds : ptd::arr(@nlasm::cmd_t), const : @post_processing_t::reg_val_const, dest : ptd::sim(), 
-	old_cmd : @nlasm::cmd_t) {
+def push_load_const(ref cmds : ptd::arr(@nlasm::cmd_t), const : @post_processing_t::reg_val_const, dest : @nlasm::reg_t, 
+		old_cmd : @nlasm::cmd_t) {
 	die unless const is :yes;
 	var as_const = const as :yes;
 	array::push(ref cmds, {
 			debug => old_cmd->debug,
 			annotation => :const([dest]),
-			cmd => :load_const({dest => dest, val => as_const->value, type => :im})
+			cmd => :load_const({dest => dest, val => as_const->value})
 		});
 }
 
@@ -142,28 +142,28 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 	state[number]->was++;
 	var cmds = block->cmds;
 	rep var i (array::len(cmds)) {
-		var ins_nr = block->from + i;
-		var const : @post_processing_t::reg_val_const = :yes({nr => i + block->from, value => ''});
+		var ins_nr = block->from as :im + i; #TODO non-im
+		var const : @post_processing_t::reg_val_const = :yes({nr => i + block->from as :im, value => ''}); #TODO non-im
 		var cmd = cmds[i];
-		var const_dest : ptd::arr(ptd::sim()) = [];
+		var const_dest : ptd::arr(@nlasm::reg_t) = [];
 		match (cmd->cmd) case :arr_decl(var arr_decl) {
 			fora var one (arr_decl->src) {
-				check_sub_val(ref const, regs[one]);
+				check_sub_val(ref const, regs[one as :im]); #TODO non-im
 			}
 			const_dest = [arr_decl->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :hash_decl(var hash_decl) {
 			fora var one (hash_decl->src) {
-				check_sub_val(ref const, regs[one->val]);
+				check_sub_val(ref const, regs[one->val as :im]); #TODO non-im
 			}
 			const_dest = [hash_decl->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :call(var call) {
 			fora var one (call->args) {
 				match (one) case :val(var val) {
-					check_sub_val(ref const, regs[val]);
+					check_sub_val(ref const, regs[val as :im]); #TODO non-im
 				} case :ref(var ref_) {
-					check_sub_val(ref const, regs[ref_]);
+					check_sub_val(ref const, regs[ref_ as :im]); #TODO non-im
 					array::push(ref const_dest, ref_);
 				}
 			}
@@ -182,20 +182,20 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 			}
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :una_op(var una_op) {
-			check_sub_val(ref const, regs[una_op->src]);
+			check_sub_val(ref const, regs[una_op->src as :im]); #TODO non-im
 			const_dest = [una_op->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :bin_op(var bin_op) {
-			check_sub_val(ref const, regs[bin_op->left]);
-			check_sub_val(ref const, regs[bin_op->right]);
+			check_sub_val(ref const, regs[bin_op->left as :im]); #TODO non-im
+			check_sub_val(ref const, regs[bin_op->right as :im]); #TODO non-im
 			const_dest = [bin_op->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :ov_is(var ov_is) {
-			check_sub_val(ref const, regs[ov_is->src]);
+			check_sub_val(ref const, regs[ov_is->src as :im]); #TODO non-im
 			const_dest = [ov_is->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :ov_as(var ov_as) {
-			check_sub_val(ref const, regs[ov_as->src]);
+			check_sub_val(ref const, regs[ov_as->src as :im]); #TODO non-im
 			const_dest = [ov_as->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :func(var as_func) {
@@ -203,64 +203,64 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 			const = :no;
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :move(var move) {
-			check_sub_val(ref const, regs[move->src]);
+			check_sub_val(ref const, regs[move->src as :im]); #TODO non-im
 			const_dest = [move->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :load_const(var as_const) {
 			const_dest = [as_const->dest];
-			const = :yes({nr => i + block->from, value => as_const->val});
-			regs[as_const->dest] = const unless as_const->dest eq '';
+			const = :yes({nr => i + block->from as :im, value => as_const->val}); #TODO non-im
+			regs[as_const->dest as :im] = const unless nlasm::is_empty(as_const->dest); #TODO non-im
 			cmd->annotation = :const([as_const->dest]);
 		} case :get_frm_idx(var get_frm_idx) {
-			check_sub_val(ref const, regs[get_frm_idx->src]);
-			check_sub_val(ref const, regs[get_frm_idx->idx]);
+			check_sub_val(ref const, regs[get_frm_idx->src as :im]); #TODO non-im
+			check_sub_val(ref const, regs[get_frm_idx->idx as :im]); #TODO non-im
 			const_dest = [get_frm_idx->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :set_at_idx(var set_at_idx) {
-			check_sub_val(ref const, regs[set_at_idx->src]);
-			check_sub_val(ref const, regs[set_at_idx->idx]);
-			check_sub_val(ref const, regs[set_at_idx->val]);
+			check_sub_val(ref const, regs[set_at_idx->src as :im]); #TODO non-im
+			check_sub_val(ref const, regs[set_at_idx->idx as :im]); #TODO non-im
+			check_sub_val(ref const, regs[set_at_idx->val as :im]); #TODO non-im
 			const_dest = [set_at_idx->src];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :get_val(var get_val) {
-			check_sub_val(ref const, regs[get_val->src]);
+			check_sub_val(ref const, regs[get_val->src as :im]); #TODO non-im
 			const_dest = [get_val->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :set_val(var set_val) {
-			check_sub_val(ref const, regs[set_val->src]);
-			check_sub_val(ref const, regs[set_val->val]);
+			check_sub_val(ref const, regs[set_val->src as :im]); #TODO non-im
+			check_sub_val(ref const, regs[set_val->val as :im]); #TODO non-im
 			const_dest = [set_val->src];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :ov_mk(var ov_mk) {
 			if (ov_mk->src is :arg) {
-				check_sub_val(ref const, regs[ov_mk->src as :arg]);
+				check_sub_val(ref const, regs[ov_mk->src as :arg as :im]); #TODO non-im
 			}
 			const_dest = [ov_mk->dest];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
 		} case :return(var return_i) {
 			const = :no;
 			if (return_i is :val) {
-				check_sub_val(ref const, regs[return_i as :val]);
+				check_sub_val(ref const, regs[return_i as :val as :im]); #TODO non-im
 			}
 		} case :die(var die_i) {
 			const = :no;
-			check_sub_val(ref const, regs[die_i]);
+			check_sub_val(ref const, regs[die_i as :im]); #TODO non-im
 		} case :prt_lbl(var label) {
 			const = :no;
 		} case :if_goto(var as_if) {
 			const = :no;
-			check_sub_val(ref const, regs[as_if->src]);
+			check_sub_val(ref const, regs[as_if->src as :im]); #TODO non-im
 		} case :goto(var label) {
 			const = :no;
 		} case :clear(var reg) {
 			const = :no;
-			regs[reg] = :no;
+			regs[reg as :im] = :no; #TODO non-im
 		} case :var_decl(var decl) {
 			die;
 		}
 		if (const is :yes) {
 			fora var dest (const_dest) {
-				push_load_const(ref new_cmds, regs[dest], dest, cmds[i]) unless dest eq '';
+				push_load_const(ref new_cmds, regs[dest as :im], dest, cmds[i]) unless nlasm::is_empty(dest); #TODO non-im
 			}
 		} else {
 			array::push(ref new_cmds, cmd);

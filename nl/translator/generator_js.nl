@@ -95,7 +95,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val eq dest;
+			return ret as :val as :im eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -180,7 +180,7 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim(), ref 
 		result .= get_namespace_name() . '.check_null(___nl__' . i . ');';
 	}
 	result .= string::lf();
-	for(var i = array::len(function->args_type); i < function->reg_size; ++i) {
+	for(var i = array::len(function->args_type); i < function->reg_size->im; ++i) {
 		result .= 'var ___nl__' . i . ' = null;' . string::lf();
 	}
 	result .= 'var label = null; while (1) { switch (label) { default: ' . string::lf();
@@ -248,7 +248,7 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }
 
-def print_arr(arr) : ptd::sim() {
+def print_arr(arr : ptd::arr(@nlasm::reg_t)) : ptd::sim() {
 	var result = imm_call('arr') . '([';
 	result .= print_register(reg) . ',' fora var reg (arr);
 	return result . '])';
@@ -268,8 +268,8 @@ def print_bin_op(bin_op : @nlasm::bin_op, ref call_counter : ptd::sim()) : ptd::
 	} elsif (bin_op->op eq 'eq' || bin_op->op eq 'ne') {
 		return result . print_int_call_sim('c_rt_lib', bin_op->op, [bin_op->left, bin_op->right]);
 	} elsif (bin_op->op eq '.') {
-		if (false && bin_op->left eq bin_op->dest) {
-			return print_internal_call('c_rt_lib', 'concat_add', [:ref(ptd::ensure(ptd::sim(), bin_op->left)), :str(print_register(bin_op->right))], ref call_counter). ';';
+		if (false && bin_op->left as :im eq bin_op->dest as :im) {
+			return print_internal_call('c_rt_lib', 'concat_add', [:ref(bin_op->left), :str(print_register(bin_op->right))], ref call_counter). ';';
 		} else {
 			return result . print_internal_call('c_rt_lib', 'concat', [
 				:str(print_register(bin_op->left)), :str(print_register(bin_op->right))], ref call_counter) . ';';
@@ -292,17 +292,18 @@ def print_call(cmodule : ptd::sim(), cname : ptd::sim(), cargs,
 		result .= ',' unless i == 0;
 		++i;
 		match (arg) case :ref(var reg) {
-		reg = ptd::ensure(ptd::sim(), reg);
+			reg = ptd::ensure(@nlasm::reg_t, reg);
 			process_ref_reg(ref pre, ref result, ref after, reg, i, call_counter);
 		} case :val(var reg) {
-		result .= print_register(reg);
+			reg = ptd::ensure(@nlasm::reg_t, reg);
+			result .= print_register(reg);
 		}
 	}
 	++call_counter;
 	return pre . result . ');' . after;
 }
 
-def process_ref_reg(ref pre : ptd::sim(), ref result : ptd::sim(), ref after : ptd::sim(), reg : ptd::sim(), i : ptd::sim(), call_counter) {
+def process_ref_reg(ref pre : ptd::sim(), ref result : ptd::sim(), ref after : ptd::sim(), reg : @nlasm::reg_t, i : ptd::sim(), call_counter) {
 	var reg_name = 'call_' . call_counter . '_' . i;
 	pre .= 'var ' . reg_name . ' = new ' . imm_call('ref') . '(' . print_register(reg) . ');';
 	result .= reg_name;
@@ -310,7 +311,7 @@ def process_ref_reg(ref pre : ptd::sim(), ref result : ptd::sim(), ref after : p
 	after .= reg_name . ' = null;';
 }
 
-def print_internal_call(module_name : ptd::sim(), fun_name : ptd::sim(), args : ptd::arr(ptd::var({ref => ptd::sim(), str => ptd::sim(), reg => @nlasm::reg_t})), 
+def print_internal_call(module_name : ptd::sim(), fun_name : ptd::sim(), args : ptd::arr(ptd::var({ref => @nlasm::reg_t, str => ptd::sim(), reg => @nlasm::reg_t})), 
 		ref call_counter : ptd::sim()) : ptd::sim() {	
 	var i = 0;
 	var pre = '';
@@ -386,7 +387,7 @@ def print_goto(goto : ptd::sim()) : ptd::sim() {
 	return 'label = ' . goto . '; continue;';
 }
 
-def print_hash(harr) : ptd::sim() {
+def print_hash(harr : ptd::arr(ptd::rec({key => ptd::sim(), val => @nlasm::reg_t}))) : ptd::sim() {
 	var result = imm_call('hash') . '({';
 	result .= escape_string(map->key) . ':' . print_register(map->val) . ',' fora var map (harr);
 	return result . '})';
@@ -402,12 +403,12 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref consts, ref call_counter : ptd::sim
 	}
 }
 
-def print_register(register) : ptd::sim() {
-	return '___nl__' . register;
+def print_register(register : @nlasm::reg_t) : ptd::sim() {
+	return '___nl__' . (register as :im);
 }
 
-def print_register_to_assign(register) : ptd::sim() {
-	return '' if register eq '';
+def print_register_to_assign(register : @nlasm::reg_t) : ptd::sim() {
+	return '' if register as :im eq '';
 	return print_register(register) . ' = ';
 }
 

@@ -24,9 +24,9 @@ def interpreter::stack_element_t() {
 			module_name => ptd::sim(),
 			next => ptd::sim(),
 			vars => ptd::arr(ptd::ptd_im()),
-			ret => ptd::sim(),
-			code_vars => ptd::hash(ptd::sim()),
-			ref_arguments => ptd::hash(ptd::sim())
+			ret => @nlasm::reg_t,
+			code_vars => ptd::hash(@nlasm::reg_t),
+			ref_arguments => ptd::hash(@nlasm::reg_t)
 		});
 }
 
@@ -107,7 +107,19 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 	known_exec_func : ptd::hash(@interpreter::known_exec_func_t)) : @interpreter::state_t {
 	return {
 			rstate => :error('nie wywolano funkcji'),
-			func => {annotation => :none, access => :priv, reg_size => 0, args_type => [], commands => [], name => '', defines_type => :no, variables => []}, #defines_type and variables fields not used
+			func => {
+				annotation => :none,
+				access => :priv,
+				reg_size => {
+					im => 0,
+					int => 0,
+				},
+				args_type => [],
+				commands => [],
+				name => '',
+				defines_type => :no,
+				variables => []
+			}, #defines_type and variables fields not used
 			labels => labels,
 			functions => functions,
 			stack => [],
@@ -116,7 +128,7 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 				module_name => '',
 				next => 0,
 				vars => [],
-				ret => '',
+				ret => :im(''),
 				code_vars => {},
 				ref_arguments => {}
 			},
@@ -194,7 +206,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 		var arg = func->args_type[idx];
 		match (arg) case :val {
 		} case :ref {
-			hash::set_value(ref new_ref_arguments, idx, idx);
+			hash::set_value(ref new_ref_arguments, idx, :im(idx));
 		}
 		new_vars[idx] = func_args[idx];
 	}
@@ -205,7 +217,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 			module_name => module_name,
 			next => 0,
 			vars => new_vars,
-			ret => '',
+			ret => :im(''),
 			code_vars => {},
 			ref_arguments => new_ref_arguments
 		};
@@ -260,7 +272,7 @@ def interpreter::evaluate_const(state : @interpreter::state_t, func : @nlasm::fu
 			module_name => module,
 			next => ins_nr,
 			vars => regs,
-			ret => '',
+			ret => :im(''),
 			code_vars => {},
 			ref_arguments => {}
 		};
@@ -367,7 +379,7 @@ def get_variables(element : @interpreter::stack_element_t) : ptd::arr(ptd::rec({
 		})) {
 	var result = [];
 	forh var variable, var reg (element->code_vars) {
-		var val = element->vars[reg];
+		var val = element->vars[reg as :im]; #TODO non-im
 		array::push(ref result, {name => variable, value => val});
 	}
 	return result;
@@ -414,15 +426,15 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 	}
 	match (command_cmd) case :arr_decl(var arr_decl) {
 		var arr = [];
-		array::push(ref arr, state->top->vars[reg]) fora var reg (arr_decl->src);
-		state->top->vars[arr_decl->dest] = arr unless arr_decl->dest eq '';
+		array::push(ref arr, state->top->vars[reg as :im]) fora var reg (arr_decl->src); #TODO non-im
+		state->top->vars[arr_decl->dest as :im] = arr unless nlasm::is_empty(arr_decl->dest); #TODO non-im
 	} case :hash_decl(var hash_decl) {
 		var h = {};
 		fora var map (hash_decl->src) {
-			var val = state->top->vars[map->val];
+			var val = state->top->vars[map->val as :im]; #TODO non-im
 			hash::set_value(ref h, map->key, val);
 		}
-		state->top->vars[hash_decl->dest] = h unless hash_decl->dest eq '';
+		state->top->vars[hash_decl->dest as :im] = h unless nlasm::is_empty(hash_decl->dest); #TODO non-im
 	} case :call(var call) {
 		var key;
 		if (call->mod eq '') {
@@ -440,19 +452,19 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 			handle_unknown_call(call, ref state);
 		}
 	} case :func(var func) {
-		state->top->vars[func->dest] = {module => func->module, name => func->name} unless func->dest eq '';
+		state->top->vars[func->dest as :im] = {module => func->module, name => func->name} unless nlasm::is_empty(func->dest); #TODO non-im
 	} case :una_op(var una_op) {
-		var arg = state->top->vars[una_op->src];
+		var arg = state->top->vars[una_op->src as :im]; #TODO non-im
 		if ((una_op->op eq '+' || una_op->op eq '-') && (!string_utils::is_number(arg))) {
 				state->rstate = :error('not an unary number');
 				--state->top->next;
 		} else {
 			var result = execute_una_op(arg, una_op->op);
-			state->top->vars[una_op->dest] = result unless una_op->dest eq '';
+			state->top->vars[una_op->dest as :im] = result unless nlasm::is_empty(una_op->dest); #TODO non-im
 		}
 	} case :bin_op(var bin_op) {
-		var left = state->top->vars[bin_op->left];
-		var right = state->top->vars[bin_op->right];
+		var left = state->top->vars[bin_op->left as :im]; #TODO non-im
+		var right = state->top->vars[bin_op->right as :im]; #TODO non-im
 		var op = bin_op->op;
 		if ((op eq '+' || op eq '-' || op eq '*' || op eq '/' || op eq '%' || op eq '<' || op eq '<=' || op eq '==' || op eq '!=' || op eq '>=' || op eq '>') && 
 			((!string_utils::is_number(left) || !string_utils::is_number(right)))) {
@@ -460,57 +472,57 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 				--state->top->next;
 		} else {
 			var result = execute_bin_op(left, right, bin_op->op);
-			state->top->vars[bin_op->dest] = result unless bin_op->dest eq '';
+			state->top->vars[bin_op->dest as :im] = result unless nlasm::is_empty(bin_op->dest); #TODO non-im
 		}
 	} case :ov_is(var ov_is) {
-		state->top->vars[ov_is->dest] = ov::is(state->top->vars[ov_is->src], ov_is->type) unless ov_is->dest eq '';
+		state->top->vars[ov_is->dest as :im] = ov::is(state->top->vars[ov_is->src as :im], ov_is->type) unless nlasm::is_empty(ov_is->dest); #TODO non-im
 	} case :ov_as(var ov_as) {
-		state->top->vars[ov_as->dest] = ov::as(state->top->vars[ov_as->src], ov_as->type) unless ov_as->dest eq '';
+		state->top->vars[ov_as->dest as :im] = ov::as(state->top->vars[ov_as->src as :im], ov_as->type) unless nlasm::is_empty(ov_as->dest); #TODO non-im
 	} case :return(var return_i) {
 		handle_return(return_i, ref state);
 	} case :die(var die_i) {
-		state->rstate = :error('die' . dfile::ssave(state->top->vars[die_i]));
+		state->rstate = :error('die' . dfile::ssave(state->top->vars[die_i as :im])); #TODO non-im
 		--state->top->next;
 	} case :move(var move) {
-		state->top->vars[move->dest] = state->top->vars[move->src] unless move->dest eq '';
+		state->top->vars[move->dest as :im] = state->top->vars[move->src as :im] unless nlasm::is_empty(move->dest); #TODO non-im
 	} case :load_const(var const) {
-		state->top->vars[const->dest] = const->val unless const->dest eq '';
+		state->top->vars[const->dest as :im] = const->val unless nlasm::is_empty(const->dest); #TODO non-im
 	} case :get_frm_idx(var get_frm_idx) {
-		var arr = state->top->vars[get_frm_idx->src];
-		var idx = state->top->vars[get_frm_idx->idx];
-		state->top->vars[get_frm_idx->dest] = arr[idx] unless get_frm_idx->dest eq '';
+		var arr = state->top->vars[get_frm_idx->src as :im]; #TODO non-im
+		var idx = state->top->vars[get_frm_idx->idx as :im]; #TODO non-im
+		state->top->vars[get_frm_idx->dest as :im] = arr[idx] unless nlasm::is_empty(get_frm_idx->dest); #TODO non-im
 	} case :set_at_idx(var set_at_idx) {
-		var arr = state->top->vars[set_at_idx->src];
-		var idx = state->top->vars[set_at_idx->idx];
-		var val = state->top->vars[set_at_idx->val];
+		var arr = state->top->vars[set_at_idx->src as :im]; #TODO non-im
+		var idx = state->top->vars[set_at_idx->idx as :im]; #TODO non-im
+		var val = state->top->vars[set_at_idx->val as :im]; #TODO non-im
 		arr[idx] = val;
-		state->top->vars[set_at_idx->src] = arr;
+		state->top->vars[set_at_idx->src as :im] = arr; #TODO non-im
 	} case :get_val(var get_val) {
-		var val = hash::get_value(state->top->vars[get_val->src], get_val->key);
-		state->top->vars[get_val->dest] = val unless get_val->dest eq '';
+		var val = hash::get_value(state->top->vars[get_val->src as :im], get_val->key); #TODO non-im
+		state->top->vars[get_val->dest as :im] = val unless nlasm::is_empty(get_val->dest); #TODO non-im
 	} case :set_val(var set_val) {
-		var hsh = state->top->vars[set_val->src];
-		var val = state->top->vars[set_val->val];
+		var hsh = state->top->vars[set_val->src as :im]; #TODO non-im
+		var val = state->top->vars[set_val->val as :im]; #TODO non-im
 		hash::set_value(ref hsh, set_val->key, val);
-		state->top->vars[set_val->src] = hsh;
+		state->top->vars[set_val->src as :im] = hsh; #TODO non-im
 	} case :ov_mk(var ov_mk) {
 		var val;
 		match (ov_mk->src) case :arg(var arg) {
-			val = ov::mk_val(ov_mk->name, state->top->vars[arg]);
+			val = ov::mk_val(ov_mk->name, state->top->vars[arg as :im]); #TODO non-im
 		} case :emp {
 			val = ov::mk(ov_mk->name);
 		}
-		state->top->vars[ov_mk->dest] = val unless ov_mk->dest eq '';
+		state->top->vars[ov_mk->dest as :im] = val unless nlasm::is_empty(ov_mk->dest); #TODO non-im
 	} case :prt_lbl(var prt_lbl) {
 	} case :if_goto(var if_goto) {
-		goto(ref state, if_goto->dest) if state->top->vars[if_goto->src];
+		goto(ref state, if_goto->dest) if state->top->vars[if_goto->src as :im]; #TODO non-im
 	} case :goto(var goto) {
 		goto(ref state, goto);
 	} case :clear(var reg) {
-		if (reg ne '') {
-			state->top->vars[reg] = interpreter::get_none_variant();
+		if (!nlasm::is_empty(reg)) {
+			state->top->vars[reg as :im] = interpreter::get_none_variant(); #TODO non-im
 			forh var variable, var reg2 (state->top->code_vars) {
-				if (reg == reg2) {
+				if (reg as :im == reg2 as :im) { #TODO non-im
 					hash::delete(ref state->top->code_vars, variable);
 					break;
 				}
@@ -529,7 +541,7 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :call(var call) {
 	} case :func(var func) {
 	} case :una_op(var una_op) {
-		var arg = state->top->vars[una_op->src];
+		var arg = state->top->vars[una_op->src as :im]; #TODO non-im
 		if (una_op->op eq '!') {
 			return false unless nl::is_variant(arg);
 			return false unless (arg is :TRUE || arg is :FALSE);
@@ -537,15 +549,15 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 			return false unless nl::is_sim(arg);
 		}
 	} case :bin_op(var bin_op) {
-		var left = state->top->vars[bin_op->left];
-		var right = state->top->vars[bin_op->right];
+		var left = state->top->vars[bin_op->left as :im]; #TODO non-im
+		var right = state->top->vars[bin_op->right as :im]; #TODO non-im
 		return false unless nl::is_sim(left);
 		return false unless nl::is_sim(right);
 	} case :ov_is(var ov_is) {
-		return false unless nl::is_variant(state->top->vars[ov_is->src]);
+		return false unless nl::is_variant(state->top->vars[ov_is->src as :im]); #TODO non-im
 		return false unless nl::is_sim(ov_is->type);
 	} case :ov_as(var ov_as) {
-		var arg = state->top->vars[ov_as->src];
+		var arg = state->top->vars[ov_as->src as :im]; #TODO non-im
 		return false unless nl::is_variant(arg);
 		return false unless nl::is_sim(ov_as->type);
 		return false unless ov::is(arg, ov_as->type);
@@ -554,32 +566,32 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :move(var move) {
 	} case :load_const(var const) {
 	} case :get_frm_idx(var get_frm_idx) {
-		var arr = state->top->vars[get_frm_idx->src];
+		var arr = state->top->vars[get_frm_idx->src as :im]; #TODO non-im
 		return false unless nl::is_array(arr);
-		var idx = state->top->vars[get_frm_idx->idx];
+		var idx = state->top->vars[get_frm_idx->idx as :im]; #TODO non-im
 		return false unless nl::is_sim(idx);
 		return false unless idx < array::len(arr);
 		return false unless idx >= 0;
 	} case :set_at_idx(var set_at_idx) {
-		var arr = state->top->vars[set_at_idx->src];
+		var arr = state->top->vars[set_at_idx->src as :im]; #TODO non-im
 		return false unless nl::is_array(arr);
-		var idx = state->top->vars[set_at_idx->idx];
+		var idx = state->top->vars[set_at_idx->idx as :im]; #TODO non-im
 		return false unless nl::is_sim(idx);
 		return false unless idx < array::len(arr);
 	} case :get_val(var get_val) {
-		var hash = state->top->vars[get_val->src];
+		var hash = state->top->vars[get_val->src as :im]; #TODO non-im
 		return false unless nl::is_hash(hash);
 		return false unless nl::is_sim(get_val->key);
 		return false unless hash::has_key(hash, get_val->key);
 	} case :set_val(var set_val) {
-		var hash = state->top->vars[set_val->src];
+		var hash = state->top->vars[set_val->src as :im]; #TODO non-im
 		return false unless nl::is_hash(hash);
 		return false unless nl::is_sim(set_val->key);
 	} case :ov_mk(var ov_mk) {
 		return false unless nl::is_sim(ov_mk->name);
 	} case :prt_lbl(var prt_lbl) {
 	} case :if_goto(var if_goto) {
-		var arg = state->top->vars[if_goto->src];
+		var arg = state->top->vars[if_goto->src as :im]; #TODO non-im
 		return false unless nl::is_variant(arg);
 		return false unless (arg is :TRUE || arg is :FALSE);
 	} case :goto(var goto) {
@@ -633,9 +645,9 @@ def interpreter::finish_callback(function : ptd::sim(), module : ptd::sim(), val
 	match (value) case :ok(var as_ok) {
 		++state->top->next;
 		match (as_ok->return) case :yes(var val) {
-			state->top->vars[call->dest] = val unless call->dest eq '';
+			state->top->vars[call->dest as :im] = val unless nlasm::is_empty(call->dest); #TODO non-im
 		} case :no {
-			if(call->dest ne ''){
+			if(!nlasm::is_empty(call->dest)){
 				state->rstate = :error('no value return from function: ' . module . '::' . function);
 				return;
 			}
@@ -644,7 +656,7 @@ def interpreter::finish_callback(function : ptd::sim(), module : ptd::sim(), val
 		rep var i (array::len(call->args)) {
 			match (call->args[i]) case :val(var reg) {
 			} case :ref(var reg) {
-				state->top->vars[reg] = as_ok->args[i];
+				state->top->vars[reg as :im] = as_ok->args[i]; #TODO non-im
 			}
 		}
 		state->rstate = :running;
@@ -672,9 +684,9 @@ def handle_normal_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @int
 		var arg = call->args[idx];
 		var value;
 		match (arg) case :val(var reg) {
-			value = state->top->vars[reg];
+			value = state->top->vars[reg as :im]; #TODO non-im
 		} case :ref(var reg) {
-			value = state->top->vars[reg];
+			value = state->top->vars[reg as :im]; #TODO non-im
 			hash::set_value(ref new_ref_arguments, arg_num, reg);
 		}
 		new_vars[arg_num] = value;
@@ -699,9 +711,9 @@ def handle_unknown_call(call : @nlasm::call_t, ref state : @interpreter::state_t
 	fora var arg (call->args) {
 		var val;
 		match (arg) case :val(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		} case :ref(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		}
 		array::push(ref args, val);
 	}
@@ -715,9 +727,9 @@ def handle_extern_call(call : @nlasm::call_t, ref state : @interpreter::state_t)
 	fora var arg (call->args) {
 		var val;
 		match (arg) case :val(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		} case :ref(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		}
 		array::push(ref args, val);
 	}
@@ -732,16 +744,16 @@ def handle_extern_call(call : @nlasm::call_t, ref state : @interpreter::state_t)
 		}
 	}
 	match (func->type) case :sequential {
-		if (call->dest eq '') {
+		if (nlasm::is_empty(call->dest)) {
 			func::exec_ref(func->func, ref args);
 		} else {
-			state->top->vars[call->dest] = func::exec_ref(func->func, ref args);
+			state->top->vars[call->dest as :im] = func::exec_ref(func->func, ref args); #TODO non-im
 		}
 		rep var arg_num (array::len(call->args)) {
 			var arg = call->args[arg_num];
 			match (arg) case :val(var reg) {
 			} case :ref(var reg) {
-				state->top->vars[reg] = args[arg_num];
+				state->top->vars[reg as :im] = args[arg_num]; #TODO non-im
 			}
 		}
 	} case :callback {
@@ -1029,9 +1041,9 @@ def handle_compiler_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @i
 	fora var arg (call->args) {
 		var val;
 		match (arg) case :val(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		} case :ref(var reg) {
-			val = state->top->vars[reg];
+			val = state->top->vars[reg as :im]; #TODO non-im
 		}
 		array::push(ref args, val);
 	}
@@ -1059,10 +1071,10 @@ def handle_compiler_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @i
 			var arg = call->args[arg_num];
 			match (arg) case :val(var reg) {
 			} case :ref(var reg) {
-				state->top->vars[reg] = args[arg_num];
+				state->top->vars[reg as :im] = args[arg_num]; #TODO non-im
 			}
 		}
-		state->top->vars[call->dest] = ret_val unless call->dest eq '';
+		state->top->vars[call->dest as :im] = ret_val unless nlasm::is_empty(call->dest); #TODO non-im
 	}
 }
 
@@ -1070,7 +1082,7 @@ def handle_return(return_i : ptd::var({val => @nlasm::reg_t, emp => ptd::none()}
 		ptd::void() {
 	var retval = interpreter::get_none_variant();
 	match (return_i) case :val(var val) {
-		retval = state->top->vars[val];
+		retval = state->top->vars[val as :im]; #TODO non-im
 	} case :emp {
 	}
 	profile_inter::end(ref state->profile, state->top->func_key);
@@ -1096,9 +1108,9 @@ def handle_return(return_i : ptd::var({val => @nlasm::reg_t, emp => ptd::none()}
 		state->func = hash::get_value(state->functions, state->top->func_key);
 		forh var arg, var reg (old_ref_arguments) {
 			var value = old_vars[arg];
-			state->top->vars[reg] = value;
+			state->top->vars[reg as :im] = value; #TODO non-im
 		}
-		state->top->vars[old_ret] = retval unless old_ret eq '';
+		state->top->vars[old_ret as :im] = retval unless nlasm::is_empty(old_ret); #TODO non-im
 	}
 	state->instruction_nr = -1;
 	++state->top->next;

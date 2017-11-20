@@ -11,8 +11,8 @@ use nlasm;
 def flow_graph::block_t() {
 	return ptd::rec({
 			cmds => ptd::arr(@nlasm::cmd_t),
-			from => ptd::sim(),
-			to => ptd::sim(),
+			from => @nlasm::reg_t,
+			to => @nlasm::reg_t,
 			reg_uses => ptd::arr(@flow_graph::reg_use_t),
 			last_modif => ptd::hash(ptd::var({write => ptd::sim(), clear => ptd::none()})),
 			prev => ptd::arr(ptd::sim()),
@@ -22,7 +22,7 @@ def flow_graph::block_t() {
 
 def flow_graph::reg_use_t() {
 	return ptd::rec({
-			reg => ptd::sim(),
+			reg => @nlasm::reg_t,
 			cmd_nr => ptd::sim(),
 			type => ptd::var({write => ptd::none(), read => ptd::none(), clear => ptd::none()})
 		});
@@ -113,32 +113,32 @@ def set_prev_block(ref map : ptd::hash(@flow_graph::block_t), name : ptd::sim())
 }
 
 def mk_block(nr : ptd::sim()) : @flow_graph::block_t {
-	return {cmds => [], prev => [], from => nr, to => -1, reg_uses => [], last_modif => {}, next => []};
+	return {cmds => [], prev => [], from => :im(nr), to => :im(-1), reg_uses => [], last_modif => {}, next => []};
 }
 
 def add_block(ref blocks : @flow_graph::state_t, ref block : @flow_graph::block_t, nr : ptd::sim(), last_label : 
 		ptd::sim()) {
-	block->to = nr;
+	block->to = :im(nr);
 	hash::set_value(ref blocks->map, last_label, block);
 	array::push(ref blocks->tab, last_label);
 	block = mk_block(nr + 1);
 }
 
 def read_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg eq '');
+	return if (reg as :im eq ''); #TODO non-im
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :read});
 }
 
 def write_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg eq '');
+	return if (reg as :im eq ''); #TODO non-im
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :write});
-	hash::set_value(ref block->last_modif, reg, :write(cmd_nr));
+	hash::set_value(ref block->last_modif, reg as :im, :write(cmd_nr)); #TODO non-im
 }
 
 def clear_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg eq '');
+	return if (reg as :im eq ''); #TODO non-im
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :clear});
-	hash::set_value(ref block->last_modif, reg, :clear);
+	hash::set_value(ref block->last_modif, reg as :im, :clear); #TODO non-im
 }
 
 def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::arg_type_t)) : @flow_graph::state_t {
@@ -216,7 +216,7 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			read_reg(ref block, return_i as :val, nr) if return_i is :val;
 			rep var arg_nr (array::len(args_types)) {
 				if (args_types[arg_nr] is :ref) {
-					read_reg(ref block, arg_nr, nr);
+					read_reg(ref block, :im(arg_nr), nr);
 				}
 			}
 			add_block(ref blocks, ref block, nr, last_label);

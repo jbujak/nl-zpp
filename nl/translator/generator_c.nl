@@ -125,8 +125,12 @@ def println_to_header(ref state : @generator_c::state_t, s : ptd::sim()) {
 	state->header .= s . string::lf();
 }
 
-def arg_t() {
+def im_t() {
 	return 'ImmT ';
+}
+
+def int_t() {
+	return 'INT ';
 }
 
 def println(ref state : @generator_c::state_t, s : ptd::sim()) {
@@ -134,20 +138,26 @@ def println(ref state : @generator_c::state_t, s : ptd::sim()) {
 	state->ret .= string::lf();
 }
 
-def get_reg(ref state : @generator_c::state_t, nlasm : @nlasm::reg_t) : ptd::sim() {
+def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
-	if (array::len(args) > nlasm && args[nlasm] is :ref) {
-		return '*___ref___' . nlasm;
+	if (reg is :im) { #TODO non-im args
+		var reg_no = reg as :im;
+		if (array::len(args) > reg_no && args[reg_no] is :ref) {
+			return '*___ref___' . reg_suffix(reg);
+		}
 	}
-	return '___nl__' . nlasm;
+	return '___nl__' . reg_suffix(reg);
 }
 
-def get_reg_ref(ref state : @generator_c::state_t, nlasm : @nlasm::reg_t) : ptd::sim() {
+def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
-	if (array::len(args) > nlasm && args[nlasm] is :ref) {
-		return '___ref___' . nlasm;
+	if (reg is :im) { #TODO non-im args
+		var reg_no = reg as :im;
+		if (array::len(args) > reg_no && args[reg_no] is :ref) {
+			return '___ref___' . reg_suffix(reg);
+		}
 	}
-	return '&___nl__' . nlasm;
+	return '&___nl__' . reg_suffix(reg);
 }
 
 def get_string(s : ptd::sim()) : ptd::sim() {
@@ -199,9 +209,9 @@ def generate_global_const_files(ref state : @generator_c::state_t) : @generator_
 	var sim = state->global_const->arr;
 	var const_len = array::len(sim);
 	println_to_header(ref state, 'void ___global_const_init();');
-	println_to_header(ref state, arg_t() . ' ___get_global_const(int __nr);');
+	println_to_header(ref state, im_t() . ' ___get_global_const(int __nr);');
 	println(ref state, '
-		'static ' . arg_t() . ' ___global_const__ = NULL;
+		'static ' . im_t() . ' ___global_const__ = NULL;
 		'static int ___global_const_init__ = 1;
 		'static int ___global_const_offset;');
 	println(ref state, 'void ___global_const_init(){
@@ -214,12 +224,12 @@ def generate_global_const_files(ref state : @generator_c::state_t) : @generator_
 		println(ref state, create_sim_to_memory(sim[i]->key, '___global_const__ + ___global_const_offset * ' . i) . ';');
 	}
 	println(ref state, '
-		'' . get_lib_fun('register_global_const') . '((' . arg_t() . ')___global_const__,(' . arg_t() . 
+		'' . get_lib_fun('register_global_const') . '((' . im_t() . ')___global_const__,(' . im_t() . 
 		')___global_const__ + ' . const_len . ' * ___global_const_offset);
 		'}}');
-	println(ref state, arg_t() . '___get_global_const(int __nr) {
-		'' . arg_t() . 'ret = NULL;
-		'' . get_fun_lib('copy', ['&ret', '(' . arg_t() . ')___global_const__ + ___global_const_offset * __nr']) . ';
+	println(ref state, im_t() . '___get_global_const(int __nr) {
+		'' . im_t() . 'ret = NULL;
+		'' . get_fun_lib('copy', ['&ret', '(' . im_t() . ')___global_const__ + ___global_const_offset * __nr']) . ';
 		'return ret;
 		'}');
 	return {c => state->ret, h => state->header};
@@ -250,14 +260,14 @@ def get_function_name(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::s
 def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
 	var fun_header = '';
 	var fun_name = get_function_name(func, mod_name);
-	fun_header .= arg_t() . fun_name . '(';
+	fun_header .= im_t() . fun_name . '(';
 	var reg_mem = 0;
-	fora var arg_type (func->args_type) {
+	fora var im_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
-		match (arg_type) case :val {
-			fun_header .= arg_t() . '___nl__' . reg_mem;
+		match (im_type) case :val {
+			fun_header .= im_t() . '___nl__' . reg_mem;
 		} case :ref {
-			fun_header .= arg_t() . '* ___ref___' . reg_mem;
+			fun_header .= im_t() . '* ___ref___' . reg_mem;
 		}
 		reg_mem++;
 	}
@@ -333,7 +343,7 @@ def get_const_singleton(ref state : @generator_c::state_t, sim : ptd::sim()) : p
 }
 
 def get_func_ptr_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
-	return arg_t() . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
+	return im_t() . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
 }
 
 def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
@@ -350,10 +360,10 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	var ret = state->ret;
 	state->ret = '';
 	println(ref state, '#line 1 "' . state->mod_name . '.nl"' . string::lf());
-	println(ref state, 'static ' . arg_t() . '*__const__f = NULL;');
+	println(ref state, 'static ' . im_t() . '*__const__f = NULL;');
 	println(ref state, 'void ' . get_fun_name('', '__const__init', state->mod_name) . '();');
-	println(ref state, arg_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr);');
-	println(ref state, arg_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr);' . string::lf());
+	println(ref state, im_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr);');
+	println(ref state, im_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr);' . string::lf());
 	fora var func (asm->functions) {
 		var fun_header = get_function_header(func, state->mod_name);
 		match (func->access) case :pub {
@@ -387,10 +397,10 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 		}
 		if (is_singleton_use_function(func)) {
 			var fun_name = get_function_name(func, state->mod_name);
-			println(ref state, arg_t() . fun_name . '(){');
+			println(ref state, im_t() . fun_name . '(){');
 			println(ref state, get_fun_name('', '__const__init', state->mod_name) . '();');
 			println(ref state, 'return ' . get_const_singleton(ref state, fun_name) . ';}');
-			print(ref state, arg_t() . fun_name . '0cal()');
+			print(ref state, im_t() . fun_name . '0cal()');
 		} else {
 			print(ref state, get_function_header(func, state->mod_name));
 		}
@@ -411,7 +421,7 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 	var dyna_len = state->const->dynamic_nr;
 	var const_len = sim_len + sing_len + dyna_len;
 	println(ref state, '
-		'static ' . arg_t() . '___const__[' . (1 + const_len) . '];
+		'static ' . im_t() . '___const__[' . (1 + const_len) . '];
 		'static int ___const_init__ = 1;');
 	println(ref state, 'void ' . get_fun_name('', '__const__init', state->mod_name) . '(){
 		'if(___const_init__) {
@@ -425,12 +435,12 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 		'for(int i=' . sim_len . ';i<' . const_len . ';++i) ___const__[i] = NULL;
 		'' . get_lib_fun('register_const') . '(___const__, ' . const_len . ');
 		'}}');
-	println(ref state, arg_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr) {
-		'' . arg_t() . 'ret = NULL;
+	println(ref state, im_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr) {
+		'' . im_t() . 'ret = NULL;
 		'' . get_fun_lib('copy', ['&ret', '___const__[__nr]']) . ';
 		'return ret;
 		'}');
-	println(ref state, arg_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr) {
+	println(ref state, im_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr) {
 		'if(___const__[__nr+' . sim_len . ']==NULL) {
 		'switch(__nr){');
 	rep var i (array::len(singleton)) {
@@ -441,7 +451,7 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 	println(ref state, 'default:
 		'	nl_die();
 		'}}
-		'' . arg_t() . 'ret = NULL;
+		'' . im_t() . 'ret = NULL;
 		'' . get_fun_lib('copy', ['&ret', '___const__[__nr+' . sim_len . ']']) . ';
 		'return ret;
 		'}');
@@ -453,17 +463,12 @@ def print_function_block(ref state : @generator_c::state_t, func : @nlasm::funct
 	move_args_to_register(ref state);
 	println(ref state, get_fun_name('', '__const__init', state->mod_name) . '();');
 	
-	var fun_vars = {};
-	fora var v (func->variables) {
-		hash::set_value(ref fun_vars, v->register, v);
+	for(var i = array::len(func->args_type); i < func->reg_size->im; ++i) {
+		print_declaration(ref state, :im(i));
 	}
 	
-	for(var i = array::len(func->args_type); i < func->reg_size; ++i) {
-		if (hash::has_key(fun_vars, i)) {
-			print_declaration(ref state, hash::get_value(fun_vars, i));
-		} else {
-			println(ref state, arg_t() . get_reg(ref state, i) . ' = NULL;');
-		}
+	for(var i = array::len(func->args_type); i < func->reg_size->int; ++i) {
+		print_declaration(ref state, :int(i));
 	}
 	
 	fora var cmd (func->commands) {
@@ -521,7 +526,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless (ret is :val);
 			return true if is_math;
 			return false unless was_singleton;
-			return ret as :val eq dest;
+			return ret as :val as :im eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -534,7 +539,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 def move_args_to_register(ref state : @generator_c::state_t) {
 	rep var arg_id (array::len(state->fun_args)) {
 		match (state->fun_args[arg_id]) case :val {
-			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, arg_id)]));
+			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, :im(arg_id))]));
 			println(ref state, ';');
 		} case :ref {
 		}
@@ -654,7 +659,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print(ref state, get_assign(ref state, una_op->dest, r));
 	} case :bin_op(var bin_op) {
 		var op = hash::get_value(get_bin_ops(), bin_op->op);
-		if (bin_op->dest eq bin_op->left && hash::has_key(get_bin_ops_mod(), bin_op->op)) {
+		if (nlasm::eq_reg(bin_op->dest, bin_op->left) && hash::has_key(get_bin_ops_mod(), bin_op->op)) {
 			op = hash::get_value(get_bin_ops_mod(), bin_op->op);
 		}
 		var r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
@@ -676,36 +681,21 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :die(var dd) {
 		print(ref state, 'nl_die_arg(' . get_reg(ref state, dd) . ')');
 	} case :move(var move) {
-		return if move->dest eq '';
-		match (move->type) case :im {
-			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
-			print(ref state, get_fun_lib('copy', arg));
-		} case :int {
-			var src_ptr = get_typed_pointer_to_reg(ref state, move->src, 'INT');
-			print(ref state, get_reg(ref state, move->dest) . ' = ' . get_lib_fun('int_new_zpp') . '(*' . src_ptr . ')');
-		} case :string {
-			#TODO string
-			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
-			print(ref state, get_fun_lib('copy', arg));
-		} case :bool {
-			#TODO bool
-			var arg = [get_reg_ref(ref state, move->dest), get_reg(ref state, move->src)];
-			print(ref state, get_fun_lib('copy', arg));
-		}
+		print_move(ref state, move->src, move->dest);
 	} case :load_const(var const) {
-		return if const->dest eq '';
-		match (const->type) case :im {
+		return if nlasm::is_empty(const->dest);
+		match (const->dest) case :im(var reg_no) {
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
-		} case :int {
-			print(ref state, get_reg(ref state, const->dest) . ' = ' . get_lib_fun('int_new_zpp') . '(' . const->val . ')');
-		} case :string {
+		} case :int(var reg_no) {
+			print(ref state, get_reg(ref state, const->dest) . ' = ' . const->val);
+		} case :string(var reg_no) {
 			#TODO string
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
-		} case :bool {
+		} case :bool(var reg_no) {
 			#TODO bool
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
@@ -754,46 +744,72 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :goto(var goto) {
 		print(ref state, 'goto label_' . goto);
 	} case :clear(var reg) {
-		print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
+		match (reg) case :im(var reg_no) {
+			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
+		} case :int(var reg_no) {
+			print(ref state, '//clear ' . get_reg(ref state, reg));
+		} case :bool(var reg_no) {
+			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO bool
+		} case :string(var reg_no) {
+			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO string
+		}
 	} case :var_decl(var decl) {
 	}
 	print(ref state, ';' . string::lf());
 }
 
-def print_declaration(ref state : @generator_c::state_t, decl : @nlasm::var_decl_t){
-	var target_type_name = arg_t();
-	var default_value = 'NULL';
-	match (decl->type) case :tct_rec(var meta) {
-	} case :tct_own_rec(var meta) {
-		die;
-	} case :tct_hash(var meta) {
-	} case :tct_own_hash(var meta) {
-		die;
-	} case :tct_arr(var meta) {
-	} case :tct_own_arr(var meta) {
-		die;
-	} case :tct_var(var param) {
-	} case :tct_own_var(var param) {
-		die;
-	} case :tct_ref(var val) {
-	} case :tct_sim {
-	} case :tct_int {
-	} case :tct_string {
-		die;
-	} case :tct_bool {
-		die;
-	} case :tct_empty {
-	} case :tct_void {
-	} case :tct_im {
+def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
+	var target_type_name;
+	var default_value;
+	match (reg) case :im(var reg_no) {
+		target_type_name = im_t();
+		default_value = 'NULL';
+	} case :int(var reg_no) {
+		target_type_name = int_t();
+		default_value = '0';
+	} case :bool(var reg_no) {
+		target_type_name = im_t(); #TODO bool
+		default_value = 'false';
+	} case :string(var reg_no) {
+		target_type_name = im_t(); #TODO string
+		default_value = '''''';
 	}
-	println(ref state, target_type_name . get_reg(ref state, decl->register) . ' = ' . default_value .';');
+	println(ref state, target_type_name . get_reg(ref state, reg) . ' = ' . default_value .';');
+}
+
+def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
+	return if nlasm::is_empty(dest);
+	match (dest) case :im(var reg_no) {
+		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		print(ref state, get_fun_lib('copy', arg));
+	} case :int(var reg_no) {
+		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
+	} case :string(var reg_no) {
+		#TODO string
+		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		print(ref state, get_fun_lib('copy', arg));
+	} case :bool(var reg_no) {
+		#TODO bool
+		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		print(ref state, get_fun_lib('copy', arg));
+	}
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
-	if (reg eq '') {
+	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
 	} else {
-		return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
+		match (reg) case :im(var reg_no) {
+			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
+		} case :int(var reg_no) {
+			return get_reg(ref state, reg) . ' = ' . right;
+		} case :string(var reg_no) {
+			#TODO string
+			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
+		} case :bool(var reg_no) {
+			#TODO bool
+			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
+		}
 	}
 }
 
@@ -853,6 +869,14 @@ def get_func_type_struct(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd
 	return ret;
 }
 
-def get_typed_pointer_to_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t, c_type : ptd::sim()) : ptd::sim() {
-	return '((' . c_type . '*)' . get_reg(ref state, reg) . ')';
+def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
+	match (reg) case :im(var reg_no) {
+		return 'im__' . reg_no;
+	} case :int(var reg_no) {
+		return 'int__' . reg_no;
+	} case :bool(var reg_no) {
+		return 'bool__' . reg_no;
+	} case :string(var reg_no) {
+		return 'string__' . reg_no;
+	}
 }

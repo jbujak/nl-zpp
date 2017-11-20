@@ -6,6 +6,7 @@
 use ptd;
 use nast;
 use tct;
+use boolean_t;
 
 def nlasm::result_t() {
 	return ptd::rec({
@@ -27,7 +28,7 @@ def nlasm::function_t() {
 	return ptd::rec({
 			annotation => ptd::var({none => ptd::none(), math => ptd::none(), state => ptd::none()}),
 			access => @nlasm::access_t,
-			reg_size => ptd::sim(),
+			reg_size => @nlasm::register_counters,
 			args_type => @nlasm::args_type,
 			commands => @nlasm::cmds_t,
 			name => ptd::sim(),
@@ -45,11 +46,16 @@ def nlasm::args_type() {
 }
 
 def nlasm::reg_t() {
-	return ptd::sim();
+	return ptd::var({
+		im => ptd::sim(),
+		int => ptd::sim(),
+		string => ptd::sim(),
+		bool => ptd::sim()
+	});
 }
 
 def nlasm::debug_t() {
-	return ptd::rec({nast_debug => @nast::debug_t, instruction_nr => ptd::sim(), declarations => ptd::hash(ptd::sim())});
+	return ptd::rec({nast_debug => @nast::debug_t, instruction_nr => ptd::sim(), declarations => ptd::hash(@nlasm::reg_t)});
 }
 
 def nlasm::empty_debug() : @nlasm::debug_t {
@@ -65,7 +71,7 @@ def nlasm::cmd_t() {
 }
 
 def nlasm::annotation_t() {
-	return ptd::var({none => ptd::none(), const => ptd::arr(ptd::sim())});
+	return ptd::var({none => ptd::none(), const => ptd::arr(@nlasm::reg_t)});
 }
 
 def nlasm::order_t() {
@@ -83,8 +89,8 @@ def nlasm::order_t() {
 			ov_as => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim()}),
 			return => @nlasm::return,
 			die => @nlasm::reg_t,
-			move => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => @nlasm::reg_type}),
-			load_const => ptd::rec({dest => @nlasm::reg_t, val => ptd::ptd_im(), type => @nlasm::reg_type}),
+			move => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t}),
+			load_const => ptd::rec({dest => @nlasm::reg_t, val => ptd::ptd_im()}),
 			get_frm_idx => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, idx => @nlasm::reg_t}),
 			set_at_idx => ptd::rec({src => @nlasm::reg_t, idx => @nlasm::reg_t, val => @nlasm::reg_t}),
 			get_val => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, key => ptd::sim()}),
@@ -146,3 +152,35 @@ def nlasm::reg_type() {
 		bool => ptd::none(),
 	});
 }
+
+def nlasm::register_counters() {
+	return ptd::rec({
+		im => ptd::sim(),
+		int => ptd::sim(),
+	});
+}
+
+def nlasm::is_empty(reg : @nlasm::reg_t) {
+	match (reg) case :im(var reg_no) {
+		return reg_no eq '';
+	} case :int(var reg_no) {
+		return reg_no eq '';
+	} case :bool(var reg_no) {
+		return reg_no eq '';
+	} case :string(var reg_no) {
+		return reg_no eq '';
+	}
+}
+
+def nlasm::eq_reg(reg1 : @nlasm::reg_t, reg2 : @nlasm::reg_t) : @boolean_t::type {
+	match (reg1) case :im(var reg_no) {
+		return reg2 is :im && reg_no == reg2 as :im;
+	} case :int(var reg_no) {
+		return reg2 is :int && reg_no == reg2 as :int;
+	} case :bool(var reg_no) {
+		return reg2 is :bool && reg_no == reg2 as :bool;
+	} case :string(var reg_no) {
+		return reg2 is :string && reg_no == reg2 as :string;
+	}
+}
+

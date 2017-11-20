@@ -73,7 +73,7 @@ def print_function(function : @nlasm::function_t, ref state : @generator_pm::sta
 	print(ref state, function->name . '(');
 	print_args_dollar(array::len(function->args_type), ref state);
 	print(ref state, ') {' . string::lf());
-	rep var reg_id (function->reg_size) {
+	rep var reg_id (function->reg_size->im) {
 		print(ref state, 'my $memory_' . reg_id . ';');
 	}
 	move_args_to_register(ref state);
@@ -100,7 +100,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val eq dest;
+			return ret as :val as :im eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -361,13 +361,13 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref state : @generator_pm::state_t) : p
 	}
 }
 
-def print_register(register : ptd::sim(), ref state : @generator_pm::state_t) : ptd::void() {
-	return if (register eq '');
-	print(ref state, '$memory_' . register . '');
+def print_register(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
+	return if (register as :im eq '');
+	print(ref state, '$memory_' . register as :im. '');
 }
 
-def print_register_to_assign(register : ptd::sim(), ref state : @generator_pm::state_t) : ptd::void() {
+def print_register_to_assign(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
 	print_register(register, ref state);
-	print(ref state, ' = ') if (register ne '');
+	print(ref state, ' = ') if (register as :im ne '');
 }
 

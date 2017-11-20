@@ -627,7 +627,7 @@ def translate(asts : ptd::hash(@nast::module_t), ref post_proc : @post_processin
 		var nla_asm = translator::translate(ast);
 		hash::set_value(ref nlasm, module, nla_asm);
 	}
-	post_processing::find(ref post_proc, ref nlasm);
+	#post_processing::find(ref post_proc, ref nlasm); #TODO fix
 	return nlasm;
 }
 

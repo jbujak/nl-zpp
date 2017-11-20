@@ -91,7 +91,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val eq dest;
+			return ret as :val as :im eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -136,7 +136,7 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim()) : pt
 		}
 	}
 	result .= string::lf();
-	for(var i = array::len(function->args_type); i < function->reg_size; ++i) {
+	for(var i = array::len(function->args_type); i < function->reg_size->im; ++i) {
 		result .= 'ImmRef ___nl__' . i . ' = new ImmRef(null);' . string::lf();
 	}
 	result .= 'Map<ImmString, Imm> ' . print_hash_name() . ';' . string::lf();
