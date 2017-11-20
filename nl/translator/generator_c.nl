@@ -265,9 +265,9 @@ def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd:
 	fora var im_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
 		match (im_type) case :val {
-			fun_header .= im_t() . '___nl__' . reg_mem;
+			fun_header .= im_t() . '___nl__' . reg_suffix(:im(reg_mem));
 		} case :ref {
-			fun_header .= im_t() . '* ___ref___' . reg_mem;
+			fun_header .= im_t() . '* ___ref___' . reg_suffix(:im(reg_mem));
 		}
 		reg_mem++;
 	}
