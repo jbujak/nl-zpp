@@ -658,12 +658,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		var r = get_fun_lib(op, [get_reg(ref state, una_op->src)]);
 		print(ref state, get_assign(ref state, una_op->dest, r));
 	} case :bin_op(var bin_op) {
-		var op = hash::get_value(get_bin_ops(), bin_op->op);
-		if (nlasm::eq_reg(bin_op->dest, bin_op->left) && hash::has_key(get_bin_ops_mod(), bin_op->op)) {
-			op = hash::get_value(get_bin_ops_mod(), bin_op->op);
-		}
-		var r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
-		print(ref state, get_assign(ref state, bin_op->dest, r));
+		print_bin_op(ref state, bin_op);
 	} case :ov_is(var ov_is) {
 		var r = get_fun_lib('priv_is', [get_reg(ref state, ov_is->src), get_const_sim(ref state, ov_is->type)]);
 		print(ref state, get_assign(ref state, ov_is->dest, r));
@@ -795,6 +790,26 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 	}
 }
 
+def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : ptd::void() {
+	var op = hash::get_value(get_bin_ops(), bin_op->op);
+	if (nlasm::eq_reg(bin_op->dest, bin_op->left) && hash::has_key(get_bin_ops_mod(), bin_op->op)) {
+		op = hash::get_value(get_bin_ops_mod(), bin_op->op);
+	}
+	var r;
+	match (bin_op->dest) case :im(var reg_no) {
+		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
+	} case :int(var reg_no) {
+		r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, bin_op->op);
+	} case :string(var reg_no) {
+		#TODO string
+		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
+	} case :bool(var reg_no) {
+		#TODO bool
+		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
+	}
+	print(ref state, get_assign(ref state, bin_op->dest, r));
+}
+
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
@@ -867,6 +882,10 @@ def get_func_type_struct(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd
 	ret .= 'struct ' . get_function_name(func, mod_name) . '0struct';
 	ret .= '{}';
 	return ret;
+}
+
+def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
+	return get_reg(ref state, left) . ' ' . op . ' ' . get_reg(ref state, right);
 }
 
 def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
