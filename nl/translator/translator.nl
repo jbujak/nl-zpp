@@ -101,11 +101,11 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 def print_fun_def(function : @nast::fun_def_t, ref state : @translator::state_t) {
 	fora var fun_arg (function->args) {
 		match (fun_arg->mod) case :none {
-			new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
-			array::push(ref state->result->args_type, :val);
+			var rim = new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
+			array::push(ref state->result->args_type, :val(rim));
 		} case :ref {
-			new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
-			array::push(ref state->result->args_type, :ref);
+			var rref = new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
+			array::push(ref state->result->args_type, :ref(rref));
 		}
 	}
 	print_cmd(function->cmd, ref state);

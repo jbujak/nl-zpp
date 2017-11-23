@@ -21,7 +21,7 @@ def nlasm::access_t() {
 }
 
 def nlasm::arg_type_t() {
-	return ptd::var({val => ptd::none(), ref => ptd::none()});
+	return ptd::var({val => @nlasm::reg_t, ref => @nlasm::reg_t});
 }
 
 def nlasm::function_t() {

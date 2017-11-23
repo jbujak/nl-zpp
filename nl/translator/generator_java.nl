@@ -129,9 +129,9 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim()) : pt
 	}
 	result .= ') throws Exception {' . string::lf();
 	rep var i (array::len(function->args_type)) {
-		match (function->args_type[i]) case :val {
+		match (function->args_type[i]) case :val(var ri) {
 			result .= 'ImmRef ___nl__' . i . ' = new ImmRef(___arg__' . i . print_getter() . ');';
-		} case :ref {
+		} case :ref(var rr) {
 			result .= 'ImmRef ___nl__' . i . ' = ___arg__' . i . ';';
 		}
 	}
