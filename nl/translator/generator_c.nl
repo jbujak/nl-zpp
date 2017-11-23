@@ -69,7 +69,7 @@ def generator_c::const_dict() {
 }
 
 def generator_c::fun_args_t() {
-	return ptd::arr(ptd::var({val => ptd::none(), ref => ptd::none()}));
+	return ptd::arr(@nlasm::arg_type_t);
 }
 
 def generator_c::const_t() {
@@ -264,10 +264,10 @@ def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd:
 	var reg_mem = 0;
 	fora var im_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
-		match (im_type) case :val {
-			fun_header .= im_t() . '___nl__' . reg_suffix({type => :im, reg_no => reg_mem});
-		} case :ref {
-			fun_header .= im_t() . '* ___ref___' . reg_suffix({type => :im, reg_no => reg_mem});
+		match (im_type) case :val(var rim) {
+			fun_header .= im_t() . '___nl__' . reg_suffix(rim);
+		} case :ref(var rref) {
+			fun_header .= im_t() . '* ___ref___' . reg_suffix(rref);
 		}
 		reg_mem++;
 	}
@@ -387,9 +387,9 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 			print(ref state, 'return ' . fun_name . '(');
 			rep var arg_id (number) {
 				print(ref state, ', ') if (arg_id > 0);
-				match (func->args_type[arg_id]) case :val {
+				match (func->args_type[arg_id]) case :val(var ri) {
 					print(ref state, '_tab[' . arg_id . ']');
-				} case :ref {
+				} case :ref(var rr) {
 					print(ref state, '&_tab[' . arg_id . ']');
 				}
 			}
@@ -534,20 +534,20 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 
 def move_args_to_register(ref state : @generator_c::state_t) {
 	rep var arg_id (array::len(state->fun_args)) {
-		match (state->fun_args[arg_id]) case :val {
-			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, {type => :im, reg_no => arg_id})]));
+		match (state->fun_args[arg_id]) case :val(var val_reg) {
+			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, val_reg)]));
 			println(ref state, ';');
-		} case :ref {
+		} case :ref(var rr) {
 		}
 	}
 }
 
 def move_register_to_ref_args(ref state : @generator_c::state_t) {
-	rep var arg_id (array::len(state->fun_args)) {
-		match (state->fun_args[arg_id]) case :val {
-		} case :ref {
-		}
-	}
+#	rep var arg_id (array::len(state->fun_args)) {
+#		match (state->fun_args[arg_id]) case :val {
+#		} case :ref {
+#		}
+#	}
 }
 
 def get_fun_lib(fun_name : ptd::sim(), args : ptd::arr(ptd::sim())) : ptd::sim() {

@@ -140,10 +140,10 @@ def print_function_or_singleton(function : @nlasm::function_t, module_name : ptd
 			call .= ', ' unless i == 0;
 			call .= 'arg' . i;
 			ret .= 'var arg' . i . ' = ';
-			match (arg) case :ref {
+			match (arg) case :ref(var rr) {
 				ret .= 'new ' . imm_call('ref') . '(' . 'arr.value.get_index_int(' . i . '));';
 				after .= 'arr.value = arr.value.set_index_int(' . i . ', arg' . i . '.value);' . string::lf();
-			} case :val {
+			} case :val(var ri) {
 				ret .= 'arr.value.get_index_int('. i . ');';
 			}
 			ret .= string::lf();
@@ -172,9 +172,9 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim(), ref 
 	}
 	result .= ') {' . string::lf();
 	rep var i (array::len(function->args_type)) {
-		match (function->args_type[i]) case :val {
+		match (function->args_type[i]) case :val(var ri) {
 			result .= 'var ___nl__' . i . ' = ___arg__' . i . ';';
-		} case :ref {
+		} case :ref(var rr) {
 			result .= 'var ___nl__' . i . ' = ___arg__' . i . '.value;';
 		}
 		result .= get_namespace_name() . '.check_null(___nl__' . i . ');';
@@ -417,9 +417,9 @@ def print_return(return_i : @nlasm::return, fun_args : @nlasm::args_type) : ptd:
 	var result = '';
 	var no = 0;
 	fora var arg (fun_args) {
-		match (arg) case :ref {
+		match (arg) case :ref(var rr) {
 			result .= '___arg__' . no . '.value = ' . '___nl__' . no . ';';
-		} case :val {
+		} case :val(var ri) {
 		}
 		++no;
 	}
