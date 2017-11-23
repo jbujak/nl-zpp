@@ -13,7 +13,7 @@ use ptd;
 use string_utils;
 
 def generator_pm::fun_args_t() {
-	return ptd::arr(ptd::var({val => ptd::none(), ref => ptd::none()}));
+	return ptd::arr(@nlasm::arg_type_t);
 }
 
 def generator_pm::state_t() {
@@ -73,8 +73,12 @@ def print_function(function : @nlasm::function_t, ref state : @generator_pm::sta
 	print(ref state, function->name . '(');
 	print_args_dollar(array::len(function->args_type), ref state);
 	print(ref state, ') {' . string::lf());
-	rep var reg_id (function->reg_size) {
-		print(ref state, 'my $memory_' . reg_id . ';');
+	fora var reg (function->registers) {
+		if (reg->type is :im) {
+			print(ref state, 'my $memory_' . reg->reg_no . ';');
+		} else {
+			die;
+		}
 	}
 	move_args_to_register(ref state);
 	print(ref state, string::lf());
@@ -100,7 +104,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val eq dest;
+			return ret as :val->reg_no eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -131,8 +135,8 @@ def print_args_dollar(args_size : ptd::sim(), ref state : @generator_pm::state_t
 def move_args_to_register(ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (array::len(state->fun_args)) {
 		print(ref state, '$memory_' . arg_id . ' = $_[' . arg_id . '];');
-		match (state->fun_args[arg_id]) case :val {
-		} case :ref {
+		match (state->fun_args[arg_id]) case :val(var ri) {
+		} case :ref(var rr) {
 			print(ref state, 'Scalar::Util::weaken($_[' . arg_id . ']) if ref($_[' . arg_id . ']);');
 		}
 	}
@@ -140,8 +144,8 @@ def move_args_to_register(ref state : @generator_pm::state_t) : ptd::void() {
 
 def move_register_to_ref_args(ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (array::len(state->fun_args)) {
-		match (state->fun_args[arg_id]) case :val {
-		} case :ref {
+		match (state->fun_args[arg_id]) case :val(var ri) {
+		} case :ref(var rr) {
 			print(ref state, '$_[' . arg_id . '] = $memory_' . arg_id . ';');
 		}
 	}
@@ -361,13 +365,13 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref state : @generator_pm::state_t) : p
 	}
 }
 
-def print_register(register : ptd::sim(), ref state : @generator_pm::state_t) : ptd::void() {
-	return if (register eq '');
-	print(ref state, '$memory_' . register . '');
+def print_register(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
+	return if (register->reg_no eq '');
+	print(ref state, '$memory_' . register->reg_no. '');
 }
 
-def print_register_to_assign(register : ptd::sim(), ref state : @generator_pm::state_t) : ptd::void() {
+def print_register_to_assign(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
 	print_register(register, ref state);
-	print(ref state, ' = ') if (register ne '');
+	print(ref state, ' = ') if (register->reg_no ne '');
 }
 

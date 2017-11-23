@@ -6,6 +6,7 @@
 use ptd;
 use nast;
 use tct;
+use boolean_t;
 
 def nlasm::result_t() {
 	return ptd::rec({
@@ -20,14 +21,14 @@ def nlasm::access_t() {
 }
 
 def nlasm::arg_type_t() {
-	return ptd::var({val => ptd::none(), ref => ptd::none()});
+	return ptd::var({val => @nlasm::reg_t, ref => @nlasm::reg_t});
 }
 
 def nlasm::function_t() {
 	return ptd::rec({
 			annotation => ptd::var({none => ptd::none(), math => ptd::none(), state => ptd::none()}),
 			access => @nlasm::access_t,
-			reg_size => ptd::sim(),
+			registers => ptd::arr(@nlasm::reg_t),
 			args_type => @nlasm::args_type,
 			commands => @nlasm::cmds_t,
 			name => ptd::sim(),
@@ -45,11 +46,14 @@ def nlasm::args_type() {
 }
 
 def nlasm::reg_t() {
-	return ptd::sim();
+	return ptd::rec({
+		type => @nlasm::reg_type,
+		reg_no => ptd::sim(),
+	});
 }
 
 def nlasm::debug_t() {
-	return ptd::rec({nast_debug => @nast::debug_t, instruction_nr => ptd::sim(), declarations => ptd::hash(ptd::sim())});
+	return ptd::rec({nast_debug => @nast::debug_t, instruction_nr => ptd::sim(), declarations => ptd::hash(@nlasm::reg_t)});
 }
 
 def nlasm::empty_debug() : @nlasm::debug_t {
@@ -65,7 +69,7 @@ def nlasm::cmd_t() {
 }
 
 def nlasm::annotation_t() {
-	return ptd::var({none => ptd::none(), const => ptd::arr(ptd::sim())});
+	return ptd::var({none => ptd::none(), const => ptd::arr(@nlasm::reg_t)});
 }
 
 def nlasm::order_t() {
@@ -136,5 +140,39 @@ def nlasm::call_t() {
 			fun_name => ptd::sim(),
 			args => ptd::arr(ptd::var({val => @nlasm::reg_t, ref => @nlasm::reg_t}))
 		});
+}
+
+def nlasm::reg_type() {
+	return ptd::var({
+		im => ptd::none(),
+		int => ptd::none(),
+		string => ptd::none(),
+		bool => ptd::none(),
+	});
+}
+
+def nlasm::is_empty(reg : @nlasm::reg_t) {
+	match (reg->type) case :im {
+		return reg->reg_no eq '';
+	} case :int {
+		return reg->reg_no eq '';
+	} case :bool {
+		return reg->reg_no eq '';
+	} case :string {
+		return reg->reg_no eq '';
+	}
+}
+
+def nlasm::eq_reg(reg1 : @nlasm::reg_t, reg2 : @nlasm::reg_t) : @boolean_t::type {
+	#TODO remove when register numbers are unique
+	match (reg1->type) case :im {
+		return reg2->type is :im && reg1->reg_no == reg2->reg_no;
+	} case :int {
+		return reg2->type is :int && reg2->reg_no == reg2->reg_no;
+	} case :bool {
+		return reg2->type is :bool && reg2->reg_no == reg2->reg_no;
+	} case :string {
+		return reg2->type is :string && reg2->reg_no == reg2->reg_no;
+	}
 }
 
