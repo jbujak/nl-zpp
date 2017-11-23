@@ -23,10 +23,10 @@ def unnecessary_commands::graph_t() {
 
 def unnecessary_commands::delete_unnecessary_commands(ref func : @nlasm::function_t) {
 	var blocks = flow_graph::make_blocks(func->commands, func->args_type);
-	delete_unnecessary_commands_in_blocks(ref blocks, func->reg_size->im);
+	delete_unnecessary_commands_in_blocks(ref blocks, array::len(func->registers));
 	func->commands = flow_graph::combine_blocks(blocks);
 	blocks = flow_graph::make_blocks(func->commands, func->args_type);
-	delete_unnecessary_clears_in_blocks(ref blocks, func->reg_size->im, array::len(func->args_type));
+	delete_unnecessary_clears_in_blocks(ref blocks, array::len(func->registers), array::len(func->args_type));
 	func->commands = flow_graph::combine_blocks(blocks);
 }
 
@@ -64,7 +64,7 @@ def delete_unnecessary_commands_in_blocks(ref blocks : @flow_graph::blocks_t, re
 	fora var block (blocks) {
 		rep var cmd_nr (array::len(block->cmds)) {
 			if (has_side_effects(block->cmds[cmd_nr])) {
-				visit_node(graph, block->from as :im + cmd_nr, ref visited_nodes); #TODO non-im
+				visit_node(graph, block->from->reg_no + cmd_nr, ref visited_nodes); #TODO non-im
 			}
 		}
 	}
@@ -73,7 +73,7 @@ def delete_unnecessary_commands_in_blocks(ref blocks : @flow_graph::blocks_t, re
 		rep var cmd_nr (array::len(blocks[block_nr]->cmds)) {
 			var cmd = blocks[block_nr]->cmds[cmd_nr];
 			var delete = false;
-			var nr = blocks[block_nr]->from as :im + cmd_nr; #TODO non-im
+			var nr = blocks[block_nr]->from->reg_no + cmd_nr; #TODO non-im
 			if (!(cmd->cmd is :clear)) {
 				if (!hash::has_key(visited_nodes, nr)) {
 					delete = true;
@@ -99,10 +99,10 @@ def delete_unnecessary_clears_in_blocks(ref blocks : @flow_graph::blocks_t, reg_
 		rep var cmd_nr (array::len(blocks[block_nr]->cmds)) {
 			var cmd = blocks[block_nr]->cmds[cmd_nr];
 			var delete = false;
-			var nr = blocks[block_nr]->from as :im + cmd_nr; #TODO non-im
+			var nr = blocks[block_nr]->from->reg_no + cmd_nr; #TODO non-im
 			if (cmd->cmd is :clear) {
 				var reg = cmd->cmd as :clear;
-				if (array::len(graph[nr]) == 0 && reg as :im >= args_num) { #TODO non-im
+				if (array::len(graph[nr]) == 0 && reg->reg_no >= args_num) { #TODO non-im
 					delete = true;
 				}
 			}
@@ -123,17 +123,17 @@ def build_commands_graph(state : @unnecessary_commands::state_t, blocks : @flow_
 		var block_state = state[block_nr];
 		fora var reg_use (block->reg_uses) {
 			match (reg_use->type) case :write {
-				block_state[reg_use->reg as :im] = {}; #TODO non-im
-				hash::set_value(ref block_state[reg_use->reg as :im], reg_use->cmd_nr, ''); #TODO non-im
+				block_state[reg_use->reg->reg_no] = {}; #TODO non-im
+				hash::set_value(ref block_state[reg_use->reg->reg_no], reg_use->cmd_nr, ''); #TODO non-im
 			} case :read {
-				forh var cmd_nr_in_reg, var none (block_state[reg_use->reg as :im]) { #TODO non-im
+				forh var cmd_nr_in_reg, var none (block_state[reg_use->reg->reg_no]) { #TODO non-im
 					array::push(ref graph[reg_use->cmd_nr], cmd_nr_in_reg);
 				}
 			} case :clear {
-				forh var cmd_nr_in_reg, var none (block_state[reg_use->reg as :im]) { #TODO non-im
+				forh var cmd_nr_in_reg, var none (block_state[reg_use->reg->reg_no]) { #TODO non-im
 					array::push(ref graph[reg_use->cmd_nr], cmd_nr_in_reg);
 				}
-				block_state[reg_use->reg as :im] = {}; #TODO non-im
+				block_state[reg_use->reg->reg_no] = {}; #TODO non-im
 			}
 		}
 	}

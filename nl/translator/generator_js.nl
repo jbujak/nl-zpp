@@ -95,7 +95,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val as :im eq dest;
+			return ret as :val->reg_no eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -180,8 +180,9 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim(), ref 
 		result .= get_namespace_name() . '.check_null(___nl__' . i . ');';
 	}
 	result .= string::lf();
-	for(var i = array::len(function->args_type); i < function->reg_size->im; ++i) {
-		result .= 'var ___nl__' . i . ' = null;' . string::lf();
+	for(var i = array::len(function->args_type); i < array::len(function->registers); ++i) {
+		die if !function->registers[i]->type is :im;
+		result .= 'var ___nl__' . function->registers[i]->reg_no . ' = null;' . string::lf();
 	}
 	result .= 'var label = null; while (1) { switch (label) { default: ' . string::lf();
 	var call_counter = 0;
@@ -268,7 +269,7 @@ def print_bin_op(bin_op : @nlasm::bin_op, ref call_counter : ptd::sim()) : ptd::
 	} elsif (bin_op->op eq 'eq' || bin_op->op eq 'ne') {
 		return result . print_int_call_sim('c_rt_lib', bin_op->op, [bin_op->left, bin_op->right]);
 	} elsif (bin_op->op eq '.') {
-		if (false && bin_op->left as :im eq bin_op->dest as :im) {
+		if (false && bin_op->left->reg_no eq bin_op->dest->reg_no) {
 			return print_internal_call('c_rt_lib', 'concat_add', [:ref(bin_op->left), :str(print_register(bin_op->right))], ref call_counter). ';';
 		} else {
 			return result . print_internal_call('c_rt_lib', 'concat', [
@@ -404,11 +405,11 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref consts, ref call_counter : ptd::sim
 }
 
 def print_register(register : @nlasm::reg_t) : ptd::sim() {
-	return '___nl__' . (register as :im);
+	return '___nl__' . (register->reg_no);
 }
 
 def print_register_to_assign(register : @nlasm::reg_t) : ptd::sim() {
-	return '' if register as :im eq '';
+	return '' if register->reg_no eq '';
 	return print_register(register) . ' = ';
 }
 

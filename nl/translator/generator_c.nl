@@ -140,8 +140,8 @@ def println(ref state : @generator_c::state_t, s : ptd::sim()) {
 
 def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
-	if (reg is :im) { #TODO non-im args
-		var reg_no = reg as :im;
+	if (reg->type is :im) { #TODO non-im args
+		var reg_no = reg->reg_no;
 		if (array::len(args) > reg_no && args[reg_no] is :ref) {
 			return '*___ref___' . reg_suffix(reg);
 		}
@@ -151,8 +151,8 @@ def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim()
 
 def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
-	if (reg is :im) { #TODO non-im args
-		var reg_no = reg as :im;
+	if (reg->type is :im) { #TODO non-im args
+		var reg_no = reg->reg_no;
 		if (array::len(args) > reg_no && args[reg_no] is :ref) {
 			return '___ref___' . reg_suffix(reg);
 		}
@@ -265,9 +265,9 @@ def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd:
 	fora var im_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
 		match (im_type) case :val {
-			fun_header .= im_t() . '___nl__' . reg_suffix(:im(reg_mem));
+			fun_header .= im_t() . '___nl__' . reg_suffix({type => :im, reg_no => reg_mem});
 		} case :ref {
-			fun_header .= im_t() . '* ___ref___' . reg_suffix(:im(reg_mem));
+			fun_header .= im_t() . '* ___ref___' . reg_suffix({type => :im, reg_no => reg_mem});
 		}
 		reg_mem++;
 	}
@@ -463,12 +463,8 @@ def print_function_block(ref state : @generator_c::state_t, func : @nlasm::funct
 	move_args_to_register(ref state);
 	println(ref state, get_fun_name('', '__const__init', state->mod_name) . '();');
 	
-	for(var i = array::len(func->args_type); i < func->reg_size->im; ++i) {
-		print_declaration(ref state, :im(i));
-	}
-	
-	for(var i = array::len(func->args_type); i < func->reg_size->int; ++i) {
-		print_declaration(ref state, :int(i));
+	for(var i = array::len(func->args_type); i < array::len(func->registers); i++) {
+		print_declaration(ref state, func->registers[i]);
 	}
 	
 	fora var cmd (func->commands) {
@@ -526,7 +522,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless (ret is :val);
 			return true if is_math;
 			return false unless was_singleton;
-			return ret as :val as :im eq dest;
+			return ret as :val->reg_no eq dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -539,7 +535,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 def move_args_to_register(ref state : @generator_c::state_t) {
 	rep var arg_id (array::len(state->fun_args)) {
 		match (state->fun_args[arg_id]) case :val {
-			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, :im(arg_id))]));
+			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, {type => :im, reg_no => arg_id})]));
 			println(ref state, ';');
 		} case :ref {
 		}
@@ -679,18 +675,18 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print_move(ref state, move->src, move->dest);
 	} case :load_const(var const) {
 		return if nlasm::is_empty(const->dest);
-		match (const->dest) case :im(var reg_no) {
+		match (const->dest->type) case :im {
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
-		} case :int(var reg_no) {
+		} case :int {
 			print(ref state, get_reg(ref state, const->dest) . ' = ' . const->val);
-		} case :string(var reg_no) {
+		} case :string {
 			#TODO string
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
-		} case :bool(var reg_no) {
+		} case :bool {
 			#TODO bool
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
@@ -739,13 +735,13 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :goto(var goto) {
 		print(ref state, 'goto label_' . goto);
 	} case :clear(var reg) {
-		match (reg) case :im(var reg_no) {
+		match (reg->type) case :im {
 			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
-		} case :int(var reg_no) {
+		} case :int {
 			print(ref state, '//clear ' . get_reg(ref state, reg));
-		} case :bool(var reg_no) {
+		} case :bool {
 			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO bool
-		} case :string(var reg_no) {
+		} case :string {
 			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO string
 		}
 	} case :var_decl(var decl) {
@@ -756,34 +752,34 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 	var target_type_name;
 	var default_value;
-	match (reg) case :im(var reg_no) {
+	match (reg->type) case :im {
 		target_type_name = im_t();
 		default_value = 'NULL';
-	} case :int(var reg_no) {
+	} case :int {
 		target_type_name = int_t();
 		default_value = '0';
-	} case :bool(var reg_no) {
+	} case :bool {
 		target_type_name = im_t(); #TODO bool
-		default_value = 'false';
-	} case :string(var reg_no) {
+		default_value = 'NULL';
+	} case :string {
 		target_type_name = im_t(); #TODO string
-		default_value = '''''';
+		default_value = 'NULL';
 	}
 	println(ref state, target_type_name . get_reg(ref state, reg) . ' = ' . default_value .';');
 }
 
 def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
 	return if nlasm::is_empty(dest);
-	match (dest) case :im(var reg_no) {
+	match (dest->type) case :im {
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
-	} case :int(var reg_no) {
+	} case :int {
 		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
-	} case :string(var reg_no) {
+	} case :string {
 		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
-	} case :bool(var reg_no) {
+	} case :bool {
 		#TODO bool
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
@@ -796,14 +792,14 @@ def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : p
 		op = hash::get_value(get_bin_ops_mod(), bin_op->op);
 	}
 	var r;
-	match (bin_op->dest) case :im(var reg_no) {
+	match (bin_op->dest->type) case :im {
 		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
-	} case :int(var reg_no) {
+	} case :int {
 		r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, bin_op->op);
-	} case :string(var reg_no) {
+	} case :string {
 		#TODO string
 		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
-	} case :bool(var reg_no) {
+	} case :bool {
 		#TODO bool
 		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
 	}
@@ -814,14 +810,14 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
 	} else {
-		match (reg) case :im(var reg_no) {
+		match (reg->type) case :im {
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
-		} case :int(var reg_no) {
+		} case :int {
 			return get_reg(ref state, reg) . ' = ' . right;
-		} case :string(var reg_no) {
+		} case :string {
 			#TODO string
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
-		} case :bool(var reg_no) {
+		} case :bool {
 			#TODO bool
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		}
@@ -889,13 +885,13 @@ def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, r
 }
 
 def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
-	match (reg) case :im(var reg_no) {
-		return 'im__' . reg_no;
-	} case :int(var reg_no) {
-		return 'int__' . reg_no;
-	} case :bool(var reg_no) {
-		return 'bool__' . reg_no;
-	} case :string(var reg_no) {
-		return 'string__' . reg_no;
+	match (reg->type) case :im {
+		return 'im__' . reg->reg_no;
+	} case :int {
+		return 'int__' . reg->reg_no;
+	} case :bool {
+		return 'bool__' . reg->reg_no;
+	} case :string {
+		return 'string__' . reg->reg_no;
 	}
 }

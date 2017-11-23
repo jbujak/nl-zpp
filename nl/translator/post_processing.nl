@@ -158,18 +158,18 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 	rep var i (array::len(cmds)) {
 		var info = [];
 		var set_c = [];
-		var const : @post_processing_t::reg_const = :yes(i + block->from as :im); #TODO non-im
+		var const : @post_processing_t::reg_const = :yes(i + block->from->reg_no); #TODO non-im
 		match (cmds[i]->cmd) case :arr_decl(var arr_decl) {
 			fora var one (arr_decl->src) {
-				check_sub(ref const, regs[one as :im], ref info); #TODO non-im
+				check_sub(ref const, regs[one->reg_no], ref info); #TODO non-im
 			}
-			regs[arr_decl->dest as :im] = const unless nlasm::is_empty(arr_decl->dest); #TODO non-im
+			regs[arr_decl->dest->reg_no] = const unless nlasm::is_empty(arr_decl->dest); #TODO non-im
 			array::push(ref set_c, arr_decl->dest);
 		} case :hash_decl(var hash_decl) {
 			fora var one (hash_decl->src) {
-				check_sub(ref const, regs[one->val as :im], ref info); #TODO non-im
+				check_sub(ref const, regs[one->val->reg_no], ref info); #TODO non-im
 			}
-			regs[hash_decl->dest as :im] = const unless nlasm::is_empty(hash_decl->dest); #TODO non-im
+			regs[hash_decl->dest->reg_no] = const unless nlasm::is_empty(hash_decl->dest); #TODO non-im
 			array::push(ref set_c, hash_decl->dest);
 		} case :call(var call) {
 			var fun_name = (call->mod eq '' ? mod_name . '_priv' : call->mod) . '::' . call->fun_name;
@@ -181,94 +181,94 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 			if (const is :yes) {
 				fora var one (call->args) {
 					match (one) case :val(var val) {
-						check_sub(ref const, regs[val as :im], ref info); #TODO non-im
+						check_sub(ref const, regs[val->reg_no], ref info); #TODO non-im
 					} case :ref(var ref_) {
-						check_sub(ref const, regs[ref_ as :im], ref info); #TODO non-im
+						check_sub(ref const, regs[ref_->reg_no], ref info); #TODO non-im
 					}
 				}
 			}
 			fora var one (call->args) {
 				match (one) case :val(var val) {
 				} case :ref(var ref_) {
-					regs[ref_ as :im] = const; #TODO non-im
+					regs[ref_->reg_no] = const; #TODO non-im
 					array::push(ref set_c, ref_);
 				}
 			}
-			regs[call->dest as :im] = const unless nlasm::is_empty(call->dest); #TODO non-im
+			regs[call->dest->reg_no] = const unless nlasm::is_empty(call->dest); #TODO non-im
 			array::push(ref set_c, call->dest);
 		} case :una_op(var una_op) {
-			check_sub(ref const, regs[una_op->src as :im], ref info); #TODO non-im
-			regs[una_op->dest as :im] = const unless nlasm::is_empty(una_op->dest); #TODO non-im
+			check_sub(ref const, regs[una_op->src->reg_no], ref info); #TODO non-im
+			regs[una_op->dest->reg_no] = const unless nlasm::is_empty(una_op->dest); #TODO non-im
 			array::push(ref set_c, una_op->dest);
 		} case :bin_op(var bin_op) {
-			check_sub(ref const, regs[bin_op->left as :im], ref info); #TODO non-im
-			check_sub(ref const, regs[bin_op->right as :im], ref info); #TODO non-im
-			regs[bin_op->dest as :im] = const unless nlasm::is_empty(bin_op->dest); #TODO non-im
+			check_sub(ref const, regs[bin_op->left->reg_no], ref info); #TODO non-im
+			check_sub(ref const, regs[bin_op->right->reg_no], ref info); #TODO non-im
+			regs[bin_op->dest->reg_no] = const unless nlasm::is_empty(bin_op->dest); #TODO non-im
 			array::push(ref set_c, bin_op->dest);
 		} case :ov_is(var ov_is) {
-			check_sub(ref const, regs[ov_is->src as :im], ref info); #TODO non-im
-			regs[ov_is->dest as :im] = const unless nlasm::is_empty(ov_is->dest); #TODO non-im
+			check_sub(ref const, regs[ov_is->src->reg_no], ref info); #TODO non-im
+			regs[ov_is->dest->reg_no] = const unless nlasm::is_empty(ov_is->dest); #TODO non-im
 			array::push(ref set_c, ov_is->dest);
 		} case :ov_as(var ov_as) {
-			check_sub(ref const, regs[ov_as->src as :im], ref info); #TODO non-im
-			regs[ov_as->dest as :im] = const unless nlasm::is_empty(ov_as->dest); #TODO non-im
+			check_sub(ref const, regs[ov_as->src->reg_no], ref info); #TODO non-im
+			regs[ov_as->dest->reg_no] = const unless nlasm::is_empty(ov_as->dest); #TODO non-im
 			array::push(ref set_c, ov_as->dest);
 		} case :func(var func) {
-			regs[func->dest as :im] = const unless nlasm::is_empty(func->dest); #TODO non-im
+			regs[func->dest->reg_no] = const unless nlasm::is_empty(func->dest); #TODO non-im
 			array::push(ref set_c, func->dest);
 		} case :move(var move) {
-			check_sub(ref const, regs[move->src as :im], ref info); #TODO non-im
-			regs[move->dest as :im] = const unless nlasm::is_empty(move->dest); #TODO non-im
+			check_sub(ref const, regs[move->src->reg_no], ref info); #TODO non-im
+			regs[move->dest->reg_no] = const unless nlasm::is_empty(move->dest); #TODO non-im
 			array::push(ref set_c, move->dest);
 		} case :load_const(var as_const) {
-			regs[as_const->dest as :im] = const unless nlasm::is_empty(as_const->dest); #TODO non-im
+			regs[as_const->dest->reg_no] = const unless nlasm::is_empty(as_const->dest); #TODO non-im
 			array::push(ref set_c, as_const->dest);
 		} case :get_frm_idx(var get_frm_idx) {
-			check_sub(ref const, regs[get_frm_idx->src as :im], ref info); #TODO non-im
-			check_sub(ref const, regs[get_frm_idx->idx as :im], ref info); #TODO non-im
-			regs[get_frm_idx->dest as :im] = const unless nlasm::is_empty(get_frm_idx->dest); #TODO non-im
+			check_sub(ref const, regs[get_frm_idx->src->reg_no], ref info); #TODO non-im
+			check_sub(ref const, regs[get_frm_idx->idx->reg_no], ref info); #TODO non-im
+			regs[get_frm_idx->dest->reg_no] = const unless nlasm::is_empty(get_frm_idx->dest); #TODO non-im
 			array::push(ref set_c, get_frm_idx->dest);
 		} case :set_at_idx(var set_at_idx) {
-			check_sub(ref const, regs[set_at_idx->src as :im], ref info); #TODO non-im
-			check_sub(ref const, regs[set_at_idx->idx as :im], ref info); #TODO non-im
-			check_sub(ref const, regs[set_at_idx->val as :im], ref info); #TODO non-im
-			regs[set_at_idx->src as :im] = const; #TODO non-im
+			check_sub(ref const, regs[set_at_idx->src->reg_no], ref info); #TODO non-im
+			check_sub(ref const, regs[set_at_idx->idx->reg_no], ref info); #TODO non-im
+			check_sub(ref const, regs[set_at_idx->val->reg_no], ref info); #TODO non-im
+			regs[set_at_idx->src->reg_no] = const; #TODO non-im
 			array::push(ref set_c, set_at_idx->src);
 		} case :get_val(var get_val) {
-			check_sub(ref const, regs[get_val->src as :im], ref info); #TODO non-im
-			regs[get_val->dest as :im] = const unless nlasm::is_empty(get_val->dest); #TODO non-im
+			check_sub(ref const, regs[get_val->src->reg_no], ref info); #TODO non-im
+			regs[get_val->dest->reg_no] = const unless nlasm::is_empty(get_val->dest); #TODO non-im
 			array::push(ref set_c, get_val->dest);
 		} case :set_val(var set_val) {
-			check_sub(ref const, regs[set_val->src as :im], ref info); #TODO non-im
-			check_sub(ref const, regs[set_val->val as :im], ref info); #TODO non-im
-			regs[set_val->src as :im] = const; #TODO non-im
+			check_sub(ref const, regs[set_val->src->reg_no], ref info); #TODO non-im
+			check_sub(ref const, regs[set_val->val->reg_no], ref info); #TODO non-im
+			regs[set_val->src->reg_no] = const; #TODO non-im
 			array::push(ref set_c, set_val->src);
 		} case :ov_mk(var ov_mk) {
 			if (ov_mk->src is :arg) {
-				check_sub(ref const, regs[ov_mk->src as :arg as :im], ref info); #TODO non-im
+				check_sub(ref const, regs[ov_mk->src as :arg->reg_no], ref info); #TODO non-im
 			}
-			regs[ov_mk->dest as :im] = const unless nlasm::is_empty(ov_mk->dest); #TODO non-im
+			regs[ov_mk->dest->reg_no] = const unless nlasm::is_empty(ov_mk->dest); #TODO non-im
 			array::push(ref set_c, ov_mk->dest);
 		} case :return(var return_i) {
 			if (return_i is :val) {
-				check_sub(ref const, regs[return_i as :val as :im], ref info); #TODO non-im
+				check_sub(ref const, regs[return_i as :val->reg_no], ref info); #TODO non-im
 			}
 		} case :die(var die_i) {
-			check_sub(ref const, regs[die_i as :im], ref info); #TODO non-im
+			check_sub(ref const, regs[die_i->reg_no], ref info); #TODO non-im
 		} case :prt_lbl(var label) {
 			const = :no;
 		} case :if_goto(var label) {
-			check_sub(ref const, regs[label->src as :im], ref info); #TODO non-im
+			check_sub(ref const, regs[label->src->reg_no], ref info); #TODO non-im
 		} case :goto(var label) {
 			const = :no;
 		} case :clear(var reg) {
-			check_sub(ref const, regs[reg as :im], ref info); #TODO non-im
-			regs[reg as :im] = :no; #TODO non-im
+			check_sub(ref const, regs[reg->reg_no], ref info); #TODO non-im
+			regs[reg->reg_no] = :no; #TODO non-im
 		} case :var_decl(var decl) {
 			#TODO
 		}
 		var set_len = array::len(set_c);
-		if (set_len > 0 && set_c[set_len - 1]  as :im eq '') { #TODO non-im
+		if (set_len > 0 && set_c[set_len - 1] ->reg_no eq '') { #TODO non-im
 			array::pop(ref set_c);
 		}
 		cmds[i]->annotation = const is :yes ? :const(set_c) : :none;

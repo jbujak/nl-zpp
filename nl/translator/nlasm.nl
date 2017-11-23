@@ -28,7 +28,7 @@ def nlasm::function_t() {
 	return ptd::rec({
 			annotation => ptd::var({none => ptd::none(), math => ptd::none(), state => ptd::none()}),
 			access => @nlasm::access_t,
-			reg_size => @nlasm::register_counters,
+			registers => ptd::arr(@nlasm::reg_t),
 			args_type => @nlasm::args_type,
 			commands => @nlasm::cmds_t,
 			name => ptd::sim(),
@@ -46,11 +46,9 @@ def nlasm::args_type() {
 }
 
 def nlasm::reg_t() {
-	return ptd::var({
-		im => ptd::sim(),
-		int => ptd::sim(),
-		string => ptd::sim(),
-		bool => ptd::sim()
+	return ptd::rec({
+		type => @nlasm::reg_type,
+		reg_no => ptd::sim(),
 	});
 }
 
@@ -153,34 +151,28 @@ def nlasm::reg_type() {
 	});
 }
 
-def nlasm::register_counters() {
-	return ptd::rec({
-		im => ptd::sim(),
-		int => ptd::sim(),
-	});
-}
-
 def nlasm::is_empty(reg : @nlasm::reg_t) {
-	match (reg) case :im(var reg_no) {
-		return reg_no eq '';
-	} case :int(var reg_no) {
-		return reg_no eq '';
-	} case :bool(var reg_no) {
-		return reg_no eq '';
-	} case :string(var reg_no) {
-		return reg_no eq '';
+	match (reg->type) case :im {
+		return reg->reg_no eq '';
+	} case :int {
+		return reg->reg_no eq '';
+	} case :bool {
+		return reg->reg_no eq '';
+	} case :string {
+		return reg->reg_no eq '';
 	}
 }
 
 def nlasm::eq_reg(reg1 : @nlasm::reg_t, reg2 : @nlasm::reg_t) : @boolean_t::type {
-	match (reg1) case :im(var reg_no) {
-		return reg2 is :im && reg_no == reg2 as :im;
-	} case :int(var reg_no) {
-		return reg2 is :int && reg_no == reg2 as :int;
-	} case :bool(var reg_no) {
-		return reg2 is :bool && reg_no == reg2 as :bool;
-	} case :string(var reg_no) {
-		return reg2 is :string && reg_no == reg2 as :string;
+	#TODO remove when register numbers are unique
+	match (reg1->type) case :im {
+		return reg2->type is :im && reg1->reg_no == reg2->reg_no;
+	} case :int {
+		return reg2->type is :int && reg2->reg_no == reg2->reg_no;
+	} case :bool {
+		return reg2->type is :bool && reg2->reg_no == reg2->reg_no;
+	} case :string {
+		return reg2->type is :string && reg2->reg_no == reg2->reg_no;
 	}
 }
 
