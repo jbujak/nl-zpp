@@ -58,7 +58,7 @@ ImmT c_std_lib0array_push(ImmT *___ref___arr, ImmT ___nl__el) {
 	return NULL;
 }
 
-ImmT c_std_lib0array_len(ImmT ___nl__arr) {
+INT c_std_lib0array_len(ImmT ___nl__arr) {
 	return c_rt_lib0array_len(___nl__arr);
 }
 ImmT c_std_lib0array_pop(ImmT *___ref___arr){

@@ -931,7 +931,12 @@ def calc_val(value : @nast::value_t, ref state : @translator::state_t) : @nlasm:
 	if (value->value is :var) {
 		return get_var_register(value->value as :var, ref state);
 	}
-	var ready_value : @nlasm::reg_t = new_register(ref state, :im); #TODO set type
+	var ready_value : @nlasm::reg_t;
+	if (value->value is :const) {
+		ready_value = new_register(ref state, :int);
+	} else { 
+		ready_value = new_register(ref state, :im); #TODO set type
+	}
 	print_val(value, ready_value, ref state);
 	return ready_value;
 }

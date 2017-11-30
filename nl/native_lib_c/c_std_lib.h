@@ -13,7 +13,7 @@ ImmT c_std_lib0get_profile_global();
 ImmT c_std_lib0fast_substr(ImmT text_arr, ImmT begin, ImmT len);
 ImmT c_std_lib0array_sub(ImmT arr, ImmT begin, ImmT len);
 ImmT c_std_lib0array_push(ImmT *arr, ImmT el);
-ImmT c_std_lib0array_len(ImmT arr);
+INT c_std_lib0array_len(ImmT arr);
 ImmT c_std_lib0array_pop(ImmT *arr);
 ImmT c_std_lib0hash_get_value(ImmT hash, ImmT key);
 ImmT c_std_lib0hash_has_key(ImmT hash, ImmT key);
