@@ -168,6 +168,9 @@ def main::main() {
 	
 	var t = false;
 
+	var a = [1,2,3];
+	i = i + a[1];
+
 	i = i + i;
 	j = j * i;
 }

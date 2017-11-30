@@ -1047,9 +1047,9 @@ ImmT c_rt_lib0array_new() {
 	return _array;
 }
 
-ImmT c_rt_lib0array_len(ImmT ___nl__arrI) {
+INT c_rt_lib0array_len(ImmT ___nl__arrI) {
 	if(!IS_ARR(___nl__arrI)) nl_die_internal("Array expected %s;", NAME(___nl__arrI));
-	return c_rt_lib0int_new(((NlArray *)___nl__arrI)->size);
+	return((NlArray *)___nl__arrI)->size;
 }
 
 NlArray* nl_array_internal_copy(ImmT ___nl__arrI) {
@@ -1158,9 +1158,9 @@ ImmT c_rt_lib0float_round(ImmT f) {
 	return c_rt_lib0float_new(number);
 }
 
-ImmT c_rt_lib0array_get(ImmT ___nl__arrI, ImmT ___nl__indexI) {
+ImmT c_rt_lib0array_get(ImmT ___nl__arrI, INT ___nl__indexI) {
 	NlArray *arr = (NlArray *)___nl__arrI;
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	ImmT ret = arr->arr[index];
@@ -1168,10 +1168,10 @@ ImmT c_rt_lib0array_get(ImmT ___nl__arrI, ImmT ___nl__indexI) {
 	return ret;
 }
 
-ImmT c_rt_lib0array_set(ImmT *___ref___arrI, ImmT ___nl__indexI, ImmT ___nl__el) {
+ImmT c_rt_lib0array_set(ImmT *___ref___arrI, INT ___nl__indexI, ImmT ___nl__el) {
 	if(!IS_ARR(*___ref___arrI)) nl_die_internal("Array expected %s;", NAME(*___ref___arrI));
 	NlArray *arr = priv_arr_to_change(___ref___arrI);
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	dec_ref(arr->arr[index]);
@@ -1480,7 +1480,7 @@ ImmT c_rt_lib0set_ref_hash(ImmT *___ref___hashI, ImmT ___nl__key, ImmT ___nl__va
 	return NULL;
 }
 
-ImmT c_rt_lib0get_ref_arr(ImmT ___nl__arrI, ImmT ___nl__indexI){
+ImmT c_rt_lib0get_ref_arr(ImmT ___nl__arrI, INT ___nl__indexI){
 	ImmT ret = c_rt_lib0array_get(___nl__arrI, ___nl__indexI);
 	if (REFS(___nl__arrI) == 1)
 		dec_ref(ret);

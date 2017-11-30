@@ -165,9 +165,9 @@ ImmT c_rt_lib0array_push(ImmT *arrI, ImmT el);
 ImmT c_rt_lib0array_new();
 ImmT c_rt_lib0array_mk(int nargs, ...);
 ImmT c_rt_lib0array_mk_dec(int nargs, ...);
-ImmT c_rt_lib0array_len(ImmT arrI);
-ImmT c_rt_lib0array_get(ImmT arrI, ImmT indexI);
-ImmT c_rt_lib0array_set(ImmT *arrI, ImmT indexI, ImmT el);
+INT c_rt_lib0array_len(ImmT arrI);
+ImmT c_rt_lib0array_get(ImmT arrI, INT indexI);
+ImmT c_rt_lib0array_set(ImmT *arrI, INT indexI, ImmT el);
 
 //types
 ImmT c_rt_lib0is_array(ImmT imm);
@@ -226,7 +226,7 @@ ImmT c_rt_lib0get_true();
 
 //ref arg
 ImmT c_rt_lib0get_ref_hash(ImmT hashI, ImmT keyI);
-ImmT c_rt_lib0get_ref_arr(ImmT arrI, ImmT indexI);
+ImmT c_rt_lib0get_ref_arr(ImmT arrI, INT indexI);
 ImmT c_rt_lib0set_ref_hash(ImmT *hashI, ImmT keyI, ImmT valI);
 ImmT c_rt_lib0set_ref_arr(ImmT *arrI, ImmT indexI, ImmT valI);
 
