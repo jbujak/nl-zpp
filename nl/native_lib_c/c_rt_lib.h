@@ -228,7 +228,7 @@ ImmT c_rt_lib0get_true();
 ImmT c_rt_lib0get_ref_hash(ImmT hashI, ImmT keyI);
 ImmT c_rt_lib0get_ref_arr(ImmT arrI, INT indexI);
 ImmT c_rt_lib0set_ref_hash(ImmT *hashI, ImmT keyI, ImmT valI);
-ImmT c_rt_lib0set_ref_arr(ImmT *arrI, ImmT indexI, ImmT valI);
+ImmT c_rt_lib0set_ref_arr(ImmT *arrI, INT indexI, ImmT valI);
 
 //memory function
 void* alloc_mem(int size);

@@ -1486,10 +1486,10 @@ ImmT c_rt_lib0get_ref_arr(ImmT ___nl__arrI, INT ___nl__indexI){
 		dec_ref(ret);
 	return ret;
 }
-ImmT c_rt_lib0set_ref_arr(ImmT *___ref___arrI, ImmT ___nl__indexI, ImmT ___nl__val){
+ImmT c_rt_lib0set_ref_arr(ImmT *___ref___arrI, INT ___nl__indexI, ImmT ___nl__val){
 	int many = REFS(*___ref___arrI) > 1;
 	NlArray *arr = priv_arr_to_change(___ref___arrI);
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	inc_ref(___nl__val);
