@@ -914,14 +914,14 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_own_hash(var hash_type) {
 		return im_t();
 	} case :tct_rec(var records) {
+		return im_t();
+	} case :tct_own_rec(var records) {
 		var ret = 'struct ' . name . ' {' . string::lf();
 		forh var r_name, var r_type (records) {
-			ret .= get_type_to_c(r_type, '') . ' ' . r_name . '0' . ';' .  string::lf();
+			ret .= get_type_to_c(r_type, '') . ' ' . r_name . '0field' . ';' .  string::lf();
 		}
 		ret .= '}';
 		return ret;
-	} case :tct_own_rec(var records) {
-		return get_type_to_c(:tct_rec(records), name);
 	} case :tct_ref(var ref_name) {
 		return func_ref_to_struct_name(ref_name);
 	} case :tct_void {

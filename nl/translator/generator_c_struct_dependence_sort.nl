@@ -5,6 +5,7 @@ use string;
 use boolean_t;
 use ptd;
 use nlasm;
+use ov;
 
 def generator_c_struct_dependence_sort::result_t(){
 	return ptd::var({
@@ -31,6 +32,15 @@ def generator_c_struct_dependence_sort::sorted_element(){
 			declaration => ptd::sim(),
 			both => ptd::sim()
 		});
+}
+
+def generator_c_struct_dependence_sort::decl_def_type() {
+	return ptd::var({
+		decl => ptd::none(),
+		def => ptd::none(),
+		both => ptd::none(),
+		none => ptd::none()
+	});
 }
 
 def get_module_name(fun : ptd::sim()) : ptd::sim() {
@@ -136,84 +146,72 @@ def remove_dups(ref a : ptd::arr(ptd::sim())) {
 	}
 }
 
-def t_both() : ptd::sim() {
-	return 'both';
-}
-
-def t_none() : ptd::sim() {
-	return 'none';
-}
-
-def t_decl() : ptd::sim() {
-	return 'decl';
-}
-
-def t_def() : ptd::sim() {
-	return 'def';
-}
-
-def join_type(a : ptd::sim(), b : ptd::sim()) : ptd::sim() {
-	if (a eq t_both() || b eq t_both()) {
-		return t_both();
+def join_type(a : @generator_c_struct_dependence_sort::decl_def_type , b : @generator_c_struct_dependence_sort::decl_def_type)
+		: @generator_c_struct_dependence_sort::decl_def_type {
+	if (a is :both || b is :both) {
+		return :both;
 	}
-	if (a eq t_none()) {
+	if (a is :none) {
 		return b;
 	}
-	if (b eq t_none()) {
+	if (b is :none) {
 		return a;
 	}
-	if (a eq b) {
+	if (ov::get_element(a) eq ov::get_element(b)) {
 		return a;
 	}
-	return t_both();
+	return :both;
 }
 
-def common_type(a : ptd::sim(), b : ptd::sim()) : ptd::sim() {
-	if (a eq t_none() || b eq t_none()) {
-		return t_none();
+def common_type(a : @generator_c_struct_dependence_sort::decl_def_type , b : @generator_c_struct_dependence_sort::decl_def_type)
+		: @generator_c_struct_dependence_sort::decl_def_type {
+	if (a is :none || b is :none) {
+		return :none;
 	}
-	if (a eq t_both()) {
+	if (a is :both) {
 		return b;
 	}
-	if (b eq t_both()) {
+	if (b is :both) {
 		return a;
 	}
-	if (a eq b) {
+	if (ov::get_element(a) eq ov::get_element(b)) {
 		return a;
 	}
-	return t_none();
+	return :none;
 }
 
-def split_type(a : ptd::sim(), b : ptd::sim()) : ptd::sim() {
-	if (a eq b) {
-		return t_none();
+def split_type(a : @generator_c_struct_dependence_sort::decl_def_type , b : @generator_c_struct_dependence_sort::decl_def_type)
+		: @generator_c_struct_dependence_sort::decl_def_type {
+	if (ov::get_element(a) eq ov::get_element(b)) {
+		return :none;
 	}
-	if (a eq t_none()) {
-		return t_none();
+	if (a is :none) {
+		return :none;
 	}
-	if (b eq t_none()) {
+	if (b is :none) {
 		return a;
 	}
-	if (b eq t_both()) {
-		return t_none();
+	if (b is :both) {
+		return :none;
 	}
-	if (a eq t_both()) {
-		if (b eq t_decl()) {
-			return t_def();
+	if (a is :both) {
+		if (b is :decl) {
+			return :def;
 		}
-		return t_decl();
+		return :decl;
 	}
 	return a;
 }
 
-def type_to_var(name : ptd::sim(), type : ptd::sim()) : @generator_c_struct_dependence_sort::sorted_element {
-	if (type eq t_both()) {
+def type_to_var(name : ptd::sim(), type : @generator_c_struct_dependence_sort::decl_def_type)
+		: @generator_c_struct_dependence_sort::sorted_element {
+	if (type is :both) {
 		return :both(name);
 	}
-	if (type eq t_decl()) {
+	if (type is :decl) {
 		return :declaration(name);
 	}
-	if (type eq t_def()) {
+	if (type is :def) {
 		return :definition(name);
 	}
 	die;
@@ -221,43 +219,44 @@ def type_to_var(name : ptd::sim(), type : ptd::sim()) : @generator_c_struct_depe
 
 def sort_graph_help(graph : @generator_c_struct_dependence_sort::graph,
 		ref output : ptd::arr(@generator_c_struct_dependence_sort::sorted_element),
-		ref path : ptd::hash(ptd::sim()), ref processed : ptd::hash(ptd::sim()),
+		ref path : ptd::hash(@generator_c_struct_dependence_sort::decl_def_type),
+		ref processed : ptd::hash(@generator_c_struct_dependence_sort::decl_def_type),
 		current : @generator_c_struct_dependence_sort::sorted_element, ref cycle : @boolean_t::type) : ptd::void() {
 	var name;
 	var type;
 	match (current) case :definition(var n) {
 		name = n;
-		type = t_def();
+		type = :def;
 	} case :declaration(var n) {
 		name = n;
-		type = t_decl();
+		type = :decl;
 	} case :both(var n) {
 		name = n;
-		type = t_both();
+		type = :both;
 	}
 
-	var current_type = t_none();
+	var current_type = :none;
 	if (hash::has_key(processed, name)) {
 		current_type = hash::get_value(processed, name);
-		if (current_type eq t_both() || current_type eq type) {
+		if (current_type is :both || ov::get_element(current_type) eq ov::get_element(type)) {
 			return;
 		}
 	}
-	var path_type = t_none();
+	var path_type = :none;
 	if (hash::has_key(path, name)) {
 		path_type = hash::get_value(path, name);
-		if (common_type(type, path_type) ne t_none()){
+		if (!common_type(type, path_type) is :none){
 			cycle = true;
 			return;
 		}
 	}
-	if (hash::get_value(graph, name)->is_divisible && type eq t_decl()) {
+	if (hash::get_value(graph, name)->is_divisible && type is :decl) {
 		hash::set_value(ref processed, name, join_type(type, current_type));
 		array::push(ref output, current);
 		return;
 	}
 	if (!hash::get_value(graph, name)->is_divisible) {
-		type = t_both();
+		type = :both;
 		current = :both(name);
 	}
 	hash::set_value(ref path, name, join_type(type, path_type));
