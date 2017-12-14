@@ -16,7 +16,7 @@ NLDIR=ast checker compiler compiler_nianio_lib parser pretty_printer translator 
 COMPILER_NATIVE=compiler_native_lib_c
 NATIVE=native_lib_c
 
-CDIR=${CACHEDIR} ${NATIVE}
+CDIR=${CACHEDIR} ${COMPILER_NATIVE}
 ICDIR=$(patsubst %,-I%,${CDIR})
 SRC_C:=$(shell find ${CDIR} -maxdepth 1  -name '*.c' -type f 2> /dev/null)
 SRC_O:=${SRC_C:%.c=${OBJDIR}/%.o}
