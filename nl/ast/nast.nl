@@ -103,6 +103,7 @@ def nast::fun_def_t() {
 def nast::fun_def_arg_t() {
 	return ptd::rec({
 			type => @nast::variable_type_t,
+			tct_type => ptd::var({none => ptd::none(), type => @tct::meta_type}),
 			name => ptd::sim(),
 			mod => ptd::var({none => ptd::none(), ref => ptd::none()})
 		});

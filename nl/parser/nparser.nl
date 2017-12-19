@@ -91,7 +91,7 @@ def parse_fun_arg_list(ref state : @nparser::state_t) : ptd::var({
 	eat(ref state, '(');
 	var ret : ptd::arr(@nast::fun_def_arg_t) = [];
 	while (!ntokenizer::next_is(ref state->state, ')')) {
-		var el : @nast::fun_def_arg_t = {mod => :none, type => :none, name => ''};
+		var el : @nast::fun_def_arg_t = {mod => :none, type => :none, name => '', tct_type => :none};
 		el->mod = :ref if try_eat(ref state, 'ref');
 		if (ntokenizer::is_type(ref state->state, :word)) {
 			el->name = ntokenizer::eat_type(ref state->state, :word);
