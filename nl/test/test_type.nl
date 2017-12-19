@@ -10,11 +10,11 @@ use boolean_t;
 
 def test_type::test() {
 	var a : @test_type::typ2 = funkcja(:a('nothing'));
-	var b : @test_type::typ1 = a;
+	var b : @test_type::typ3 = 'a';
 	var c = {a => []};
 	array::push(ref c->a, a);
 	hash::set_value(ref c, 'a', [a]);
-	var d = :stolik;
+	var d;
 	d = :a('nic');
 	var e = {g => ''};
 	if (true) {
@@ -37,7 +37,7 @@ def test_type::test() {
 }
 
 def cos() : @test_type::typ2 {
-	return :h('');
+	return '';
 }
 
 def f(a : @test_type::rekord) : ptd::rec({g => ptd::sim(), h => @test_type::typ2}) {
@@ -51,7 +51,11 @@ def test_type::typ1() {
 }
 
 def test_type::typ2() {
-	return ptd::var({g => @test_type::typ1, h => ptd::sim()});
+	return ptd::sim();
+}
+
+def test_type::typ3() {
+	return ptd::sim();
 }
 
 def test_type::rekord() {
@@ -68,9 +72,9 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 	var emp : @test_type::rekord;
 	match (a) case :a(var t) {
 		ret = :dynia;
-		return :h('');
+		return '';
 	} case :b(var b_param) {
-		ret = :h('');
+		ret = '';
 	} case :d(var dd) {
 		var cop = dd;
 		emp = cop;

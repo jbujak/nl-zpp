@@ -191,7 +191,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 	} case :tct_sim {
 		return :tct_sim if b is :tct_sim;
 	} case :tct_int {
-		return :tct_int if b is :tct_int;
+		if (b is :tct_int) {
+			return :tct_int;
+		} else {
+			add_error(ref errors, 'cannot assign non int to int');
+		}
 	} case :tct_string {
 		die; #TODO
 	} case :tct_bool {

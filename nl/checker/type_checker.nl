@@ -137,12 +137,12 @@ def prepare_def_fun(modules : ptd::hash(@nast::module_t), ref errors : @tc_types
 	return def_fun;
 }
 
-def type_checker::check(modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) : 
+def type_checker::check(modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) :
 	@tc_types::return_t {
-	return type_checker::check_modules(modules, lib_modules);
+	return type_checker::check_modules(ref modules, lib_modules);
 }
 
-def type_checker::check_modules(modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) : 
+def type_checker::check_modules(ref modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) :
 	@tc_types::return_t {
 	var errors : @tc_types::errors_t = {errors => [], warnings => [], current_line => -1, module => ''};
 	var def_fun : @tc_types::defs_funs_t = prepare_def_fun(lib_modules, ref errors);
@@ -150,12 +150,12 @@ def type_checker::check_modules(modules : ptd::hash(@nast::module_t), lib_module
 	forh var module_name, var ast (modules) {
 		errors->current_line = -1;
 		errors->module = module_name;
-		check_module(ast, ref def_fun, ref errors, ref deref);
+		check_module(ref modules{module_name}, ref def_fun, ref errors, ref deref);
 	}
 	return {errors => errors->errors, deref => deref, warnings => errors->warnings};
 }
 
-def check_module(module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t, ref errors : @tc_types::errors_t, ref 
+def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t, ref errors : @tc_types::errors_t, ref
 	deref : @tc_types::deref_types) : ptd::void() {
 	var modules : @tc_types::modules_t = {
 			env => {
@@ -171,7 +171,8 @@ def check_module(module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t,
 		hash::set_value(ref modules->imports, import->name, true);
 	}
 	hash::set_value(ref modules->imports, module->name, true);
-	fora var fun_def (module->fun_def) {
+	rep var i (array::len(module->fun_def)) {
+		var fun_def = module->fun_def[i];
 		var fun_vars : @tc_types::vars_t = {};
 		fora var fun_arg (fun_def->args) {
 			var arg_type = type_to_ptd(fun_arg->type, ref errors);
@@ -180,13 +181,13 @@ def check_module(module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t,
 		}
 		modules->env->ret_type = return_type_to_tct(fun_def->ret_type, ref errors);
 		check_types_imported(modules->env->ret_type, ref modules, ref errors);
-		check_cmd(fun_def->cmd, ref modules, ref fun_vars, ref errors);
+		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
 	}
 	def_fun = modules->funs;
 	deref = modules->env->deref;
 }
 
-def join_vars(ref vars : @tc_types::vars_t, vars_op : @tc_types::vars_t, ref modules : @tc_types::modules_t, ref errors 
+def join_vars(ref vars : @tc_types::vars_t, vars_op : @tc_types::vars_t, ref modules : @tc_types::modules_t, ref errors
 	: @tc_types::errors_t) : ptd::void() {
 	return if hash::has_key(vars_op, '__END');
 	if (hash::has_key(vars, '__END')) {
@@ -207,7 +208,7 @@ def set_end_function(ref vars : @tc_types::vars_t) : ptd::void() {
 	set_type_to_variable(ref vars, '__END', tct::empty());
 }
 
-def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars : @tc_types::vars_t, ref errors : 
+def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars : @tc_types::vars_t, ref errors :
 	@tc_types::errors_t) : ptd::hash(@tc_types::var_t) {
 	errors->current_line = cmd->debug->begin->line;
 	var ret : ptd::hash(@tc_types::var_t) = {};
@@ -218,19 +219,22 @@ def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars
 				get_print_tct_type_name(if_cond_type->type))
 			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors);
 		var vars_op : @tc_types::vars_t = vars;
-		check_cmd(as_if->if, ref modules, ref vars_op, ref errors);
-		fora var elsif_s (as_if->elsif) {
+		check_cmd(ref as_if->if, ref modules, ref vars_op, ref errors);
+
+		rep var i (array::len(as_if->elsif)) {
+			var elsif_s = as_if->elsif[i];
 			errors->current_line = elsif_s->cmd->debug->begin->line;
 			var elsif_cond : @tc_types::type = check_val(elsif_s->cond, ref modules, ref vars, ref errors);
 			add_error(ref errors, 'elsif condition should be sim or boolean instead of ' . 
 					get_print_tct_type_name(elsif_cond->type))
 				unless ptd_system::is_condition_type(elsif_cond, ref modules, ref errors);
 			var vars_cmd : @tc_types::vars_t = vars;
-			check_cmd(elsif_s->cmd, ref modules, ref vars_cmd, ref errors);
+			check_cmd(ref as_if->elsif[i]->cmd, ref modules, ref vars_cmd, ref errors);
 			join_vars(ref vars_op, vars_cmd, ref modules, ref errors);
 		}
-		check_cmd(as_if->else, ref modules, ref vars, ref errors);
+		check_cmd(ref as_if->else, ref modules, ref vars, ref errors);
 		join_vars(ref vars, vars_op, ref modules, ref errors);
+		cmd->cmd = :if(as_if);
 	} case :for(var as_for) {
 		match (as_for->start) case :value(var value) {
 			check_val(value, ref modules, ref vars, ref errors);
@@ -245,35 +249,43 @@ def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars
 				unless ptd_system::is_condition_type(for_cond, ref modules, ref errors);
 			join_vars(ref vars_op, vars, ref modules, ref errors);
 		}
-		break_continue_block(as_for->cmd, ref modules, ref vars_op, ref errors);
+		break_continue_block(ref as_for->cmd, ref modules, ref vars_op, ref errors);
 		check_val(as_for->iter, ref modules, ref vars_op, ref errors);
 		join_vars(ref vars, vars_op, ref modules, ref errors);
+		cmd->cmd = :for(as_for);
 	} case :fora(var as_fora) {
-		check_fora(as_fora, ref modules, ref vars, ref errors);
+		check_fora(ref as_fora, ref modules, ref vars, ref errors);
+		cmd->cmd = :fora(as_fora);
 	} case :forh(var as_forh) {
-		check_forh(as_forh, ref modules, ref vars, ref errors);
+		check_forh(ref as_forh, ref modules, ref vars, ref errors);
+		cmd->cmd = :forh(as_forh);
 	} case :loop(var as_loop) {
-		break_continue_block(as_loop, ref modules, ref vars, ref errors);
+		break_continue_block(ref as_loop, ref modules, ref vars, ref errors);
+		cmd->cmd = :loop(as_loop);
 	} case :rep(var as_rep) {
-		check_rep(as_rep, ref modules, ref vars, ref errors);
+		check_rep(ref as_rep, ref modules, ref vars, ref errors);
+		cmd->cmd = :rep(as_rep);
 	} case :while(var as_while) {
-		check_while(as_while, ref modules, ref vars, ref errors);
+		check_while(ref as_while, ref modules, ref vars, ref errors);
+		cmd->cmd = :while(as_while);
 	} case :if_mod(var if_mod) {
 		var if_cond_type : @tc_types::type = check_val(if_mod->cond, ref modules, ref vars, ref errors);
 		add_error(ref errors, 'if argument should be sim or boolean type instead of ' . 
 				get_print_tct_type_name(if_cond_type->type))
 			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors);
 		var vars_op : @tc_types::vars_t = vars;
-		check_cmd(if_mod->cmd, ref modules, ref vars_op, ref errors);
+		check_cmd(ref if_mod->cmd, ref modules, ref vars_op, ref errors);
 		join_vars(ref vars, vars_op, ref modules, ref errors);
+		cmd->cmd = :if_mod(if_mod);
 	} case :unless_mod(var unless_mod) {
 		var unless_cond_type : @tc_types::type = check_val(unless_mod->cond, ref modules, ref vars, ref errors);
 		add_error(ref errors, 'unless argument should be sim or boolean type instead of ' . 
 				get_print_tct_type_name(unless_cond_type->type))
 			unless ptd_system::is_condition_type(unless_cond_type, ref modules, ref errors);
 		var vars_op : @tc_types::vars_t = vars;
-		check_cmd(unless_mod->cmd, ref modules, ref vars_op, ref errors);
+		check_cmd(ref unless_mod->cmd, ref modules, ref vars_op, ref errors);
 		join_vars(ref vars, vars_op, ref modules, ref errors);
+		cmd->cmd = :unless_mod(unless_mod);
 	} case :break {
 		if (!modules->env->breaks->is) {
 			add_error(ref errors, 'command break can be used only in cyclic block');
@@ -291,7 +303,8 @@ def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars
 			modules->env->breaks->vars = tmp;
 		}
 	} case :match(var as_match) {
-		check_match(as_match, ref modules, ref vars, ref errors);
+		check_match(ref as_match, ref modules, ref vars, ref errors);
+		cmd->cmd = :match(as_match);
 	} case :value(var val) {
 		check_val(val, ref modules, ref vars, ref errors);
 	} case :return(var as_return) {
@@ -309,11 +322,19 @@ def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars
 		}
 		set_end_function(ref vars);
 	} case :block(var block) {
-		fora var cmd_s (block) {
-			forh var var_name, var var_ (check_cmd(cmd_s, ref modules, ref vars, ref errors)) {
+		rep var i (array::len(block)) {
+			forh var var_name, var var_ (check_cmd(ref block[i], ref modules, ref vars, ref errors)) {
 				add_var_to_vars(var_, var_name, ref vars);
 			}
 		}
+		rep var i (array::len(block)) {
+			if (block[i]->cmd is :var_decl) {
+				var var_decl = block[i]->cmd as :var_decl;
+				var_decl->tct_type = :type(vars{var_decl->name}->type);
+				block[i]->cmd = :var_decl(var_decl);
+			}
+		}
+		cmd->cmd = :block(block);
 	} case :die(var as_die) {
 		fora var arg (as_die) {
 			check_val(arg, ref modules, ref vars, ref errors);
@@ -347,16 +368,16 @@ def check_cmd(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars
 	return ret;
 }
 
-def break_continue_block(cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref 
+def break_continue_block(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref
 	errors : @tc_types::errors_t) : ptd::void() {
 	var old = modules->env->breaks;
 	modules->env->breaks = {is => true, vars => vars};
-	check_cmd(cmd, ref modules, ref vars, ref errors);
+	check_cmd(ref cmd, ref modules, ref vars, ref errors);
 	join_vars(ref vars, modules->env->breaks->vars, ref modules, ref errors);
 	modules->env->breaks = old;
 }
 
-def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, 
+def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t,
 		ref errors : @tc_types::errors_t) : ptd::rec({vars => ptd::hash(@tc_types::var_t), err_type => @tc_types::type}) {
 	var ret : ptd::hash(@tc_types::var_t) = {};
 	var err_type : @tc_types::type = {type => tct::empty(), src => :speculation};
@@ -388,9 +409,9 @@ def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::
 	return {vars => ret, err_type => err_type};
 }
 
-def check_forh(as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : 
+def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
 	@tc_types::errors_t) : ptd::void() {
-	var hash_type : @tc_types::type = ptd_system::can_delete(check_val(as_forh->hash, ref modules, ref vars, ref errors), 
+	var hash_type : @tc_types::type = ptd_system::can_delete(check_val(as_forh->hash, ref modules, ref vars, ref errors),
 			ref modules, ref errors);
 	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors)) {
 	} elsif (ptd_system::is_accepted(hash_type, tct::rec({}), ref modules, ref errors)) {
@@ -403,11 +424,11 @@ def check_forh(as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, ref 
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(as_forh->key, {type => tct::sim(), src => :speculation}, ref vars_op, ref errors);
 	add_var_decl_with_type_and_check(as_forh->val, hash_type, ref vars_op, ref errors);
-	break_continue_block(as_forh->cmd, ref modules, ref vars_op, ref errors);
+	break_continue_block(ref as_forh->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
 
-def check_fora(as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : 
+def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
 	@tc_types::errors_t) : ptd::void() {
 	var fora_arr_type : @tc_types::type = ptd_system::can_delete(check_val(as_fora->array, ref modules, ref vars, ref 
 				errors), ref modules, ref errors);
@@ -416,33 +437,33 @@ def check_fora(as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, ref 
 	fora_arr_type->type = fora_arr_type->type is :tct_arr ? fora_arr_type->type as :tct_arr : tct::tct_im();
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(as_fora->iter, fora_arr_type, ref vars_op, ref errors);
-	break_continue_block(as_fora->cmd, ref modules, ref vars_op, ref errors);
+	break_continue_block(ref as_fora->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
 
-def check_while(as_while : @nast::while_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors 
+def check_while(ref as_while : @nast::while_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors
 	: @tc_types::errors_t) : ptd::void() {
 	var cond_type : @tc_types::type = check_val(as_while->cond, ref modules, ref vars, ref errors);
 	add_error(ref errors, 'while argument should be sim or boolean type insteand of ' . 
 			get_print_tct_type_name(cond_type->type))
 		unless ptd_system::is_condition_type(cond_type, ref modules, ref errors);
 	var vars_op : @tc_types::vars_t = vars;
-	break_continue_block(as_while->cmd, ref modules, ref vars_op, ref errors);
+	break_continue_block(ref as_while->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
 
-def check_rep(as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : 
+def check_rep(ref as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
 	@tc_types::errors_t) : ptd::void() {
 	var count_type : @tc_types::type = check_val(as_rep->count, ref modules, ref vars, ref errors);
 	add_error(ref errors, 'rep argument should be a number instead of ' . get_print_tct_type_name(count_type->type))
 		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors);
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(as_rep->iter, {type => tct::int(), src => :speculation}, ref vars_op, ref errors);
-	break_continue_block(as_rep->cmd, ref modules, ref vars_op, ref errors);
+	break_continue_block(ref as_rep->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
 
-def check_match(as_match : @nast::match_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors 
+def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors
 	: @tc_types::errors_t) : ptd::void() {
 	var val_type : @tc_types::type = ptd_system::can_delete(check_val(as_match->val, ref modules, ref vars, ref errors), 
 			ref modules, ref errors);
@@ -479,7 +500,8 @@ def check_match(as_match : @nast::match_t, ref modules : @tc_types::modules_t, r
 	var vars_op : @tc_types::vars_t = vars;
 	var first = true;
 	var hash_b = {};
-	fora var branch (branches) {
+	rep var i (array::len(branches)) {
+		var branch = branches[i];
 		var vars_case : @tc_types::vars_t = vars;
 		var variant_name : ptd::sim() = branch->variant->name;
 		add_error(ref errors, 'repeated the case name in match: ' . variant_name)
@@ -505,7 +527,7 @@ def check_match(as_match : @nast::match_t, ref modules : @tc_types::modules_t, r
 				add_error(ref errors, 'variant `:' . variant_name . ' should has param');
 			}
 		}
-		check_cmd(branch->cmd, ref modules, ref vars_case, ref errors);
+		check_cmd(ref branches[i]->cmd, ref modules, ref vars_case, ref errors);
 		match (branch->variant->value) case :value(var var_decl) {
 			hash::delete(ref vars_case, var_decl->name) unless hash::has_key(vars_op, var_decl->name);
 		} case :none {
@@ -520,7 +542,7 @@ def check_match(as_match : @nast::match_t, ref modules : @tc_types::modules_t, r
 	vars = vars_op;
 }
 
-def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : 
+def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
 	@tc_types::errors_t) : @tc_types::type {
 	var ret = tc_types::get_default_type();
 	match (val->value) case :ternary_op(var ternary_op) {
@@ -1191,6 +1213,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		}
 		var err_left_len = array::len(errors->errors);
 		var left_type : @tc_types::type = get_type_left_side_equation(bin_op->left, ref modules, ref vars, ref errors);
+		left_type->type = ptd_system::cross_type(left_type->type, right_type->type, ref modules, ref errors);
 		return left_type if (array::len(errors->errors) - err_left_len > 0);
 		return set_type_to_lval(bin_op->left, left_type, right_type, ref modules, ref vars, ref errors);
 	}

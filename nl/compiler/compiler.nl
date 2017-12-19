@@ -199,7 +199,7 @@ def exec_interpreter(input : @compiler::input_type) : ptd::sim() {
 		show_and_count_errors(errors, input, {});
 		return 1;
 	}
-	check_modules(asts, ref errors, input->deref, input->check_public_fun);
+	check_modules(ref asts, ref errors, input->deref, input->check_public_fun);
 	if (show_and_count_errors(errors, input, {}) > 0) {
 		return 1;
 	}
@@ -456,7 +456,7 @@ def compile_ide(opt_cli : @compiler::input_type) : ptd::void() {
 			c_fe_lib::print('############################################################');
 			continue;
 		}
-		check_modules(asts, ref errors, opt_cli->deref, opt_cli->check_public_fun);
+		check_modules(ref asts, ref errors, opt_cli->deref, opt_cli->check_public_fun);
 		if (show_and_count_errors(errors, opt_cli, nianio_files) > 0) {
 			c_fe_lib::print('############################################################');
 			continue;
@@ -523,7 +523,7 @@ def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
 	}
 
 	profile::begin('module checking');
-	check_modules(asts, ref errors, opt_cli->deref, opt_cli->check_public_fun);
+	check_modules(ref asts, ref errors, opt_cli->deref, opt_cli->check_public_fun);
 	profile::end('module_checking');
 	if (show_and_count_errors(errors, opt_cli, nianio_files) > 0) {
 		return 1;
@@ -631,10 +631,10 @@ def translate(asts : ptd::hash(@nast::module_t), ref post_proc : @post_processin
 	return nlasm;
 }
 
-def check_modules(asts : ptd::hash(@nast::module_t), ref errors : @compiler::errors_group_t, deref : @compiler::deref_t, check_public_fun : @boolean_t::type) 
+def check_modules(ref asts : ptd::hash(@nast::module_t), ref errors : @compiler::errors_group_t, deref : @compiler::deref_t, check_public_fun : @boolean_t::type)
 	: ptd::void() {
 	c_fe_lib::print('type checking...');
-	var ret = type_checker::check_modules(asts, asts);
+	var ret = type_checker::check_modules(ref asts, asts);
 	if (check_public_fun) {
 		var used_functions = {};
 		match (c_fe_lib::file_to_string('public_functions.df')) case :ok(var ok) {
