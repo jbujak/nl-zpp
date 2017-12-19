@@ -1005,7 +1005,7 @@ def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
 	} case :tct_bool {
 		return :bool;
 	} case :tct_empty {
-		die;
+		return :im;
 	} case :tct_void {
 		die;
 	} case :tct_im {

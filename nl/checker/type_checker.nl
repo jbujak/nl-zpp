@@ -182,6 +182,9 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 		modules->env->ret_type = return_type_to_tct(fun_def->ret_type, ref errors);
 		check_types_imported(modules->env->ret_type, ref modules, ref errors);
 		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
+		rep var j (array::len(fun_def->args)) {
+			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
+		}
 	}
 	def_fun = modules->funs;
 	deref = modules->env->deref;
@@ -422,8 +425,8 @@ def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, 
 	}
 	hash_type->type = hash_type->type is :tct_hash ? hash_type->type as :tct_hash : tct::tct_im();
 	var vars_op : @tc_types::vars_t = vars;
-	add_var_decl_with_type_and_check(as_forh->key, {type => tct::sim(), src => :speculation}, ref vars_op, ref errors);
-	add_var_decl_with_type_and_check(as_forh->val, hash_type, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(ref as_forh->key, {type => tct::sim(), src => :speculation}, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(ref as_forh->val, hash_type, ref vars_op, ref errors);
 	break_continue_block(ref as_forh->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
@@ -436,7 +439,7 @@ def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, 
 		unless ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors);
 	fora_arr_type->type = fora_arr_type->type is :tct_arr ? fora_arr_type->type as :tct_arr : tct::tct_im();
 	var vars_op : @tc_types::vars_t = vars;
-	add_var_decl_with_type_and_check(as_fora->iter, fora_arr_type, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(ref as_fora->iter, fora_arr_type, ref vars_op, ref errors);
 	break_continue_block(ref as_fora->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
@@ -458,7 +461,7 @@ def check_rep(ref as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref
 	add_error(ref errors, 'rep argument should be a number instead of ' . get_print_tct_type_name(count_type->type))
 		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors);
 	var vars_op : @tc_types::vars_t = vars;
-	add_var_decl_with_type_and_check(as_rep->iter, {type => tct::int(), src => :speculation}, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(ref as_rep->iter, {type => tct::int(), src => :speculation}, ref vars_op, ref errors);
 	break_continue_block(ref as_rep->cmd, ref modules, ref vars_op, ref errors);
 	join_vars(ref vars, vars_op, ref modules, ref errors);
 }
@@ -1261,9 +1264,13 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 	var op_def2 = tc_types::get_bin_op_def(op);
 	if (!ptd_system::is_accepted(left_type2, op_def2->arg1, ref modules, ref errors)) {
 		add_error(ref errors, 'incorrect type of the first argument operator ''' . op . '''');
+	} elsif(bin_op->left->value is :var) {
+		vars{bin_op->left->value as :var}->type = op_def2->arg1;
 	}
 	if (!ptd_system::is_accepted(right_type, op_def2->arg2, ref modules, ref errors)) {
 		add_error(ref errors, 'incorrect type of the second argument operator ''' . op . '''');
+	} elsif(bin_op->right->value is :var) {
+		vars{bin_op->right->value as :var}->type = op_def2->arg2;
 	}
 	return {type => op_def2->ret, src => :speculation};
 }
@@ -1471,13 +1478,15 @@ def add_var_decl_to_vars(var_type : @tct::meta_type, name : ptd::sim(), ref vars
 	}
 }
 
-def add_var_decl_with_type_and_check(var_decl : @nast::variable_declaration_t, type : @tc_types::type, ref vars : 
+def add_var_decl_with_type_and_check(ref var_decl : @nast::variable_declaration_t, type : @tc_types::type, ref vars : 
 	@tc_types::vars_t, ref errors : @tc_types::errors_t) : ptd::void() {
 	add_error(ref errors, 'variable `' . var_decl->name . ''' already exists') if hash::has_key(vars, var_decl->name);
 	if (is_known(type)) {
 		add_var_to_vars({overwrited => :no, type => type->type}, var_decl->name, ref vars);
+		var_decl->tct_type = :type(type->type);
 	} else {
 		add_var_to_vars({overwrited => :yes, type => type->type}, var_decl->name, ref vars);
+		var_decl->tct_type = :type(type->type);
 	}
 }
 
