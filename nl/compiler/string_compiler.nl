@@ -30,7 +30,7 @@ def string_compiler::compile(program : ptd::sim(), module_name : ptd::sim()) : p
 		if (array::len(errors) == 0) {
 			var asts = {};
 			hash::set_value(ref asts, ast->name, ast);
-			var types_ret = type_checker::check_modules(asts, asts);
+			var types_ret = type_checker::check_modules(ref asts, asts);
 			errors = types_ret->errors;
 		}
 		return :ok(translator::translate(ast)) if array::len(errors) == 0;
@@ -108,7 +108,7 @@ def string_compiler::check_type(type_check : @string_compiler::type_check_t, ast
 			hash::set_value(ref check, hash::get_value(asts, key)->name, hash::get_value(asts, key));
 			hash::set_value(ref keys, hash::get_value(asts, key)->name, key);
 		}
-		var types_ret = type_checker::check_modules(check, lib);
+		var types_ret = type_checker::check_modules(ref check, lib);
 		fora var err (types_ret->errors) {
 			array::push(ref errors, {error=> err, key => hash::get_value(keys, err->module)});
 		}
@@ -134,7 +134,7 @@ def string_compiler::compile_to_nlasm(modules : ptd::hash(ptd::sim())) : ptd::va
 		}
 	}
 	return :err(errors) if array::len(errors) > 0;
-	var types_ret = type_checker::check_modules(asts, asts);
+	var types_ret = type_checker::check_modules(ref asts, asts);
 	return :err(types_ret->errors) if array::len(types_ret->errors) > 0;
 	var nlasms = {};
 	forh var module_name, var ast (asts) {
