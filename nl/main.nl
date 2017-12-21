@@ -1,7 +1,7 @@
 use ptd;
 use hash;
 use own;
-
+use boolean_t;
 ###
 # (c) Atinea Sp. z o.o.
 ###
@@ -162,6 +162,16 @@ def main::is_empty(reg : @main::reg_t) {
 def main::main() {
 	var s : ptd::sim();
 	s = 'asdf';
+	var ss : ptd::sim() = 'asdf';
+	var b : @boolean_t::type = false;
+	if ('b' eq s) {
+		b = true;
+	}
+	var r : @main::reg_type = :im;
+	if (r is :int) {
+
+	}
+
 	var i : ptd::int();
 	i = 44;
 	var j : ptd::int() = 99;

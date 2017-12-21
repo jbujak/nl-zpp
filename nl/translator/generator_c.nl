@@ -135,6 +135,10 @@ def int_t() : ptd::sim() {
 	return 'INT ';
 }
 
+def bool_t() : ptd::sim() {
+	return 'bool ';
+}
+
 def println(ref state : @generator_c::state_t, s : ptd::sim()) {
 	state->ret .= s;
 	state->ret .= string::lf();
@@ -152,13 +156,12 @@ def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim()
 
 def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
-	if (reg->type is :im) { #TODO non-im args
-		var reg_no = reg->reg_no;
-		if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
-			return '___ref___' . reg_suffix(reg);
-		}
+	var reg_no = reg->reg_no;
+	if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
+		return '___ref___' . reg_suffix(reg);
+	} else {
+		return '&___nl__' . reg_suffix(reg);
 	}
-	return '&___nl__' . reg_suffix(reg);
 }
 
 def get_string(s : ptd::sim()) : ptd::sim() {
@@ -351,6 +354,7 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	print_to_header(ref state, get_cr());
 	print_to_header(ref state, '#pragma once' . string::lf());
 	print_to_header(ref state, get_include('c_rt_lib') . string::lf());
+	print_to_header(ref state, get_include('stdbool') . string::lf());
 	print(ref state, get_cr());
 	println(ref state, get_include('c_rt_lib'));
 	println(ref state, get_include('c_global_const'));
@@ -679,7 +683,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		generate_call(ref state, call);
 	} case :una_op(var una_op) {
 		var op = hash::get_value(get_unary_ops(), una_op->op);
-		var r = get_fun_lib(op, [get_reg(ref state, una_op->src)]);
+		var r;
+		if (op eq 'not') {
+            r = '!' . get_reg(ref state, una_op->src);
+		} else {
+			r = get_fun_lib(op, [get_reg(ref state, una_op->src)]);
+		}
 		print(ref state, get_assign(ref state, una_op->dest, r));
 	} case :bin_op(var bin_op) {
 		print_bin_op(ref state, bin_op);
@@ -715,10 +724,8 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
 		} case :bool {
-			#TODO bool
-			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
-			generate_imm(ref state, const->val);
-			print(ref state, ')');
+			print(ref state, get_reg(ref state, const->dest) . ' = ');
+			generate_imm(ref state, const->val);			
 		}
 	} case :get_frm_idx(var get) {
 		var r = get_fun_lib('array_get', [get_reg(ref state, get->src), get_reg(ref state, get->idx)]);
@@ -741,9 +748,9 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :ov_mk(var mk) {
 		var r;
 		if (mk->src is :emp && (mk->name eq 'TRUE')) {
-			r = get_fun_lib('get_true', []);
+			r = 'true';
 		} elsif (mk->src is :emp && (mk->name eq 'FALSE')) {
-			r = get_fun_lib('get_false', []);
+			r = 'false';
 		} else {
 			match (mk->src) case :arg(var a) {
 				r = get_fun_lib('ov_mk_arg', [get_const_sim(ref state, mk->name), get_reg(ref state, a)]);
@@ -757,7 +764,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		return;
 	} case :if_goto(var ifgoto) {
 		print(ref state, 'if(');
-		print(ref state, get_fun_lib('check_true_native', [get_reg(ref state, ifgoto->src)]));
+		print(ref state, get_reg(ref state, ifgoto->src));
 		print(ref state, '){ goto label_' . ifgoto->dest . ';}' . string::lf());
 		return;
 	} case :goto(var goto) {
@@ -768,7 +775,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		} case :int {
 			print(ref state, '//clear ' . get_reg(ref state, reg));
 		} case :bool {
-			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO bool
+			print(ref state, '//clear ' . get_reg(ref state, reg));			
 		} case :string {
 			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)])); #TODO string
 		}
@@ -787,8 +794,8 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 		target_type_name = int_t();
 		default_value = '0';
 	} case :bool {
-		target_type_name = im_t(); #TODO bool
-		default_value = 'NULL';
+		target_type_name = bool_t();
+		default_value = 'false';
 	} case :string {
 		target_type_name = im_t(); #TODO string
 		default_value = 'NULL';
@@ -808,9 +815,7 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
-		#TODO bool
-		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
-		print(ref state, get_fun_lib('copy', arg));
+		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));		
 	}
 }
 
@@ -820,16 +825,25 @@ def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : p
 		op = hash::get_value(get_bin_ops_mod(), bin_op->op);
 	}
 	var r;
-	match (bin_op->dest->type) case :im {
-		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
-	} case :int {
-		r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, bin_op->op);
-	} case :string {
-		#TODO string
-		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
-	} case :bool {
-		#TODO bool
-		r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);
+	#TODO string specific
+	if (bin_op->op eq 'eq') {
+		if(bin_op->left->type is :im || bin_op->left->type is :string) {
+			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+		} else {
+			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, '==');			
+		}
+	} elsif (bin_op->op eq 'ne') {
+		if(bin_op->left->type is :im || bin_op->left->type is :string) {
+			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+		} else {
+			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, '!=');			
+		}
+	} else {
+		if(bin_op->left->type is :im || bin_op->left->type is :string) {
+			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+		} else {
+			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, bin_op->op);			
+		}
 	}
 	print(ref state, get_assign(ref state, bin_op->dest, r));
 }
@@ -846,8 +860,7 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 			#TODO string
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		} case :bool {
-			#TODO bool
-			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
+			return get_reg(ref state, reg) . ' = ' . right;
 		}
 	}
 }
@@ -932,7 +945,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_string {
 		return im_t();
 	} case :tct_bool {
-		return im_t();
+		return bool_t();
 	} case :tct_var(var vars) {
 		return im_t();
 	} case :tct_own_var(var vars) {
@@ -947,6 +960,9 @@ def get_type_name(type : @tct::meta_type) {
 }
 
 def func_ref_to_struct_name(f : ptd::sim()) : ptd::sim() {
+	if(f eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
+		return bool_t();
+	}
 	return im_t(); #return string::replace(f, '::', '0') . '0struct '; #TODO: return correct name also for ptd types
 }
 
