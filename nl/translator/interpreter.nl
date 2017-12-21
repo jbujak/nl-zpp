@@ -204,8 +204,8 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 	var new_ref_arguments = {};
 	rep var idx (array::len(func->args_type)) {
 		var arg = func->args_type[idx];
-		match (arg) case :val(var ri) {
-		} case :ref(var rr) {
+		match (arg->by) case :val {
+		} case :ref {
 			hash::set_value(ref new_ref_arguments, idx, {type => :im, reg_no => idx});
 		}
 		new_vars[idx] = func_args[idx];

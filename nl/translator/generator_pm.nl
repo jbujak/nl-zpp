@@ -135,8 +135,8 @@ def print_args_dollar(args_size : ptd::sim(), ref state : @generator_pm::state_t
 def move_args_to_register(ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (array::len(state->fun_args)) {
 		print(ref state, '$memory_' . arg_id . ' = $_[' . arg_id . '];');
-		match (state->fun_args[arg_id]) case :val(var ri) {
-		} case :ref(var rr) {
+		match (state->fun_args[arg_id]->by) case :val {
+		} case :ref {
 			print(ref state, 'Scalar::Util::weaken($_[' . arg_id . ']) if ref($_[' . arg_id . ']);');
 		}
 	}
@@ -144,8 +144,8 @@ def move_args_to_register(ref state : @generator_pm::state_t) : ptd::void() {
 
 def move_register_to_ref_args(ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (array::len(state->fun_args)) {
-		match (state->fun_args[arg_id]) case :val(var ri) {
-		} case :ref(var rr) {
+		match (state->fun_args[arg_id]->by) case :val {
+		} case :ref {
 			print(ref state, '$_[' . arg_id . '] = $memory_' . arg_id . ';');
 		}
 	}

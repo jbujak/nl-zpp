@@ -95,11 +95,13 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 def print_fun_def(function : @nast::fun_def_t, ref state : @translator::state_t) {
 	fora var fun_arg (function->args) {
 		match (fun_arg->mod) case :none {
-			var rim = new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
-			array::push(ref state->result->args_type, :val(rim));
+			var rim = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type));
+			var arg_type_rim = {by => :val, register => rim, type => fun_arg->tct_type};
+			array::push(ref state->result->args_type, arg_type_rim);
 		} case :ref {
-			var rref = new_declaration(fun_arg->name, ref state, :im); #TODO handle other arg types
-			array::push(ref state->result->args_type, :ref(rref));
+			var rref = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type));
+			var arg_type_rref = {by => :ref, register => rref, type => fun_arg->tct_type};			
+			array::push(ref state->result->args_type, arg_type_rref);
 		}
 	}
 	print_cmd(function->cmd, ref state);
@@ -866,14 +868,14 @@ def print_safe_return(to_return : ptd::var({val => @nlasm::reg_t, emp => ptd::no
 	var args = state->result->args_type;
 	if (to_return is :val) {
 		return_value = to_return as :val;
-		if (return_value->reg_no < array::len(args) && args[return_value->reg_no] is :ref) {
+		if (return_value->reg_no < array::len(args) && args[return_value->reg_no]->by is :ref) {
 			return_value = new_register(ref state, :im); #TODO set value
 			move(return_value, to_return as :val, ref state);
 			to_return = :val(return_value);
 		}
 	}
 	fora var reg (state->logic->registers) {
-		continue if (reg->reg_no < array::len(args) && args[reg->reg_no] is :ref);
+		continue if (reg->reg_no < array::len(args) && args[reg->reg_no]->by is :ref);
 		continue if (reg->reg_no == return_value->reg_no);
 		undef_reg(reg, ref state);
 	}
