@@ -63,8 +63,7 @@ def tct::tct_im() : @tct::meta_type {
 }
 
 def tct::bool() : @tct::meta_type {
-	#TODO return :tct_bool;
-	return tct::var({FALSE => tct::none(), TRUE => tct::none()});
+	return :tct_bool;
 }
 
 def tct::func() : @tct::meta_type {

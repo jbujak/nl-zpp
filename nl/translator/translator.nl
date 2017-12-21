@@ -12,6 +12,7 @@ use hash;
 use nlasm;
 use boolean_t;
 use string_utils;
+use ov;
 
 def translator::function_logic_t() {
 	return ptd::rec({
@@ -186,7 +187,7 @@ def print_fun_val(fun_val : @nast::fun_val_t, destination : @nlasm::reg_t, ref s
 				array::push(ref args, :ref(arg));
 				hash::set_value(ref lvalues, i, lvalue);
 			} else {
-				var arg = new_register(ref state, :im); #TODO set type
+				var arg = new_register(ref state, value_type_to_reg_type(fun_arg->val, ref state));
 				print_val(fun_arg->val, arg, ref state);
 				array::push(ref args, :ref(arg));
 			}
@@ -276,12 +277,12 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 
 def print_var_op(var_op : @nast::var_op_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	return if nlasm::is_empty(destination);
-	print_val(var_op->left, destination, ref state);
+	var temporary = dest_val(var_op->left, destination, ref state);
 	var to_add : @nlasm::order_t;
 	match (var_op->op) case :ov_is {
-		to_add = :ov_is({dest => destination, src => destination, type => var_op->case});
+		to_add = :ov_is({dest => destination, src => temporary, type => var_op->case});
 	} case :ov_as {
-		to_add = :ov_as({dest => destination, src => destination, type => var_op->case});
+		to_add = :ov_as({dest => destination, src => temporary, type => var_op->case});
 	}
 	print(ref state, to_add);
 }
@@ -341,13 +342,8 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 		move(destination, left, ref state) if !nlasm::eq_reg(left, destination);
 		print_sim_label(after, ref state);
 	} else {
-		var left = dest_val(bin_op->left, destination, ref state);
-		var right;
-		if (nlasm::eq_reg(left, destination)) {
-			right = calc_val(bin_op->right, ref state);
-		} else {
-			right = dest_val(bin_op->right, destination, ref state);
-		}
+		var left = calc_val(bin_op->left, ref state);
+		var right = calc_val(bin_op->right, ref state);
 		print_bin_op_operator_command(destination, left, right, bin_op->op, ref state);
 	}
 }
@@ -917,7 +913,8 @@ def dest_val(value : @nast::value_t, destination : @nlasm::reg_t, ref state : @t
 	if (value->value is :var) {
 		return get_var_register(value->value as :var, ref state);
 	}
-	destination = new_register(ref state, :int) if nlasm::is_empty(destination); #TODO set type
+	var reg_type = value_type_to_reg_type(value, ref state);
+	destination = new_register(ref state, reg_type) if nlasm::is_empty(destination) || ov::get_element(reg_type) ne ov::get_element(destination->type);
 	print_val(value, destination, ref state);
 	return destination;
 }
@@ -930,15 +927,13 @@ def def_val(value : @nast::value_t, first : @nlasm::reg_t, second : @nlasm::reg_
 }
 
 def calc_val(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_t {
+	var val_reg_type = value_type_to_reg_type(value, ref state);
 	if (value->value is :var) {
 		return get_var_register(value->value as :var, ref state);
 	}
 	var ready_value : @nlasm::reg_t;
-	if (value->value is :const) {
-		ready_value = new_register(ref state, :int);
-	} else { 
-		ready_value = new_register(ref state, :im); #TODO set type
-	}
+	ready_value = new_register(ref state, val_reg_type);
+	
 	print_val(value, ready_value, ref state);
 	return ready_value;
 }
@@ -979,6 +974,48 @@ def get_sim_label(ref state : @translator::state_t) : ptd::sim() {
 	return state->label_nr;
 }
 
+def value_type_to_reg_type(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_type {
+	match(value->value) case :const(var c) {
+		return :int;
+	} case :post_inc(var val) {
+		return :int;
+	} case :post_dec(var val) {
+		return :int;
+	} case :variant(var vart) {
+		if((vart->name eq 'TRUE' || vart->name eq 'FALSE') && vart->var->value is :nop) {
+			return :bool;
+		} else {
+			return :im;
+		}
+	} case :string(var str) {
+		return :string;
+	} case :ternary_op(var top) {
+		return value_type_to_reg_type(top->snd, ref state);
+	} case :hash_key(var hk) {
+		return :im; #TODO make difference for int/string as it's a sim
+	} case :nop {
+		die; #it's not possible to assign nop
+	} case :parenthesis(var p) {
+		return value_type_to_reg_type(p, ref state);
+	} case :arr_decl(var ad) {
+		return :im;
+	} case :hash_decl(var hd) {
+		return :im;
+	} case :var(var v) {
+		return get_var_register(v, ref state)->type;
+	} case :bin_op(var bop) {
+		return value_type_to_reg_type(bop->left, ref state);
+	} case :var_op(var vop) {
+		return value_type_to_reg_type(vop->left, ref state);		
+	} case :unary_op(var uop) {
+		return value_type_to_reg_type(uop->val, ref state);
+	} case :fun_label(var fl) {
+		return :im;
+	} case :fun_val(var fv) {
+		return :im;
+	}
+}
+
 def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
 	match (type) case :tct_rec(var rec_type) {
 		return :im;
@@ -997,6 +1034,9 @@ def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
 	} case :tct_own_var(var var_type) {
 		return :im;
 	} case :tct_ref(var ref_type) {
+		if (ref_type eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
+			return :bool;
+		}
 		return :im;
 	} case :tct_sim {
 		return :im;

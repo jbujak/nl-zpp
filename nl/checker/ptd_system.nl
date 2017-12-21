@@ -47,7 +47,6 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 	} case :tct_string {
 		return false; #TODO
 	} case :tct_bool {
-		return false; #TODO
 	} case :tct_var(var vars) {
 		return false if hash::size(b as :tct_var) != hash::size(vars);
 		forh var name, var type (vars) {
@@ -199,7 +198,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 	} case :tct_string {
 		die; #TODO
 	} case :tct_bool {
-		die; #TODO
+		if (b is :tct_bool) {
+			return :tct_bool;
+		} else {
+			add_error(ref errors, 'cannot assign non boolean to bool');
+		}
 	} case :tct_ref(var ref_name) {
 		die;
 	} case :tct_void {
@@ -406,7 +409,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	} case :tct_string {
 		die; #TODO
 	} case :tct_bool {
-		die; #TODO
+		return :ok if from is :tct_bool;
+		return mk_err(to, from);
 	} case :tct_var(var vars) {
 		return mk_err(to, from) unless from is :tct_var;
 		var from_var = from as :tct_var;
