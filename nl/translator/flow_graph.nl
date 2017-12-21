@@ -215,7 +215,7 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 		} case :return(var return_i) {
 			read_reg(ref block, return_i as :val, nr) if return_i is :val;
 			rep var arg_nr (array::len(args_types)) {
-				if (args_types[arg_nr] is :ref) {
+				if (args_types[arg_nr]->by is :ref) {
 					read_reg(ref block, {type => :im, reg_no => arg_nr}, nr);
 				}
 			}
