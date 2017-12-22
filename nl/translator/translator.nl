@@ -80,6 +80,7 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 					access => function->access,
 					registers => [],
 					args_type => [],
+					ret_type => :tct_im,
 					commands => [],
 					name => function->name,
 					defines_type => function->defines_type,
@@ -105,6 +106,7 @@ def print_fun_def(function : @nast::fun_def_t, ref state : @translator::state_t)
 			array::push(ref state->result->args_type, arg_type_rref);
 		}
 	}
+	state->result->ret_type = function->ret_type->tct_type;
 	print_cmd(function->cmd, ref state);
 	print_return({debug => {begin => function->cmd->debug->end, end => function->cmd->debug->end}, value => :nop}, ref state);
 }
@@ -854,7 +856,9 @@ def print_die(value : ptd::arr(@nast::value_t), debug : @nast::debug_t, ref stat
 def print_return(as_return : @nast::value_t, ref state : @translator::state_t) {
 	var ret = :emp;
 	if (!(as_return->value is :nop)) {
-		ret = :val(calc_val(as_return, ref state));
+		var return_reg = new_register(ref state, var_type_to_reg_type(state->result->ret_type));
+		move(return_reg, calc_val(as_return, ref state), ref state);
+		ret = :val(return_reg);
 	}
 	print_safe_return(ret, ref state);
 }
@@ -865,7 +869,7 @@ def print_safe_return(to_return : ptd::var({val => @nlasm::reg_t, emp => ptd::no
 	if (to_return is :val) {
 		return_value = to_return as :val;
 		if (return_value->reg_no < array::len(args) && args[return_value->reg_no]->by is :ref) {
-			return_value = new_register(ref state, :im); #TODO set value
+			return_value = new_register(ref state, var_type_to_reg_type(state->result->ret_type)); #TODO set value
 			move(return_value, to_return as :val, ref state);
 			to_return = :val(return_value);
 		}

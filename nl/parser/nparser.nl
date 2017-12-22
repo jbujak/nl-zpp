@@ -114,7 +114,7 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 		err => ptd::sim()
 	}) {
 	var ret : @nast::fun_def_t = {
-			ret_type => :none,
+			ret_type => {type => :none, tct_type => :tct_empty},
 			line => ntokenizer::get_line(state->state),
 			args => [],
 			name => '',
@@ -135,7 +135,7 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 	if (ntokenizer::next_is(ref state->state, ':')) {
 		eat(ref state, ':');
 		try var tmp = parse_type(ref state);
-		ret->ret_type = :type(tmp);
+		ret->ret_type->type = :type(tmp);
 	}
 	try ret->cmd = parse_block(ref state);
 	match (ptd_parser::fun_def_to_ptd(ret->cmd)) case :err(var err) {

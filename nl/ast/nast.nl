@@ -90,7 +90,7 @@ def nast::variant_t() {
 
 def nast::fun_def_t() {
 	return ptd::rec({
-			ret_type => @nast::variable_type_t,
+			ret_type => ptd::rec({type => @nast::variable_type_t, tct_type => @tct::meta_type}),
 			line => ptd::sim(),
 			name => ptd::sim(),
 			cmd => @nast::cmd_t,

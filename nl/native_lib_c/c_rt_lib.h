@@ -6,6 +6,7 @@
 #pragma once
 
 #include </usr/include/stdio.h>
+#include <stdbool.h>
 
 typedef double FLOAT;
 typedef long long INT;
@@ -220,7 +221,8 @@ INT c_rt_lib0int_unary_minus(INT arg);
 INT c_rt_lib0int_unary_plus(INT arg);
 
 //boolean
-int c_rt_lib0check_true_native(ImmT imm);
+bool c_rt_lib0check_true_native(ImmT imm);
+ImmT c_rt_lib0bool_to_nl_native(bool b);
 ImmT c_rt_lib0get_false();
 ImmT c_rt_lib0get_true();
 
