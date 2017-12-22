@@ -126,7 +126,7 @@ def prepare_def_fun(modules : ptd::hash(@nast::module_t), ref errors : @tc_types
 					module => module_name,
 					access => fun_def->access,
 					args => new_args,
-					ret_type => return_type_to_tct(fun_def->ret_type, ref errors)
+					ret_type => return_type_to_tct(fun_def->ret_type->type, ref errors)
 				};
 			var name = get_fun_def_key(new_fun_def);
 			add_error(ref errors, 'redefine function: ' . name) if (hash::has_key(funs, name));
@@ -179,11 +179,17 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 			check_types_imported(arg_type, ref modules, ref errors);
 			add_var_decl_to_vars(arg_type, fun_arg->name, ref fun_vars);
 		}
-		modules->env->ret_type = return_type_to_tct(fun_def->ret_type, ref errors);
+		modules->env->ret_type = return_type_to_tct(fun_def->ret_type->type, ref errors);
 		check_types_imported(modules->env->ret_type, ref modules, ref errors);
 		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
 		rep var j (array::len(fun_def->args)) {
 			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
+		}
+		var fun_name = get_function_name(module->name, fun_def->name);
+		if (hash::has_key(get_special_functions(), fun_name)) {
+			module->fun_def[i]->ret_type->tct_type = get_special_functions(){fun_name}->r;
+		} else {
+			module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
 		}
 	}
 	def_fun = modules->funs;
@@ -853,6 +859,13 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::void(),
 			a => [{mod => :ref, type => tct::arr(tct::tct_im()), name => ''}]
 		});
+	hash::set_value(ref f, 'array::equal', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''}
+			]
+		});
 	hash::set_value(ref f, 'hash::set_value', {
 			r => tct::void(),
 			a => [
@@ -930,6 +943,8 @@ def get_special_functions() : @tc_types::special_functions {
 		});
 	hash::set_value(ref f, 'string::chr', {r => tct::sim(), a => [{mod => :none, type => tct::int(), name => ''}]});
 	hash::set_value(ref f, 'string::ord', {r => tct::int(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'string::is_letter', {r => tct::bool(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'string::is_digit', {r => tct::bool(), a => [{mod => :none, type => tct::sim(), name => ''}]});
 	hash::set_value(ref f, 'string::split', {
 			r => tct::arr(tct::sim()),
 			a => [{mod => :none, type => tct::sim(), name => ''}, {mod => :none, type => tct::sim(), name => ''}]

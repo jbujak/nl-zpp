@@ -17,6 +17,7 @@
 #include </usr/include/signal.h>
 #include <sys/prctl.h>
 #include <sys/time.h>
+#include <stdbool.h>
 
 #include "c_rt_lib.h"
 #include "c_global_const.h"
@@ -1426,17 +1427,21 @@ ImmT c_rt_lib0get_true(){
 	return _true;
 }
 
-int c_rt_lib0check_true_native(ImmT ___nl__arg) {
-	if(___nl__arg == _true) return 1;
-	if(___nl__arg == _false) return 0;
+bool c_rt_lib0check_true_native(ImmT ___nl__arg) {
+	if(___nl__arg == _true) return true;
+	if(___nl__arg == _false) return false;
 	if (compare_string_with_cstr(((NlOv*)___nl__arg)->name, "TRUE") == 0) {
-		return 1;
+		return true;
 	} else if (compare_string_with_cstr(((NlOv*)___nl__arg)->name, "FALSE") == 0) {
-		return 0;
+		return false;
 	}
 	char *name = ((NlOv*)___nl__arg)->name->s;
 	nl_die_internal("bad variant in boolean check: %s", name);
-	return 0;
+	return false;
+}
+
+ImmT c_rt_lib0bool_to_nl_native(bool b) {
+	return priv_to_nl_native(b);
 }
 
 ImmT c_rt_lib0not(ImmT ___nl__arg) {

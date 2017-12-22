@@ -82,7 +82,7 @@ def process_fun_def(ref ret : @reference_generator::refs, module : @reference_ge
 	});
 
 	process_cmd(ref ret, module, fun_def->cmd);
-	process_type(ref ret, module, fun_def->ret_type);
+	process_type(ref ret, module, fun_def->ret_type->type);
 	fora var arg (fun_def->args) {
 		process_type(ref ret, module, arg->type);
 	}

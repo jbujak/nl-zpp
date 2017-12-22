@@ -95,6 +95,7 @@ def generator_c::state_t() {
 			additional_imports => ptd::hash(@boolean_t::type),
 			mod_name => ptd::sim(),
 			fun_args => @generator_c::fun_args_t,
+			ret_type => @tct::meta_type,
 			const => ptd::rec({
 					sim => @generator_c::const_t,
 					singleton => @generator_c::const_t,
@@ -109,6 +110,7 @@ def generator_c::get_empty_state() : @generator_c::state_t {
 			ret => '',
 			header => '',
 			fun_args => [],
+			ret_type => :tct_im,
 			const => {dynamic_nr => 0, sim => {arr => [], hash => {}}, singleton => {arr => [], hash => {}}},
 			mod_name => '',
 			additional_imports => {},
@@ -264,7 +266,7 @@ def get_function_name(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::s
 def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
 	var fun_header = '';
 	var fun_name = get_function_name(func, mod_name);
-	fun_header .= im_t() . fun_name . '(';
+	fun_header .= get_type_name(func->ret_type) . fun_name . '(';
 	var reg_mem = 0;
 	fora var arg_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
@@ -347,7 +349,7 @@ def get_const_singleton(ref state : @generator_c::state_t, sim : ptd::sim()) : p
 }
 
 def get_func_ptr_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
-	return im_t() . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
+	return get_type_name(func->ret_type) . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
 }
 
 def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
@@ -492,6 +494,7 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 def print_function_block(ref state : @generator_c::state_t, func : @nlasm::function_t) : ptd::void() {
 	println(ref state, ' {');
 	state->fun_args = func->args_type;
+	state->ret_type = func->ret_type;
 	move_args_to_register(ref state);
 	println(ref state, get_fun_name('', '__const__init', state->mod_name) . '();');
 	
@@ -700,11 +703,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print(ref state, get_assign(ref state, ov_as->dest, r));
 	} case :return(var rr) {
 		move_register_to_ref_args(ref state);
-		print(ref state, 'return ');
 		match (rr) case :val(var v) {
+			print(ref state, 'return ');
 			print(ref state, get_reg(ref state, v));
 		} case :emp {
-			print(ref state, 'NULL');
+			print(ref state, 'return ');
+			print(ref state, get_empty_value(state->ret_type));
 		}
 	} case :die(var dd) {
 		print(ref state, 'nl_die_arg(' . get_reg(ref state, dd) . ')');
@@ -806,8 +810,7 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
 	return if nlasm::is_empty(dest);
 	match (dest->type) case :im {
-		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
-		print(ref state, get_fun_lib('copy', arg));
+		print_move_to_im(ref state, src, dest);
 	} case :int {
 		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
 	} case :string {
@@ -816,6 +819,23 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
 		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));		
+	}
+}
+
+def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
+	match (src->type) case :im {
+		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		print(ref state, get_fun_lib('copy', arg));
+	} case :int {
+		var arg = [get_reg_ref(ref state, dest), get_fun_lib('int_new', [get_reg(ref state, src)])];
+		print(ref state, get_fun_lib('move', arg));
+	} case :bool {
+		var arg = [get_reg_ref(ref state, dest), get_fun_lib('bool_to_nl_native', [get_reg(ref state, src)])];
+		print(ref state, get_fun_lib('move', arg));
+	} case :string {
+		#TODO string
+		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		print(ref state, get_fun_lib('copy', arg));
 	}
 }
 
@@ -876,7 +896,11 @@ def generate_call(ref state : @generator_c::state_t, call : @nlasm::call_t) : pt
 		}
 	}
 	ret .= ')';
-	print(ref state, get_assign(ref state, call->dest, ret));
+	if (nlasm::is_empty(call->dest)) {
+		print(ref state, ret);
+	} else {
+		print(ref state, get_assign(ref state, call->dest, ret));
+	}
 }
 
 def create_sim(obj : ptd::sim()) : ptd::sim() {
@@ -920,7 +944,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_arr(var arr_type) {
 		return im_t();
 	} case :tct_own_arr(var arr_type) {
-		return get_type_to_c(arr_type, '') . '*';
+		return get_type_to_c(arr_type, '') . '* ';
 	} case :tct_hash(var hash_type) {
 		return im_t();
 	} case :tct_own_hash(var hash_type) {
@@ -932,12 +956,12 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 		forh var r_name, var r_type (records) {
 			ret .= get_type_to_c(r_type, '') . ' ' . r_name . '0field' . ';' .  string::lf();
 		}
-		ret .= '}';
+		ret .= '} ';
 		return ret;
 	} case :tct_ref(var ref_name) {
 		return func_ref_to_struct_name(ref_name);
 	} case :tct_void {
-		return 'void';
+		return 'void ';
 	} case :tct_sim {
 		return im_t();
 	} case :tct_int {
@@ -951,7 +975,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_own_var(var vars) {
 		return im_t();
 	} case :tct_empty {
-		return 'void';
+		return im_t();
 	}
 }
 
@@ -999,5 +1023,41 @@ def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
 		return 'bool__' . reg->reg_no;
 	} case :string {
 		return 'string__' . reg->reg_no;
+	}
+}
+
+def get_empty_value(type : @tct::meta_type) : ptd::sim() {
+	match (type) case :tct_im {
+		return 'NULL';
+	} case :tct_arr(var arr_type) {
+		return 'NULL';
+	} case :tct_own_arr(var arr_type) {
+		return 'NULL';
+	} case :tct_hash(var hash_type) {
+		return 'NULL';
+	} case :tct_own_hash(var hash_type) {
+		return 'NULL';
+	} case :tct_rec(var records) {
+		return 'NULL';
+	} case :tct_own_rec(var records) {
+		return 'NULL';
+	} case :tct_ref(var ref_name) {
+		return 'NULL';
+	} case :tct_void {
+		return '';
+	} case :tct_sim {
+		return 'NULL';
+	} case :tct_int {
+		return 0;
+	} case :tct_string {
+		return 'NULL';
+	} case :tct_bool {
+		return 'false';
+	} case :tct_var(var vars) {
+		return 'NULL';
+	} case :tct_own_var(var vars) {
+		return 'NULL';
+	} case :tct_empty {
+		return 'NULL';
 	}
 }

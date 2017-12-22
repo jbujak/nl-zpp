@@ -98,7 +98,7 @@ def print_fun_def_head(ref state : @wprinter::state_t, function : @nast::fun_def
 		array::append(ref ret, [wprinter::build_sim(','), wprinter::get_sep()]) if i != array::len(function->args) - 1;
 	}
 	array::push(ref ret, wprinter::build_sim(')'));
-	match (function->ret_type) case :type(var type) {
+	match (function->ret_type->type) case :type(var type) {
 		array::append(ref ret, [
 				wprinter::get_sep(),
 				wprinter::build_sim(':'),

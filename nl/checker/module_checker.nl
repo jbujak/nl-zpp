@@ -142,7 +142,7 @@ def module_checker::check_module(module : @nast::module_t, check_public_fun, ref
 	fora var fun_def (module->fun_def) {
 		state->errors->current_line = fun_def->line;
 		state->vars = {};
-		state->return = {was => false, arg => check_return_type(fun_def->ret_type, ref state)};
+		state->return = {was => false, arg => check_return_type(fun_def->ret_type->type, ref state)};
 		var prev = save_block(ref state);
 		fora var fun_arg (fun_def->args) {
 			add_var(fun_arg->name, false, false, ref state);

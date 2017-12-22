@@ -112,6 +112,7 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 				access => :priv,
 				registers => [],
 				args_type => [],
+				ret_type => :tct_im,
 				commands => [],
 				name => '',
 				defines_type => :no,
