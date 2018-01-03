@@ -181,3 +181,15 @@ def nlasm::eq_reg(reg1 : @nlasm::reg_t, reg2 : @nlasm::reg_t) : @boolean_t::type
 	}
 }
 
+def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @boolean_t::type {
+	match (reg1) case :im {
+		return reg2 is :im;
+	} case :int {
+		return reg2 is :int;
+	} case :bool {
+		return reg2 is :bool;
+	} case :string {
+		return reg2 is :string;
+	}
+}
+

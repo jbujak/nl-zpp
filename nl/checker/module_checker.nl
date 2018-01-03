@@ -485,7 +485,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		match (as_try) case :decl(var var_decl) {
 			add_var_dec(var_decl, false, false, ref state);
 		} case :lval(var lval) {
-			check_val({debug => cmd->debug, value => :bin_op(lval)}, ref state);
+			check_val({debug => cmd->debug, value => :bin_op(lval), type => lval->left->type}, ref state);
 		} case :expr(var expr) {
 			check_val(expr, ref state);
 		}
@@ -493,7 +493,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		match (as_ensure) case :decl(var var_decl) {
 			add_var_dec(var_decl, false, false, ref state);
 		} case :lval(var lval) {
-			check_val({debug => cmd->debug, value => :bin_op(lval)}, ref state);
+			check_val({debug => cmd->debug, value => :bin_op(lval), type => lval->left->type}, ref state);
 		} case :expr(var expr) {
 			check_val(expr, ref state);
 		}
