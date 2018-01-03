@@ -570,8 +570,10 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 def move_args_to_register(ref state : @generator_c::state_t) {
 	rep var arg_id (array::len(state->fun_args)) {
 		match (state->fun_args[arg_id]->by) case :val {
-			print(ref state, get_fun_lib('arg_val', [get_reg(ref state, state->fun_args[arg_id]->register)]));
-			println(ref state, ';');
+			if (state->fun_args[arg_id]->register->type is :im) {
+				print(ref state, get_fun_lib('arg_val', [get_reg(ref state, state->fun_args[arg_id]->register)]));
+				println(ref state, ';');
+			}
 		} case :ref {
 		}
 	}

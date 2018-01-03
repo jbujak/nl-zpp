@@ -108,7 +108,7 @@ def print_fun_def(function : @nast::fun_def_t, ref state : @translator::state_t)
 	}
 	state->result->ret_type = function->ret_type->tct_type;
 	print_cmd(function->cmd, ref state);
-	print_return({debug => {begin => function->cmd->debug->end, end => function->cmd->debug->end}, value => :nop}, ref state);
+	print_return({debug => {begin => function->cmd->debug->end, end => function->cmd->debug->end}, value => :nop, type => :tct_empty}, ref state);
 }
 
 def print_array_declaration(arr : ptd::arr(@nast::value_t), destination : @nlasm::reg_t, ref state : 
@@ -181,7 +181,10 @@ def print_fun_val(fun_val : @nast::fun_val_t, destination : @nlasm::reg_t, ref s
 	rep var i (array::len(fun_val->args)) {
 		var fun_arg = fun_val->args[i];
 		match (fun_arg->mod) case :none {
-			array::push(ref args, :val(calc_val(fun_arg->val, ref state)));
+			var arg_src = calc_val(fun_arg->val, ref state);
+			var arg_dst = new_register(ref state, var_type_to_reg_type(fun_arg->expected_type));
+			move(arg_dst, arg_src, ref state);
+			array::push(ref args, :val(arg_dst));
 		} case :ref {
 			if (hash::has_key(ref_var, i)) {
 				var lvalue = get_value_of_lvalue(fun_arg->val, true, ref state);
@@ -250,7 +253,7 @@ def print_post_operator(value : @nast::value_t, sign : ptd::sim(), destination :
 	var lvalue = get_value_of_lvalue(value, true, ref state);
 	var dest = lvalue[array::len(lvalue) - 1] as :value;
 	move(destination, dest, ref state);
-	var const_reg = calc_val({debug => value->debug, value => :const(1)}, ref state);
+	var const_reg = calc_val({debug => value->debug, value => :const(1), type => :tct_int}, ref state);
 	print_bin_op_operator_command(dest, dest, const_reg, sign eq '++' ? '+' : '-', ref state);
 	set_value_of_lvalue(lvalue, true, ref state);
 }
@@ -263,7 +266,7 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 	} elsif (unary_op->op eq '++' || unary_op->op eq '--') {
 		var lvalue = get_value_of_lvalue(unary_op->val, true, ref state);
 		var dest = lvalue[array::len(lvalue) - 1] as :value;
-		var src = dest_val({debug => unary_op->val->debug, value => :const(1)}, destination, ref state);
+		var src = dest_val({debug => unary_op->val->debug, value => :const(1), type => :tct_int}, destination, ref state);
 		print_bin_op_operator_command(dest, dest, src, unary_op->op eq '++' ? '+' : '-', ref state);
 		move(destination, dest, ref state);
 		set_value_of_lvalue(lvalue, true, ref state);
@@ -307,8 +310,10 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 		print_fun_val({
 			name => 'array_push',
 			module => 'c_rt_lib',
-			args => [{val => bin_op->left, mod => :ref}, {val => bin_op->right, mod => :none}]},
-			destination, ref state);
+			args => [
+				{val => bin_op->left, mod => :ref, expected_type => :tct_im},
+				{val => bin_op->right, mod => :none, expected_type => :tct_im}
+			]}, destination, ref state);
 	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->') {
 		var left_val = dest_val(bin_op->left, destination, ref state);
 		if (bin_op->op eq 'ARRAY_INDEX') {
@@ -464,11 +469,18 @@ def print_if_mod(as_if_mod : ptd::rec({cond => @nast::value_t, cmd => @nast::cmd
 def print_unless_mod(as_unless_mod : ptd::rec({cond => @nast::value_t, cmd => @nast::cmd_t}), ref state : 
 	@translator::state_t) {
 	var as_if = {
-			cond => {debug => as_unless_mod->cond->debug, value => :unary_op({val => 
-				{
-					debug => as_unless_mod->cond->debug,
-					value => :parenthesis(as_unless_mod->cond),
-				}, op => '!'})},
+			cond => {
+				debug => as_unless_mod->cond->debug,
+				value => :unary_op({
+					val => {
+						debug => as_unless_mod->cond->debug,
+						value => :parenthesis(as_unless_mod->cond),
+						type => :tct_bool
+					},
+					op => '!',
+				}),
+				type => :tct_bool
+			},
 			if => as_unless_mod->cmd,
 			elsif => [],
 			else => {debug => as_unless_mod->cmd->debug, cmd => :nop}
@@ -689,6 +701,20 @@ def move(destination : @nlasm::reg_t, source : @nlasm::reg_t, ref state : @trans
 
 def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::reg_t, arg_2 : @nlasm::reg_t, operator : 
 		ptd::sim(), ref state : @translator::state_t) {
+	var real_arg_1 = arg_1;
+	var real_arg_2 = arg_2;
+	var expected_operand_type = :int;
+	if (operator eq '.' || operator eq '.=' || operator eq 'eq') {
+		expected_operand_type = :string;
+	}
+	if (!nlasm::eq_reg_type(arg_1->type, expected_operand_type)) {
+		real_arg_1 = new_register(ref state, expected_operand_type);
+		move(real_arg_1, arg_1, ref state);
+	}
+	if (!nlasm::eq_reg_type(arg_2->type, expected_operand_type)) {
+		real_arg_2 = new_register(ref state, expected_operand_type);
+		move(real_arg_2, arg_2, ref state);
+	}
 	if (operator eq '+' || operator eq '+=') {
 		operator = '+';
 	} elsif (operator eq '-' || operator eq '-=') {
@@ -700,7 +726,7 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 	} elsif (operator eq '.' || operator eq '.=') {
 		operator = '.';
 	}
-	print(ref state, :bin_op({dest => destination, left => arg_1, right => arg_2, op => operator}));
+	print(ref state, :bin_op({dest => destination, left => real_arg_1, right => real_arg_2, op => operator}));
 }
 
 def print(ref state : @translator::state_t, ord : @nlasm::order_t) {
@@ -849,7 +875,7 @@ def print_ternary_op(op : @nast::ternary_op_t, destination : @nlasm::reg_t, ref 
 
 def print_die(value : ptd::arr(@nast::value_t), debug : @nast::debug_t, ref state : @translator::state_t) {
 	var arg = new_register(ref state, :im); #TODO set type
-	print_val({debug => debug, value => :arr_decl(value)}, arg, ref state);
+	print_val({debug => debug, value => :arr_decl(value), type => :tct_arr(:tct_im)}, arg, ref state);
 	print(ref state, :die(arg));
 }
 
@@ -869,7 +895,7 @@ def print_safe_return(to_return : ptd::var({val => @nlasm::reg_t, emp => ptd::no
 	if (to_return is :val) {
 		return_value = to_return as :val;
 		if (return_value->reg_no < array::len(args) && args[return_value->reg_no]->by is :ref) {
-			return_value = new_register(ref state, var_type_to_reg_type(state->result->ret_type)); #TODO set value
+			return_value = new_register(ref state, var_type_to_reg_type(state->result->ret_type));
 			move(return_value, to_return as :val, ref state);
 			to_return = :val(return_value);
 		}
@@ -979,45 +1005,7 @@ def get_sim_label(ref state : @translator::state_t) : ptd::sim() {
 }
 
 def value_type_to_reg_type(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_type {
-	match(value->value) case :const(var c) {
-		return :int;
-	} case :post_inc(var val) {
-		return :int;
-	} case :post_dec(var val) {
-		return :int;
-	} case :variant(var vart) {
-		if((vart->name eq 'TRUE' || vart->name eq 'FALSE') && vart->var->value is :nop) {
-			return :bool;
-		} else {
-			return :im;
-		}
-	} case :string(var str) {
-		return :string;
-	} case :ternary_op(var top) {
-		return value_type_to_reg_type(top->snd, ref state);
-	} case :hash_key(var hk) {
-		return :im; #TODO make difference for int/string as it's a sim
-	} case :nop {
-		die; #it's not possible to assign nop
-	} case :parenthesis(var p) {
-		return value_type_to_reg_type(p, ref state);
-	} case :arr_decl(var ad) {
-		return :im;
-	} case :hash_decl(var hd) {
-		return :im;
-	} case :var(var v) {
-		return get_var_register(v, ref state)->type;
-	} case :bin_op(var bop) {
-		return value_type_to_reg_type(bop->left, ref state);
-	} case :var_op(var vop) {
-		return value_type_to_reg_type(vop->left, ref state);		
-	} case :unary_op(var uop) {
-		return value_type_to_reg_type(uop->val, ref state);
-	} case :fun_label(var fl) {
-		return :im;
-	} case :fun_val(var fv) {
-		return :im;
-	}
+	return var_type_to_reg_type(value->type);
 }
 
 def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {

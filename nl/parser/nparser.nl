@@ -177,6 +177,7 @@ def parse_fun_val_arg(ref state : @nparser::state_t) : ptd::var({ok => @nast::fu
 	var el = {};
 	el->mod = try_eat(ref state, 'ref') ? :ref : :none;
 	try el->val = parse_expr(ref state);
+	el->expected_type = :tct_im;
 	return :ok(el);
 }
 
@@ -214,13 +215,14 @@ def parse_label(ref state : @nparser::state_t) : ptd::var({
 	return :ok(:fun_val(fun_val));
 }
 
-def parse_hash_key(ref state : @nparser::state_t) : ptd::rec({debug => @nast::debug_t, value => ptd::var({hash_key => ptd::sim()})}) {
+def parse_hash_key(ref state : @nparser::state_t) : @nast::value_t {
 	var begin_place = ntokenizer::get_place(ref state->state);
 	var ret = :hash_key(ntokenizer::is_text(ref state->state) ?
 		ntokenizer::eat_text(ref state->state) : '');
 	return {
 		debug => {begin => begin_place, end => ntokenizer::get_place(ref state->state)},
 		value => ret,
+		type => :tct_empty,
 	};
 }
 
@@ -266,15 +268,33 @@ def parse_type(ref state : @nparser::state_t) : @nparser::try_value_t {
 				begin => begin,
 				end => ntokenizer::get_place(ref state->state),
 			},
-			value => :unary_op({op => '@', val => {debug => {begin => fun_label_begin, end => fun_label_end}, value => fun_label}}),
+			value => :unary_op({
+				op => '@',
+				val => {
+					debug => {begin => fun_label_begin, end => fun_label_end},
+					value => fun_label,
+					type => :tct_empty,
+				},
+			}),
+			type => :tct_empty,
 		});
 	}
 	if (ntokenizer::is_type(ref state->state, :word)) {
 		try var ret = parse_label(ref state);
-		return :ok({debug => {begin => begin, end => ntokenizer::get_place(ref state->state)}, value => ret}) if (ret is :fun_val);
+		 if (ret is :fun_val) {
+			return :ok({
+				debug => {begin => begin, end => ntokenizer::get_place(ref state->state)},
+				value => ret,
+				type => :tct_empty,
+			});
+		}
 	}
 	add_error(ref state, 'wrong format of type, expected ''@'' or function call');
-	return :ok({debug => {begin => begin, end => ntokenizer::get_place(ref state->state)}, value => :nop});
+	return :ok({
+		debug => {begin => begin, end => ntokenizer::get_place(ref state->state)},
+		value => :nop,
+		type => :tct_empty,
+	});
 }
 
 def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, prec : ptd::sim()) : @nparser::try_value_t {
@@ -333,7 +353,11 @@ def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, pr
 		} else {
 			return :ok(left);
 		}
-		left = {debug => {begin => new_begin, end => ntokenizer::get_place(ref state->state)}, value => new_left};
+		left = {
+			debug => {begin => new_begin, end => ntokenizer::get_place(ref state->state)},
+			value => new_left,
+			type => :tct_empty,
+		};
 	}
 	die;
 }
@@ -384,6 +408,7 @@ def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser:
 					end => fun_label_end,
 				},
 				value => fun_label,
+				type => :tct_empty,
 			};
 		} else {
 			try value = parse_expr_rec(ref state, hash::get_value(nast::get_unary_ops(), op)->prec);
@@ -405,8 +430,12 @@ def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser:
 		add_error(ref state, err);
 		return :err(err);
 	}
-	return parse_expr_rec_left(ref state, {debug => {begin => begin, end => ntokenizer::get_place(ref state->state)}, 
-		value => expr}, prec);
+	var left = {
+		debug => {begin => begin, end => ntokenizer::get_place(ref state->state)}, 
+		value => expr,
+		type => :tct_empty,
+	};
+	return parse_expr_rec_left(ref state, left, prec);
 }
 
 def get_value_nop(ref state : @nparser::state_t) : @nast::value_t {
@@ -416,6 +445,7 @@ def get_value_nop(ref state : @nparser::state_t) : @nast::value_t {
 			end => ntokenizer::get_place(ref state->state),
 		},
 		value => :nop,
+		type => :tct_empty,
 	};
 }
 

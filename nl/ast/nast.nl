@@ -132,7 +132,7 @@ def nast::variable_declaration_t() {
 }
 
 def nast::fun_val_arg_t() {
-	return ptd::rec({val => @nast::value_t, mod => ptd::var({none => ptd::none(), ref => ptd::none()})});
+	return ptd::rec({val => @nast::value_t, expected_type => @tct::meta_type, mod => ptd::var({none => ptd::none(), ref => ptd::none()})});
 }
 
 def nast::fun_val_t() {
@@ -175,6 +175,7 @@ def nast::value_t() {
 	return ptd::rec({
 		debug => @nast::debug_t,
 		value => @nast::value_only_t,
+		type => @tct::meta_type,
 	});
 }
 
@@ -285,7 +286,7 @@ def nast::empty_debug() : @nast::debug_t {
 }
 
 def nast::cast_to_value(value : @nast::value_only_t) : @nast::value_t {
-	return {debug => nast::empty_debug(), value => value};
+	return {debug => nast::empty_debug(), value => value, type => :tct_empty};
 }
 
 
