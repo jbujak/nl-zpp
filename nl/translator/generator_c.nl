@@ -958,7 +958,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 		forh var r_name, var r_type (records) {
 			ret .= get_type_to_c(r_type, '') . ' ' . r_name . '0field' . ';' .  string::lf();
 		}
-		ret .= '} ';
+		ret .= '}';
 		return ret;
 	} case :tct_ref(var ref_name) {
 		return func_ref_to_struct_name(ref_name);

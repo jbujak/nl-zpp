@@ -30,7 +30,6 @@ def test_type::test() {
 	if (true) {
 		d = :b({a => 'ss', c => 'ff'});
 	} else {
-		d = :kotek;
 		die;
 	}
 	funkcja(d);
@@ -71,7 +70,6 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 	var ret;
 	var emp : @test_type::rekord;
 	match (a) case :a(var t) {
-		ret = :dynia;
 		return '';
 	} case :b(var b_param) {
 		ret = '';
@@ -80,7 +78,6 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 		emp = cop;
 		emp = a as :d;
 		cop->g = '';
-		ret = :mysz;
 		die;
 	}
 	die unless test_is(ret);
