@@ -377,8 +377,8 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 	forh var var_name, var var_ (b_vars) {
 		hash::set_value(ref b_vars, var_name, hash::get_value(vars, var_name));
 	}
-	if (hash::has_key(vars, '__end')) {
-		hash::set_value(ref b_vars, '__end', {overwrited => :yes, type => tct::empty()});
+	if (hash::has_key(vars, '__END')) {
+		hash::set_value(ref b_vars, '__END', {overwrited => :yes, type => tct::empty()});
 	}
 	return ret;
 }
