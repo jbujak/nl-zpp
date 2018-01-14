@@ -33,7 +33,7 @@ def string_compiler::compile(program : ptd::sim(), module_name : ptd::sim()) : p
 			var types_ret = type_checker::check_modules(ref asts, asts);
 			errors = types_ret->errors;
 		}
-		return :ok(translator::translate(ast)) if array::len(errors) == 0;
+		return :ok(translator::translate(ast, {})) if array::len(errors) == 0;
 		return :err(errors);
 	} case :error(var errors) {
 		return :err(errors);
@@ -138,7 +138,7 @@ def string_compiler::compile_to_nlasm(modules : ptd::hash(ptd::sim())) : ptd::va
 	return :err(types_ret->errors) if array::len(types_ret->errors) > 0;
 	var nlasms = {};
 	forh var module_name, var ast (asts) {
-		hash::set_value(ref nlasms, module_name, translator::translate(ast));
+		hash::set_value(ref nlasms, module_name, translator::translate(ast, {}));
 	}
 	var state = post_processing::init({}, :o0);
 	post_processing::find(ref state, ref nlasms);

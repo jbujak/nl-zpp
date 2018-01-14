@@ -18,6 +18,7 @@ def translator::function_logic_t() {
 	return ptd::rec({
 		registers => ptd::arr(@nlasm::reg_t),
 		variables => ptd::hash(@nlasm::reg_t),
+		defined_types => ptd::hash(@tct::meta_type),
 	});
 }
 
@@ -59,7 +60,7 @@ def translator::last_debug_char(debug : @nast::debug_t) : @nast::debug_t {
 	return {begin => begin, end => end};
 }
 
-def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
+def translator::translate(ast : @nast::module_t, defined_types : ptd::hash(@tct::meta_type)) : @nlasm::result_t {
 	var result : @nlasm::result_t = {module_name => ast->name, functions => [], imports => []};
 	result->imports = [];
 	fora var imp (ast->import) {
@@ -69,6 +70,7 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 		var logic = {
 			variables => {},
 			registers => [],
+			defined_types => defined_types
 		};
 		var state : @translator::state_t = {
 				label_nr => 0,
@@ -97,11 +99,11 @@ def translator::translate(ast : @nast::module_t) : @nlasm::result_t {
 def print_fun_def(function : @nast::fun_def_t, ref state : @translator::state_t) {
 	fora var fun_arg (function->args) {
 		match (fun_arg->mod) case :none {
-			var rim = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type));
+			var rim = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type, state->logic->defined_types));
 			var arg_type_rim = {by => :val, register => rim, type => fun_arg->tct_type};
 			array::push(ref state->result->args_type, arg_type_rim);
 		} case :ref {
-			var rref = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type));
+			var rref = new_declaration(fun_arg->name, ref state, var_type_to_reg_type(fun_arg->tct_type as :type, state->logic->defined_types));
 			var arg_type_rref = {by => :ref, register => rref, type => fun_arg->tct_type};			
 			array::push(ref state->result->args_type, arg_type_rref);
 		}
@@ -142,7 +144,7 @@ def print_var_decl(var_decl : @nast::variable_declaration_t, ref state : @transl
 	match (var_decl->tct_type) case :none {
 		reg_type = :im;
 	} case :type(var var_type) {
-		reg_type = var_type_to_reg_type(var_type);
+		reg_type = var_type_to_reg_type(var_type, state->logic->defined_types);
 	}
 	var reg = new_declaration(var_decl->name, ref state, reg_type);
 	match (var_decl->tct_type) case :none {
@@ -182,7 +184,7 @@ def print_fun_val(fun_val : @nast::fun_val_t, destination : @nlasm::reg_t, ref s
 		var fun_arg = fun_val->args[i];
 		match (fun_arg->mod) case :none {
 			var arg_src = calc_val(fun_arg->val, ref state);
-			var arg_dst = new_register(ref state, var_type_to_reg_type(fun_arg->expected_type));
+			var arg_dst = new_register(ref state, var_type_to_reg_type(fun_arg->expected_type, state->logic->defined_types));
 			move(arg_dst, arg_src, ref state);
 			array::push(ref args, :val(arg_dst));
 		} case :ref {
@@ -882,7 +884,7 @@ def print_die(value : ptd::arr(@nast::value_t), debug : @nast::debug_t, ref stat
 def print_return(as_return : @nast::value_t, ref state : @translator::state_t) {
 	var ret = :emp;
 	if (!(as_return->value is :nop)) {
-		var return_reg = new_register(ref state, var_type_to_reg_type(state->result->ret_type));
+		var return_reg = new_register(ref state, var_type_to_reg_type(state->result->ret_type, state->logic->defined_types));
 		move(return_reg, calc_val(as_return, ref state), ref state);
 		ret = :val(return_reg);
 	}
@@ -895,7 +897,7 @@ def print_safe_return(to_return : ptd::var({val => @nlasm::reg_t, emp => ptd::no
 	if (to_return is :val) {
 		return_value = to_return as :val;
 		if (return_value->reg_no < array::len(args) && args[return_value->reg_no]->by is :ref) {
-			return_value = new_register(ref state, var_type_to_reg_type(state->result->ret_type));
+			return_value = new_register(ref state, var_type_to_reg_type(state->result->ret_type, state->logic->defined_types));
 			move(return_value, to_return as :val, ref state);
 			to_return = :val(return_value);
 		}
@@ -1005,14 +1007,14 @@ def get_sim_label(ref state : @translator::state_t) : ptd::sim() {
 }
 
 def value_type_to_reg_type(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_type {
-	return var_type_to_reg_type(value->type);
+	return var_type_to_reg_type(value->type, state->logic->defined_types);
 }
 
-def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
+def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @nlasm::reg_type {
 	match (type) case :tct_rec(var rec_type) {
 		return :im;
 	} case :tct_own_rec(var rec_type) {
-		return :im;
+		return :rec(type);
 	} case :tct_hash(var hash_type) {
 		return :im;
 	} case :tct_own_hash(var hash_type) {
@@ -1028,6 +1030,8 @@ def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
 	} case :tct_ref(var ref_type) {
 		if (ref_type eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
 			return :bool;
+		} elsif (defined_types{ref_type} is :tct_own_rec) {
+			return :rec(type);
 		}
 		return :im;
 	} case :tct_sim {
@@ -1048,14 +1052,6 @@ def var_type_to_reg_type(type : @tct::meta_type) : @nlasm::reg_type {
 }
 
 def get_lvalue_reg_type(lvalue : @translator::lvalue_values_t) : @nlasm::reg_type {
-	match(lvalue[array::len(lvalue) - 1] as :value->type) case :im {
-		return :im;
-	} case :int {
-		return :int;
-	} case :string {
-		return :string;
-	} case :bool {
-		return :bool;
-	}
+	return lvalue[array::len(lvalue) - 1] as :value->type;
 }
 

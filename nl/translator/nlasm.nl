@@ -80,10 +80,7 @@ def nlasm::annotation_t() {
 def nlasm::order_t() {
 	return ptd::var({
 			arr_decl => ptd::rec({dest => @nlasm::reg_t, src => ptd::arr(@nlasm::reg_t)}),
-			hash_decl => ptd::rec({
-					dest => @nlasm::reg_t,
-					src => ptd::arr(ptd::rec({key => ptd::sim(), val => @nlasm::reg_t}))
-				}),
+			hash_decl => @nlasm::hash_decl_t,
 			func => ptd::rec({dest => @nlasm::reg_t, module => ptd::sim(), name => ptd::sim()}),
 			call => @nlasm::call_t,
 			una_op => @nlasm::una_op_t,
@@ -111,6 +108,13 @@ def nlasm::var_decl_t() {
 	return ptd::rec({
 		type => @tct::meta_type,
 		register => @nlasm::reg_t
+	});
+}
+
+def nlasm::hash_decl_t() {
+	return ptd::rec({
+		dest => @nlasm::reg_t,
+		src => ptd::arr(ptd::rec({key => ptd::sim(), val => @nlasm::reg_t}))
 	});
 }
 
@@ -153,32 +157,16 @@ def nlasm::reg_type() {
 		int => ptd::none(),
 		string => ptd::none(),
 		bool => ptd::none(),
+		rec => @tct::meta_type,
 	});
 }
 
 def nlasm::is_empty(reg : @nlasm::reg_t) {
-	match (reg->type) case :im {
-		return reg->reg_no eq '';
-	} case :int {
-		return reg->reg_no eq '';
-	} case :bool {
-		return reg->reg_no eq '';
-	} case :string {
-		return reg->reg_no eq '';
-	}
+	return reg->reg_no eq '';
 }
 
 def nlasm::eq_reg(reg1 : @nlasm::reg_t, reg2 : @nlasm::reg_t) : @boolean_t::type {
-	#TODO remove when register numbers are unique
-	match (reg1->type) case :im {
-		return reg2->type is :im && reg1->reg_no == reg2->reg_no;
-	} case :int {
-		return reg2->type is :int && reg2->reg_no == reg2->reg_no;
-	} case :bool {
-		return reg2->type is :bool && reg2->reg_no == reg2->reg_no;
-	} case :string {
-		return reg2->type is :string && reg2->reg_no == reg2->reg_no;
-	}
+	return reg1->reg_no == reg2->reg_no;
 }
 
 def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @boolean_t::type {
@@ -190,6 +178,8 @@ def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @bool
 		return reg2 is :bool;
 	} case :string {
 		return reg2 is :string;
+	} case :rec(var type_fun) {
+		return reg2 is :rec;
 	}
 }
 
