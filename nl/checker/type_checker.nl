@@ -1218,7 +1218,8 @@ def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modul
 		left_type->type = left_type->type as :tct_hash;
 		return left_type;
 	}
-	if (!ptd_system::is_accepted(left_type, tct::rec({}), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(left_type, tct::rec({}), ref modules, ref errors)
+			&& !ptd_system::is_accepted(left_type, tct::own_rec({}), ref modules, ref errors)) {
 		add_error(ref errors, 'binary operator -> can be applied only to record : ' . 
 			get_print_tct_type_name(left_type->type));
 	}
@@ -1610,6 +1611,10 @@ def fill_value_types_in_cmd(ref cmd : @nast::cmd_t, b_vars : @tc_types::vars_t, 
 	} case :var_decl(var var_decl) {
 		match (var_decl->value) case :none {
 		} case :value(var value) {
+			match (var_decl->tct_type) case :none {
+			} case :type(var type) {
+				value->type = type;
+			}
 			fill_value_type(ref value, vars, modules);
 			var_decl->value = :value(value);
 			cmd->cmd = :var_decl(var_decl);
@@ -1724,8 +1729,14 @@ def fill_value_type(ref value : @nast::value_t, vars : @tc_types::vars_t, module
 		#TODO
 		value->type = :tct_arr(:tct_im);
 	} case :hash_decl(var hash_decl) {
-		#TODO
-		value->type = :tct_hash(:tct_im);
+		rep var i (array::len(hash_decl)) {
+			hash_decl[i]->key->type = :tct_string;
+			if (value->type is :tct_own_rec) {
+				hash_decl[i]->val->type = (value->type as :tct_own_rec){hash_decl[i]->key->value as :hash_key};
+			}
+			fill_value_type(ref hash_decl[i]->val, vars, modules);
+		}
+		value->value = :hash_decl(hash_decl);
 	} case :var(var variable_name) {
 		value->type = vars{variable_name}->type;
 	} case :bin_op(var bin_op) {

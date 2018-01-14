@@ -115,6 +115,8 @@ def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_ty
 	return :ok if from->type is :tct_im;
 	if (as_type is :tct_rec) {
 		return :ok if hash::size(as_type as :tct_rec) == 0 && from->type is :tct_rec;
+	} elsif (as_type is :tct_own_rec) {
+		return :ok if hash::size(as_type as :tct_own_rec) == 0 && from->type is :tct_own_rec;
 	} elsif (as_type is :tct_var) {
 		return :ok if hash::size(as_type as :tct_var) == 0 && from->type is :tct_var;
 	}
@@ -284,7 +286,28 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors));
 		}
 	} case :tct_own_rec(var reca) {
-		die; #TODO
+		if (b is :tct_own_rec) {
+			var recb = b as :tct_own_rec;
+			var err = false;
+			forh var field, var type (reca) {
+				err = true if (!hash::has_key(recb, field));
+			}
+			forh var field, var type (recb) {
+				err = true if (!hash::has_key(reca, field));
+			}
+			if (err) {
+				add_error(ref errors, 'cannot merge incompatible own::rec types');
+			} else {
+				var ret = {};
+				forh var field, var type (reca) {
+					hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
+							ref errors));
+				}
+				return tct::own_rec(ret);
+			}
+		} else {
+			add_error(ref errors, 'cannot merge non own::rec with own::rec');
+		}
 	} case :tct_hash(var hash) {
 		if (b is :tct_hash) {
 			return tct::hash(cross_type(hash, b as :tct_hash, ref_inf, ref modules, ref errors));
@@ -398,7 +421,19 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		}
 		return :ok;
 	} case :tct_own_rec(var records) {
-		die; #TODO
+		return mk_err(to, from) unless from is :tct_rec;
+		var cand_records : ptd::hash(@tct::meta_type) = from as :tct_rec;
+		return mk_err(to, from) if hash::size(cand_records) != hash::size(records);
+		forh var name, var record (records) {
+			return mk_err(to, from) unless hash::has_key(cand_records, name);
+			var cand_record : @tct::meta_type = hash::get_value(cand_records, name);
+			match (check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			} case :err(var info) {
+				array::push(ref info->stack, :ptd_rec(name));
+				return :err(info);
+			}
+		}
+		return :ok;
 	} case :tct_ref(var ref_name) {
 		die;
 	} case :tct_void {

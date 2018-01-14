@@ -31,6 +31,7 @@ use profile;
 use nsystem;
 use string_utils;
 use reference_generator;
+use tct;
 
 def get_dir_cache_name() : ptd::sim() {
 	return 'cache_nl';
@@ -623,8 +624,17 @@ def show_and_count_errors(all_errors : @compiler::errors_group_t, opt_cli : @com
 
 def translate(asts : ptd::hash(@nast::module_t), ref post_proc : @post_processing_t::state_t) : ptd::hash(@nlasm::result_t) {
 	var nlasm = {};
+	var defined_types : ptd::hash(@tct::meta_type) = {};
 	forh var module, var ast (asts) {
-		var nla_asm = translator::translate(ast);
+		fora var func (ast->fun_def) {
+			match (func->defines_type) case :no {
+			} case :yes(var type) {
+				defined_types{module . '::' . func->name} = type;
+			}
+		}
+	}
+	forh var module, var ast (asts) {
+		var nla_asm = translator::translate(ast, defined_types);
 		hash::set_value(ref nlasm, module, nla_asm);
 	}
 	#post_processing::find(ref post_proc, ref nlasm); #TODO fix

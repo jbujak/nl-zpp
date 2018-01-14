@@ -21,8 +21,8 @@ def main():
         testnum = testnum + 1       
 
 
-    test("Empty struct", lambda: re.search(r"\s*struct\s*test_generated_struct0empty_struct0struct\s*\{\s*\};", contents))
-    test("Empty function is not a struct", lambda: not re.search(r"\s*struct\s*test_generated_struct0empty_function0struct\s*\{\s*\};", contents))
+    test("Empty struct", lambda: re.search(r"\s*struct\s*test_generated_struct0empty_struct0type\s*\{\s*\};", contents))
+    test("Empty function is not a struct", lambda: not re.search(r"\s*struct\s*test_generated_struct0empty_function0type\s*\{\s*\};", contents))
 
     return (1 if fail else 0)
 
