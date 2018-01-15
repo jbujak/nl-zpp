@@ -1238,9 +1238,6 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		var err_left_len = array::len(errors->errors);
 		var left_type : @tc_types::type = get_type_left_side_equation(bin_op->left, ref modules, ref vars, ref errors);
 		left_type->type = ptd_system::cross_type(left_type->type, right_type->type, ref modules, ref errors);
-		if (tct::is_own_type(left_type->type) || tct::is_own_type(right_type->type)) {
-			add_error(ref errors, 'own type cannot take part in assignment');
-		}
 		return left_type if (array::len(errors->errors) - err_left_len > 0);
 		return set_type_to_lval(bin_op->left, left_type, right_type, ref modules, ref vars, ref errors);
 	}
