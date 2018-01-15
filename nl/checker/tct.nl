@@ -5,6 +5,7 @@
 
 use hash;
 use ptd;
+use boolean_t;
 
 def tct::arr(arr_type : @tct::meta_type) : @tct::meta_type {
 	return :tct_arr(arr_type);
@@ -127,3 +128,38 @@ def tct::meta_type() {
 		});
 }
 
+def tct::is_own_type(type : @tct::meta_type) : @boolean_t::type {
+	match (type) case :tct_rec (var p) {
+		return false;
+	} case :tct_own_rec (var p) {
+		return true;
+	} case :tct_hash (var p) {
+		return false;
+	} case :tct_own_hash (var p) {
+		return true;
+	} case :tct_arr (var p) {
+		return false;
+	} case :tct_own_arr (var p) {
+		return true;
+	} case :tct_var (var p) {
+		return false;
+	} case :tct_own_var (var p) {
+		return true;
+	} case :tct_ref (var p) {
+		return false;
+	} case :tct_sim {
+		return false;
+	} case :tct_int {
+		return false;
+	} case :tct_string {
+		return false;
+	} case :tct_bool {
+		return false;
+	} case :tct_empty {
+		return false;
+	} case :tct_void {
+		return false;
+	} case :tct_im {
+		return false;
+	}
+}
