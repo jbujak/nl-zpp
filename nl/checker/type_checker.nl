@@ -1238,6 +1238,9 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		var err_left_len = array::len(errors->errors);
 		var left_type : @tc_types::type = get_type_left_side_equation(bin_op->left, ref modules, ref vars, ref errors);
 		left_type->type = ptd_system::cross_type(left_type->type, right_type->type, ref modules, ref errors);
+		if (tct::is_own_type(left_type->type) && tct::is_own_type(right_type->type)) {
+			add_error(ref errors, 'cannot assign own type value to own type variable');
+		}
 		return left_type if (array::len(errors->errors) - err_left_len > 0);
 		return set_type_to_lval(bin_op->left, left_type, right_type, ref modules, ref vars, ref errors);
 	}
@@ -1454,6 +1457,12 @@ def check_var_decl_try(var_decl : @nast::variable_declaration_t, is_try : @boole
 		} case :ok(var ok) {
 			ret_types->ok->type = ok;
 			check_types_imported(ok, ref modules, ref errors);
+			if (tct::is_own_type(ok)) {
+				match (var_decl->value) case :value(var value){
+				} case :none {
+					add_error(ref errors, 'own types must be initialized');
+				}
+			}
 		}
 		ret_types->ok->overwrited = :no;
 	} case :none {
