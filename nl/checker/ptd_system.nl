@@ -618,6 +618,7 @@ def get_function_def(type_name : ptd::sim(), ref modules : @tc_types::modules_t,
 		return [];
 	}
 	if (!hash::has_key(modules->funs, module)) {
+		add_error(ref errors, 'module `' . module . ''' does not exist');
 		return [];
 	}
 	var module_st = hash::get_value(modules->funs, module);
