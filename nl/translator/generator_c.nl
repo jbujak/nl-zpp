@@ -428,7 +428,8 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 					print(ref state, '&_tab[' . arg_id . ']');
 				}
 			}
-			println(ref state, ');}');
+			println(ref state, ');');
+			println(ref state, '}');
 		}
 		if (is_singleton_use_function(func)) {
 			var fun_name = get_function_name(func, state->mod_name);
