@@ -1,0 +1,77 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Poświąteczna prezentacja
+		
+		18.01.2018
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co miało być zrobione}
+		\begin{itemize}
+			\item Zdebugowanie kompilacji intów
+			\item Doprowadzenie do wygenerowania kompilującego się kodu C
+			\item Zapisywanie typów zmiennych w drzewie AST
+			\item Początek pracy nad kompilacją struktur
+			\item Wyjaśnienie obsługi sytuacji wyjątkowych używając async/await
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Zdebugowanie kompilacji intów + generowanie poprawnego kodu C + typy w AST}
+		\color{green} Zrobione
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Jakub Bujak
+			\item Dodanie zapisywania wywnioskowanych typów zmiennych w drzewie AST
+			\item Dodanie wnioskowania o typach wszystkich wartości pojawiających się w kodzie i ich zapisywanie
+			\item Poprawienie generowania przypisań między rejestrami o różnych typach
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Początek kompilacji struktur}
+		\color{green} Zrobione
+		\begin{itemize}
+		 \item Osoby odpowiedzialne -- Jakub Bujak, Michał Borkowski
+		 \item Dopracowanie generowania deklaracji struktur
+		 \item Dodanie inicjalizacji struktur
+		 \item Dodanie nowych warunków do type checkera
+		 \item Pierwsze próby kompilacji odwołań do pól rekordu
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Wyjaśnienie obsługi sytuacji wyjątkowych używając async/await}
+		\color{green} Zrobione
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Marek Puzyna
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Dodatkowo -- dodanie kompilacji booli}
+		\color{green} Zrobione
+		\begin{itemize}
+			\item Osoba odpowiedzialna -- Marian Dziubiak
+			\item Dzięki temu pusta pętla kompiluje się do w pełni efektywnego C
+			\item Efekt: z 9s do 0.3s dla $10^8$ pustych iteracji (analogiczny for w C działa w 0.24s)
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+	 \frametitle{Dziękuję za uwagę}
+	\end{frame}
+
+\end{document}
