@@ -44,7 +44,7 @@
 		\frametitle{Początek kompilacji struktur}
 		\color{green} Zrobione
 		\begin{itemize}
-		 \item Osoby odpowiedzialne -- Jakub Bujak, Michał Borkowski
+		 \item Osoby odpowiedzialne -- Michał Borkowski, Jakub Bujak
 		 \item Dopracowanie generowania deklaracji struktur
 		 \item Dodanie inicjalizacji struktur
 		 \item Dodanie nowych warunków do type checkera
@@ -59,14 +59,24 @@
 			\item Osoba odpowiedzialna -- Marek Puzyna
 		\end{itemize}
 	\end{frame}
-	
+
 	\begin{frame}
 		\frametitle{Dodatkowo -- dodanie kompilacji booli}
 		\color{green} Zrobione
 		\begin{itemize}
 			\item Osoba odpowiedzialna -- Marian Dziubiak
 			\item Dzięki temu pusta pętla kompiluje się do w pełni efektywnego C
-			\item Efekt: z 9s do 0.3s dla $10^8$ pustych iteracji (analogiczny for w C działa w 0.24s)
+			\item Efekt dla $10^8$ pustych iteracji: 9s $\rightarrow$ 3.5s $\rightarrow$ 0.3s (analogiczny for w C działa w 0.24s)
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Plany na ferie}
+		\begin{itemize}
+			\item Dalsza praca nad kompilacją dostępów do zagnieżdżonych pól struktur
+			\item Poprawki warningów kompilacji gcc
+			\item Dostosowywanie type checkera do nowych typów
+			\item Dodanie skryptu benchmarkującego
 		\end{itemize}
 	\end{frame}
 	
