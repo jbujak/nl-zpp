@@ -866,13 +866,21 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 	match (dest->type) case :im {
 		print_move_to_im(ref state, src, dest);
 	} case :int {
-		print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		if(src->type is :im) {
+			print(ref state, get_reg_value(ref state, dest) . ' = getIntFromImm(' . get_reg(ref state, src) . ')');
+		} else {
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		}
 	} case :string {
 		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
-		print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		if(src->type is :im) {
+			print(ref state, get_reg_value(ref state, dest) . ' = c_rt_lib0check_true_native(' . get_reg(ref state, src) . ')');
+		} else {
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		}
 	} case :rec(var type_fun) {
 		die;
 	}
