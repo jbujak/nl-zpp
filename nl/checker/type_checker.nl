@@ -189,15 +189,21 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
 		}
 		var fun_name = get_function_name(module->name, fun_def->name);
-		if (hash::has_key(get_special_functions(), fun_name) && module->fun_def[i]->access is :pub) {
+		if (hash::has_key(get_special_functions(), fun_name)) {
 			var special_fun_def = get_special_functions(){fun_name};
 			module->fun_def[i]->ret_type->tct_type = special_fun_def->r;
 			rep var j (array::len(module->fun_def[i]->args)) {
 				module->fun_def[i]->args[j]->tct_type = :type(special_fun_def->a[j]->type);
+				fun_vars{module->fun_def[i]->args[j]->name} = {overwrited => :no, type => special_fun_def->a[j]->type};
 			}
 		} else {
 			module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
+			rep var j (array::len(fun_def->args)) {
+				module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
+			}
 		}
+		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
+		fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
 	}
 	def_fun = modules->funs;
 	deref = modules->env->deref;
