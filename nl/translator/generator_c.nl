@@ -435,14 +435,31 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 			println(ref state, get_func_ptr_header(func, state->mod_name) . '{');
 			var number = array::len(func->args_type);
 			println(ref state, get_fun_lib('func_num_args', ['_num', number, get_string(fun_name)]) . ';');
+			rep var arg_id (number) {
+				var unpack_function = '';
+				var type = get_type_to_c(func->args_type[arg_id]->type as :type, '');
+				match (func->args_type[arg_id]->register->type) case :im {
+				} case :int {
+					unpack_function = 'getIntFromImm';
+				} case :bool {
+					unpack_function = 'c_rt_lib0check_true_native';
+				} case :string {
+					#TODO
+				} case :rec(var r_type) {
+					die; #TODO: should we allow casting own::rec to im?
+				}
+				print(ref state, type . 'var' . arg_id . ' = ' . unpack_function . '(_tab[' . arg_id . ']);' . string::lf());
+			}
 			print(ref state, 'return ' . fun_name . '(');
 			rep var arg_id (number) {
 				print(ref state, ', ') if (arg_id > 0);
-				match (func->args_type[arg_id]->by) case :val {
-					print(ref state, '_tab[' . arg_id . ']');
-				} case :ref {
-					print(ref state, '&_tab[' . arg_id . ']');
+				var ref_mark;
+				match (func->args_type[arg_id]->by) case :ref {
+					ref_mark = '&';
+				} case :val {
+					ref_mark = '';
 				}
+				print (ref state, ref_mark . 'var' . arg_id);
 			}
 			println(ref state, ');');
 			println(ref state, '}');
