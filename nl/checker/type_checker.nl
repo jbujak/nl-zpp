@@ -811,10 +811,10 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::tct_im(),
 			a => [{mod => :none, type => tct::tct_im(), name => ''}, {mod => :none, type => tct::tct_im(), name => ''}]
 		});
-	hash::set_value(ref f, 'ptd::try_cast', {
-			r => tct::tct_im(),
-			a => [{mod => :none, type => tct::tct_im(), name => ''}, {mod => :none, type => tct::tct_im(), name => ''}]
-		});
+	# hash::set_value(ref f, 'ptd::try_cast', {
+	# 		r => tct::var({ok => :tct_var_none, err => :tct_var_none}),
+	# 		a => [{mod => :none, type => tct::tct_im(), name => ''}, {mod => :none, type => tct::tct_im(), name => ''}]
+	# 	});
 	hash::set_value(ref f, 'ptd::ensure_only_static_do_not_touch_without_permission', {
 			r => tct::tct_im(),
 			a => [{mod => :none, type => tct::tct_im(), name => ''}, {mod => :none, type => tct::tct_im(), name => ''}]
@@ -830,7 +830,7 @@ def get_special_functions() : @tc_types::special_functions {
 		r => tct::void(),
 		a => [
 			{mod => :ref, type => tct::arr(tct::tct_im()), name => ''},
-			{mod => :none, type => tct::tct_im(), name => ''},
+			{mod => :none, type => tct::int(), name => ''},
 			{mod => :none, type => tct::tct_im(), name => ''},
 		]
 	});
@@ -838,13 +838,13 @@ def get_special_functions() : @tc_types::special_functions {
 		r => tct::void(),
 		a => [
 			{mod => :ref, type => tct::arr(tct::tct_im()), name => ''},
-			{mod => :none, type => tct::tct_im(), name => ''},
+			{mod => :none, type => tct::int(), name => ''},
 		]
 	});
 
 
 	hash::set_value(ref f, 'array::subarray', {
-			r => tct::tct_im(),
+			r => tct::arr(tct::tct_im()),
 			a => [
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 				{mod => :none, type => tct::int(), name => ''},
@@ -871,7 +871,7 @@ def get_special_functions() : @tc_types::special_functions {
 		});
 	hash::set_value(ref f, 'array::sort', {
 			r => tct::void(),
-			a => [{mod => :ref, type => tct::arr(tct::sim()), name => ''}]
+			a => [{mod => :ref, type => tct::tct_im(), name => ''}]
 		});
 	hash::set_value(ref f, 'array::pop', {
 			r => tct::void(),
@@ -882,6 +882,15 @@ def get_special_functions() : @tc_types::special_functions {
 			a => [
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''}
+			]
+		});
+	hash::set_value(ref f, 'array::part_sort', {
+			r => tct::void(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'hash::set_value', {
@@ -979,6 +988,27 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::sim(),
 			a => [
 				{mod => :none, type => tct::int(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::array_sub', {
+			r => tct::arr(tct::tct_im()),
+			a => [
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::array_len', {
+			r => tct::int(),
+			a => [
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::string_compare', {
+			r => tct::int(),
+			a => [
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'c_singleton::sigleton_do_not_use_without_approval', {
