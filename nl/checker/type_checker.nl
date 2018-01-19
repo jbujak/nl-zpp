@@ -189,8 +189,12 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
 		}
 		var fun_name = get_function_name(module->name, fun_def->name);
-		if (hash::has_key(get_special_functions(), fun_name)) {
-			module->fun_def[i]->ret_type->tct_type = get_special_functions(){fun_name}->r;
+		if (hash::has_key(get_special_functions(), fun_name) && module->fun_def[i]->access is :pub) {
+			var special_fun_def = get_special_functions(){fun_name};
+			module->fun_def[i]->ret_type->tct_type = special_fun_def->r;
+			rep var j (array::len(module->fun_def[i]->args)) {
+				module->fun_def[i]->args[j]->tct_type = :type(special_fun_def->a[j]->type);
+			}
 		} else {
 			module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
 		}
