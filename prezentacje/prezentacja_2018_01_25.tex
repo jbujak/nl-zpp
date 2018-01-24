@@ -1,0 +1,107 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Końcowosemestralna prezentacja
+		
+		25.01.2018
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Przegląd ostatniego tygodnia}
+		\begin{itemize}
+			\item Dalsza praca nad kompilacją dostępów do zagnieżdżonych pól struktur
+			-- Jakub Bujak, brak postępów
+			\item Poprawki warningów kompilacji gcc -- Marian Dziubiak, zejście z 275 na 74 warningi
+			\item Dostosowywanie type checkera do nowych typów -- Michał Borkowski, wymuszenie
+			inicjalizacji typów own i zabronienie kopiowania
+			\item Dodanie skryptu benchmarkującego -- Michał Borkowski, zrobione
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co zostało zrobione w tym semestrze}
+		\begin{itemize}
+			\item Znacząca rozbudowa type checkera
+			\item Dodanie kompilacji intów i booli NL do intów i booli C
+			\item Dodanie generowania definicji struktur dla rekordów typu own
+			\item Dodanie kompilowania inicjalizacji rekordów
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Rozbudowa type checkera}
+		\begin{itemize}
+			\item Dodanie zapisywania typów w drzewie AST
+			\item Poprawki do wnioskowania o typie zmiennych
+			\item Otypowanie brakujących funkcji bibliotecznych
+			\item Dodanie zapisywania informacji o typie każdej analizowanej wartości
+			\item Wymuszanie inicjalizacji ownów i zakaz kopiowania zmiennych own
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Dodanie kompilacji intów i booli}
+		\begin{itemize}
+			\item Otypowanie rejestrów nlasma
+			\item Ustawianie typów rejestrów podczas generowania nlasma używając informacji z AST
+			\item Dodanie generowania różnych konstrukcji C dla różnych typów rejestrów
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Generowanie definicji struktur dla rekordów typu own}
+		\begin{itemize}
+			\item Sortowanie topologiczne zdefiniowanych rekordów, tak żeby typy pól były wcześniej
+			niż typ rekordu je zawierającego
+			\item Wypisywanie definicji struktur w kolejności topologicznej
+			\item Wypisywanie \texttt{typedef} dla każdego zdefiniowanego typu, tak żeby można było się
+			do niego odnosić bezpośrednio po jego nazwie
+			\item Na razie nazwy struktur są generowane tylko na podstawie nazw z NianioLanga
+			-- psuje się przy anonimowych typach rekordów
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Dodanie kompilowania inicjalizacji rekordów}
+		\begin{itemize}
+			\item Wypisywanie ciągu deklaracji struktur pomocniczych i przypisań
+			\item Niezmiennik: w nlasmie pomiędzy dowolnymi dwoma instrukcjami rekord jest w
+			poprawnym stanie (nie ma częściowej inicjalizacji).
+			\item Inicjalizacja może przebiegać w czasie kwadratowym od liczby pól w rekordzie
+			(przy zagnieżdżonych strukturach kopiujemy całe te struktury)
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co zostało do zrobienia}
+		\begin{itemize}
+			\item Dodanie kompilacji dostępów do pól rekordu
+			\item Dodanie obsługi anonimowych typów rekordów
+			\item Dodanie kompilacji pozostałych typów:
+			\begin{itemize}
+				\item tablica \texttt{own::arr(type)} do trójki
+				$\langle\texttt{int size, int capacity, type *elements}\rangle$
+				\item wariant \texttt{own::var} do pary
+				$\langle\texttt{int label, void *element}\rangle$
+				\item \texttt{own::string} do tablicy znaków
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+	 \frametitle{Dziękuję za uwagę}
+	\end{frame}
+
+\end{document}
