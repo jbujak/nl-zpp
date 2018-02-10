@@ -182,7 +182,9 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 		modules->env->ret_type = return_type_to_tct(fun_def->ret_type->type, ref errors);
 		check_types_imported(modules->env->ret_type, ref modules, ref errors);
 		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
-		fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
+		if (array::is_empty(errors->errors)) {
+			fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
+		}
 		rep var j (array::len(fun_def->args)) {
 			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
 		}
@@ -1214,6 +1216,17 @@ def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modul
 		left_type->type = hash::get_value(fields, field);
 		return left_type;
 	}
+	if (left_type->type is :tct_own_rec) {
+		var fields = left_type->type as :tct_own_rec;
+		var field = bin_op->right->value as :hash_key;
+		if (!hash::has_key(fields, field)) {
+			add_error(ref errors, 'unknown record key: ' . field) if is_known(left_type);
+			left_type->type = tct::tct_im();
+			return left_type;
+		}
+		left_type->type = hash::get_value(fields, field);
+		return left_type;
+	}
 	if (left_type->type is :tct_hash) {
 		left_type->type = left_type->type as :tct_hash;
 		return left_type;
@@ -1798,8 +1811,7 @@ def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::va
 		#TODO set type
 		binary_op_val->type = :tct_im;
 	} elsif (binary_op->op eq '->') {
-		#TODO set type
-		binary_op_val->type = :tct_im;
+		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors)->type;
 	} elsif (binary_op->op eq '[]=') {
 		binary_op_val->type = :tct_void;
 	} else {
