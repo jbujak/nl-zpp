@@ -257,6 +257,9 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 			regs[reg->reg_no] = :no;
 		} case :var_decl(var decl) {
 			die;
+		} case :use_field(var use_field) {
+			#TODO
+		} case :release_field(var release_field) {
 		}
 		if (const is :yes) {
 			fora var dest (const_dest) {

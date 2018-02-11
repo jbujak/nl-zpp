@@ -146,6 +146,14 @@ def println(ref state : @generator_c::state_t, s : ptd::sim()) {
 	state->ret .= string::lf();
 }
 
+def get_reg_lvalue(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+	match (reg->access_type) case :value {
+		return get_reg(ref state, reg);
+	} case :reference {
+		return '*' . get_reg(ref state, reg);
+	}
+}
+
 def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
 	var reg_no = reg->reg_no;
@@ -159,10 +167,18 @@ def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim()
 def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	var args = state->fun_args;
 	var reg_no = reg->reg_no;
-	if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
-		return '___ref___' . reg_suffix(reg);
-	} else {
-		return '&___nl__' . reg_suffix(reg);
+	match (reg->access_type) case :value {
+		if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
+			return '___ref___' . reg_suffix(reg);
+		} else {
+			return '&___nl__' . reg_suffix(reg);
+		}
+	} case :reference {
+		if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
+			return '*___ref___' . reg_suffix(reg);
+		} else {
+			return '___nl__' . reg_suffix(reg);
+		}
 	}
 }
 
@@ -670,6 +686,7 @@ def get_func_pointer(ref state : @generator_c::state_t, module_name : ptd::sim()
 
 def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::void() {
 	print(ref state, '#line ' . asm->debug->nast_debug->begin->line . string::lf());
+	var is_nop = false;
 	match (asm->cmd) case :arr_decl(var decl) {
 		var args = [array::len(decl->src)];
 		array::push(ref args, get_reg(ref state, el)) fora var el (decl->src);
@@ -787,8 +804,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			#TODO
 		}
 	} case :var_decl(var decl) {
+	} case :use_field(var use_field) {
+		print_use_field(ref state, use_field);
+	} case :release_field(var release_field) {
+		is_nop = true;
 	}
-	print(ref state, ';' . string::lf());
+	print(ref state, ';' . string::lf()) unless is_nop;
 }
 
 def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
@@ -806,9 +827,14 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 	} case :string {
 		target_type_name = im_t(); #TODO string
 		default_value = 'NULL';
-	} case :rec(var type_fun) {
-		target_type_name = get_type_to_c(type_fun, state->mod_name) . ' ';
+	} case :rec(var type) {
+		target_type_name = get_type_to_c(type, state->mod_name) . ' ';
 		default_value = '{}';
+	}
+	match (reg->access_type) case :value {
+	} case :reference {
+		target_type_name .= '*';
+		default_value = 'NULL';
 	}
 	println(ref state, target_type_name . get_reg(ref state, reg) . ' = ' . default_value .';');
 }
@@ -818,13 +844,13 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 	match (dest->type) case :im {
 		print_move_to_im(ref state, src, dest);
 	} case :int {
-		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
+		print(ref state, get_reg_lvalue(ref state, dest) . ' = ' . get_reg(ref state, src));
 	} case :string {
 		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
-		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));		
+		print(ref state, get_reg_lvalue(ref state, dest) . ' = ' . get_reg(ref state, src));
 	} case :rec(var type_fun) {
 		die;
 	}
@@ -832,18 +858,33 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 
 def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
 	match (src->type) case :im {
-		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		var arg = [get_reg_ref(ref state, dest), get_im_from_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :int {
-		var arg = [get_reg_ref(ref state, dest), get_fun_lib('int_new', [get_reg(ref state, src)])];
+		var arg = [get_reg_ref(ref state, dest), get_im_from_reg(ref state, src)];
 		print(ref state, get_fun_lib('move', arg));
 	} case :bool {
-		var arg = [get_reg_ref(ref state, dest), get_fun_lib('bool_to_nl_native', [get_reg(ref state, src)])];
+		var arg = [get_reg_ref(ref state, dest), get_im_from_reg(ref state, src)];
 		print(ref state, get_fun_lib('move', arg));
 	} case :string {
 		#TODO string
-		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		var arg = [get_reg_ref(ref state, dest), get_im_from_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
+	} case :rec(var type_fun) {
+		die;
+	}
+}
+
+def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+	match (reg->type) case :im {
+		return get_reg(ref state, reg);
+	} case :int {
+		return get_fun_lib('int_new', [get_reg(ref state, reg)]);
+	} case :bool {
+		return get_fun_lib('bool_to_nl_native', [get_reg(ref state, reg)]);
+	} case :string {
+		#TODO string
+		return get_reg(ref state, reg);
 	} case :rec(var type_fun) {
 		die;
 	}
@@ -883,7 +924,7 @@ def print_hash_declaration(ref state : @generator_c::state_t, hash_decl : @nlasm
 		var args = [array::len(hash_decl->src)];
 		fora var el (hash_decl->src) {
 			array::push(ref args, get_const_sim(ref state, el->key));
-			array::push(ref args, get_reg(ref state, el->val));
+			array::push(ref args, get_im_from_reg(ref state, el->val));
 		}
 		var r = get_fun_lib('hash_mk', args);
 		print(ref state, get_assign(ref state, hash_decl->dest, r));
@@ -896,6 +937,17 @@ def print_hash_declaration(ref state : @generator_c::state_t, hash_decl : @nlasm
 	} else {
 		die;
 	}
+}
+
+def print_use_field(ref state : @generator_c::state_t, use_field : @nlasm::use_field_t) : ptd::void() {
+	var ret =  get_reg(ref state, use_field->new_owner) . ' = &(' . get_reg(ref state, use_field->old_owner);
+	match (use_field->old_owner->access_type) case :value {
+		ret .= '.';
+	} case :reference {
+		ret .= '->';
+	}
+	ret .=  get_field_name(use_field->field_name) . ')';
+	print(ref state, ret);
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
@@ -1051,17 +1103,24 @@ def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, r
 }
 
 def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
+	var ret;
 	match (reg->type) case :im {
-		return 'im__' . reg->reg_no;
+		ret = 'im';
 	} case :int {
-		return 'int__' . reg->reg_no;
+		ret = 'int';
 	} case :bool {
-		return 'bool__' . reg->reg_no;
+		ret = 'bool';
 	} case :string {
-		return 'string__' . reg->reg_no;
+		ret = 'string';
 	} case :rec(var type_fun) {
-		return 'rec__' . reg->reg_no;
+		ret = 'rec';
 	}
+	match (reg->access_type) case :value {
+	} case :reference {
+		ret .= '_ptr';
+	}
+	ret .= '__' . reg->reg_no;
+	return ret;
 }
 
 def get_empty_value(type : @tct::meta_type) : ptd::sim() {

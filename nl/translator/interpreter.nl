@@ -129,6 +129,7 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 				ret => {
 					type => :im,
 					reg_no => '',
+					access_type => :value,
 				},
 				code_vars => {},
 				ref_arguments => {}
@@ -207,7 +208,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 		var arg = func->args_type[idx];
 		match (arg->by) case :val {
 		} case :ref {
-			hash::set_value(ref new_ref_arguments, idx, {type => :im, reg_no => idx});
+			hash::set_value(ref new_ref_arguments, idx, {type => :im, reg_no => idx, access_type => :value});
 		}
 		new_vars[idx] = func_args[idx];
 	}
@@ -221,6 +222,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 			ret => {
 				type => :im,
 				reg_no => '',
+				access_type => :value,
 			},
 			code_vars => {},
 			ref_arguments => new_ref_arguments
@@ -279,6 +281,7 @@ def interpreter::evaluate_const(state : @interpreter::state_t, func : @nlasm::fu
 			ret => {
 				type => :im,
 				reg_no => '',
+				access_type => :value,
 			},
 			code_vars => {},
 			ref_arguments => {}
@@ -537,6 +540,10 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 		}
 	} case :var_decl(var decl) {
 		die;
+	} case :use_field(var use_field) {
+		die;
+	} case :release_field(var release_field) {
+		die;
 	}
 	handle_new_declarations(ref state);
 }
@@ -604,6 +611,10 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :goto(var goto) {
 	} case :clear(var reg) {
 	} case :var_decl(var decl) {
+		die;
+	} case :use_field(var use_field) {
+		die;
+	} case :release_field(var release_field) {
 		die;
 	}
 	return true;

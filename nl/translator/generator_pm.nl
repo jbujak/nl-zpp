@@ -256,6 +256,10 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		print(ref state, ');');
 	} case :var_decl(var decl) {
 		die;
+	} case :use_field(var use_field) {
+		die;
+	} case :release_field(var release_field) {
+		die;
 	}
 	print(ref state, string::lf());
 }

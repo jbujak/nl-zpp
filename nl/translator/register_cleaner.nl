@@ -35,11 +35,11 @@ def clean_f(func : @nlasm::function_t) : @nlasm::function_t {
 	var map : ptd::hash(@nlasm::reg_t) = {};
 	rep var i (array::len(func->registers)) {
 		if (regs{i}) {
-			map{i} = {type => :im, reg_no => new_reg_index};
+			map{i} = {type => :im, reg_no => new_reg_index, access_type => :value};
 			++new_reg_index;
 		}
 	}
-	map{''} = {type => :im, reg_no => ''};
+	map{''} = {type => :im, reg_no => '', access_type => :value};
 	var new_func = func;
 	new_func->commands = recalculate_registers(func->commands, map);
 	return new_func;
@@ -185,6 +185,17 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			new_cmd = :clear(map{clear->reg_no});
 		} case :var_decl(var decl) {
 			die;
+		} case :use_field(var use_field) {
+			new_cmd = :use_field({
+				new_owner => map{use_field->new_owner->reg_no},
+				old_owner => map{use_field->old_owner->reg_no},
+				field_name => use_field->field_name,
+			});
+		} case :release_field(var release_field) {
+			new_cmd = :release_field({
+				current_owner => map{release_field->current_owner->reg_no},
+				field_name => release_field->field_name,
+			});
 		}
 		new_cmds []= {
 			annotation => recalculate_annotation(cmd->annotation, map),
@@ -292,6 +303,10 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{clear->reg_no} = true;
 		} case :var_decl(var decl) {
 			die;
+		} case :use_field(var use_field) {
+			regs{use_field->src->reg_no} = true;
+			regs{use_field->val->reg_no} = true;
+		} case :release_field(var release_field) {
 		}
 	}
 	return regs;
