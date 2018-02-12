@@ -12,7 +12,6 @@ use hash;
 use nlasm;
 use boolean_t;
 use string_utils;
-use ov;
 
 def translator::function_logic_t() {
 	return ptd::rec({
@@ -135,7 +134,7 @@ def print_hash_declaration(hash : ptd::arr(@nast::hash_elem_t), destination : @n
 def print_variant(variant : @nast::variant_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	var arg = :emp;
 	if (!variant->var->value is :nop) {
-		arg = :arg(dest_val(variant->var, destination, ref state));
+		arg = :arg(dest_val(variant->var, ref state));
 	}
 	print(ref state, :ov_mk({dest => destination, src => arg, name => variant->name}));
 }
@@ -269,7 +268,7 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 	} elsif (unary_op->op eq '++' || unary_op->op eq '--') {
 		var lvalue = get_value_of_lvalue(unary_op->val, true, ref state);
 		var dest = lvalue[array::len(lvalue) - 1] as :value;
-		var src = dest_val({debug => unary_op->val->debug, value => :const(1), type => :tct_int}, destination, ref state);
+		var src = dest_val({debug => unary_op->val->debug, value => :const(1), type => :tct_int}, ref state);
 		print_bin_op_operator_command(dest, dest, src, unary_op->op eq '++' ? '+' : '-', ref state);
 		move(destination, dest, ref state);
 		set_value_of_lvalue(lvalue, true, ref state);
@@ -285,7 +284,7 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 
 def print_var_op(var_op : @nast::var_op_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	return if nlasm::is_empty(destination);
-	var temporary = dest_val(var_op->left, destination, ref state);
+	var temporary = dest_val(var_op->left, ref state);
 	var to_add : @nlasm::order_t;
 	match (var_op->op) case :ov_is {
 		to_add = :ov_is({dest => destination, src => temporary, type => var_op->case});
@@ -300,9 +299,9 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 		var lvalue = get_value_of_lvalue(bin_op->left, false, ref state);
 		var destination_empty = nlasm::is_empty(destination);
 		if (destination_empty) {
-			destination = new_register(ref state, get_lvalue_reg_type(lvalue));
+			destination = {type => :im, reg_no => '', access_type => :value};
 		}
-		var right = dest_val(bin_op->right, destination, ref state);
+		var right = dest_val(bin_op->right, ref state);
 		var dest = lvalue[array::len(lvalue) - 1] as :value;
 		move(dest, right, ref state);
 		if (!destination_empty) {
@@ -318,15 +317,22 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 				{val => bin_op->right, mod => :none, expected_type => :tct_im}
 			]}, destination, ref state);
 	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->') {
-		var left_val = dest_val(bin_op->left, destination, ref state);
+		var left_val = dest_val(bin_op->left, ref state);
 		if (bin_op->op eq 'ARRAY_INDEX') {
 			var index_val = calc_val(bin_op->right, ref state);
 			print_get_from_index(destination, left_val, index_val, ref state);
 		} elsif (bin_op->op eq 'HASH_INDEX') {
 			var key_val = calc_val(bin_op->right, ref state);
 			print_call_base(destination, 'hash_get_value', [:val(left_val), :val(key_val)], ref state);
+		} elsif (bin_op->op eq '->') {
+			var field_name = bin_op->right->value as :hash_key;
+			match (destination->access_type) case :value {
+				print_get_value(destination, left_val, field_name, ref state);
+			} case :reference {
+				use_field(destination, left_val, field_name, ref state);
+			}
 		} else {
-			print_get_value(destination, left_val, bin_op->right->value as :hash_key, ref state);
+			die;
 		}
 	} elsif (bin_op->op eq '+=' || bin_op->op eq '-=' || bin_op->op eq '/=' || bin_op->op eq '*=' || bin_op->op eq '.=') {
 		var right = calc_val(bin_op->right, ref state);
@@ -345,10 +351,10 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 		print_sim_label(after, ref state);
 	} elsif (bin_op->op eq '||') {
 		var after = get_sim_label(ref state);
-		var left = dest_val(bin_op->left, destination, ref state);
+		var left = dest_val(bin_op->left, ref state);
 		move(destination, left, ref state) if !nlasm::eq_reg(destination, left);
 		print_if_goto(after, left, ref state);
-		left = dest_val(bin_op->right, destination, ref state);
+		left = dest_val(bin_op->right, ref state);
 		move(destination, left, ref state) if !nlasm::eq_reg(left, destination);
 		print_sim_label(after, ref state);
 	} else {
@@ -913,7 +919,7 @@ def print_ternary_op(op : @nast::ternary_op_t, destination : @nlasm::reg_t, ref 
 	die unless op->op eq '?';
 	var end_label = get_sim_label(ref state);
 	var first_label = get_sim_label(ref state);
-	var condition = dest_val(op->fst, destination, ref state);
+	var condition = dest_val(op->fst, ref state);
 	print_if_goto(first_label, condition, ref state);
 	print_val(op->thrd, destination, ref state);
 	print(ref state, :goto(end_label));
@@ -988,12 +994,21 @@ def convert_str_to_number(str : ptd::sim()) : ptd::sim() {
 	}
 }
 
-def dest_val(value : @nast::value_t, destination : @nlasm::reg_t, ref state : @translator::state_t) : @nlasm::reg_t {
+def dest_val(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_t {
 	if (value->value is :var) {
 		return get_var_register(value->value as :var, ref state);
 	}
 	var reg_type = value_type_to_reg_type(value, ref state);
-	destination = new_register(ref state, reg_type) if nlasm::is_empty(destination) || ov::get_element(reg_type) ne ov::get_element(destination->type);
+	var value_type = value->type;
+	while (value_type is :tct_ref) {
+		value_type = state->logic->defined_types{value_type as :tct_ref};
+	}
+	var destination;
+	if (value_type is :tct_own_rec) {
+		destination = new_reference_register(ref state, reg_type);
+	} else {
+		destination = new_register(ref state, reg_type);
+	}
 	print_val(value, destination, ref state);
 	return destination;
 }

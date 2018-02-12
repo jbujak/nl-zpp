@@ -146,7 +146,7 @@ def println(ref state : @generator_c::state_t, s : ptd::sim()) {
 	state->ret .= string::lf();
 }
 
-def get_reg_lvalue(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	match (reg->access_type) case :value {
 		return get_reg(ref state, reg);
 	} case :reference {
@@ -758,7 +758,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 					get_reg(ref state, set->val)
 				]));
 	} case :get_val(var get) {
-		var r = get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
+		var r;
+		match (get->src->access_type) case :value {
+			r = get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
+		} case :reference {
+			r = get_reg(ref state, get->src) . '->' . get_field_name(get->key);
+		}
 		print(ref state, get_assign(ref state, get->dest, r));
 	} case :set_val(var set) {
 		print(ref state, get_fun_lib('hash_set_value_dec', [
@@ -807,7 +812,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :use_field(var use_field) {
 		print_use_field(ref state, use_field);
 	} case :release_field(var release_field) {
-		is_nop = true;
+		print(ref state, get_reg(ref state, release_field->current_owner) . ' = NULL');
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }
@@ -844,13 +849,13 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 	match (dest->type) case :im {
 		print_move_to_im(ref state, src, dest);
 	} case :int {
-		print(ref state, get_reg_lvalue(ref state, dest) . ' = ' . get_reg(ref state, src));
+		print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
 	} case :string {
 		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
-		print(ref state, get_reg_lvalue(ref state, dest) . ' = ' . get_reg(ref state, src));
+		print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
 	} case :rec(var type_fun) {
 		die;
 	}
@@ -957,14 +962,14 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		match (reg->type) case :im {
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		} case :int {
-			return get_reg(ref state, reg) . ' = ' . right;
+			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :string {
 			#TODO string
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		} case :bool {
-			return get_reg(ref state, reg) . ' = ' . right;
+			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :rec(var type_fun) {
-			return get_reg(ref state, reg) . ' = ' . right;
+			return get_reg_value(ref state, reg) . ' = ' . right;
 		}
 	}
 }
@@ -1099,7 +1104,7 @@ def get_func_type_struct_def(func : @nlasm::function_t, mod_name : ptd::sim()) :
 }
 
 def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
-	return get_reg(ref state, left) . ' ' . op . ' ' . get_reg(ref state, right);
+	return get_reg_value(ref state, left) . ' ' . op . ' ' . get_reg_value(ref state, right);
 }
 
 def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
