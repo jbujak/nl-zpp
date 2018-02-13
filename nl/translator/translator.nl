@@ -803,16 +803,14 @@ def get_struct_of_lvalue(ref left : @nast::value_t, state : @translator::state_t
 				var left_type_name = bin_op->left->type as :tct_ref;
 				left_type = state->logic->defined_types{left_type_name};
 			}
-			if (left_type is :tct_rec || left_type is :tct_im) {
-				new_ret = [:key(bin_op->right->value as :hash_key)];
-			} elsif (left_type is :tct_own_rec) {
+			if (left_type is :tct_own_rec) {
 				var field_name = bin_op->right->value as :hash_key;
 				new_ret = [:use_field({
 					dest_type => (left_type as :tct_own_rec){field_name},
 					field_name => field_name,
 				})];
 			} else {
-				die;
+				new_ret = [:key(bin_op->right->value as :hash_key)];
 			}
 		} else {
 			die;
@@ -1123,8 +1121,3 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 		return :im;
 	}
 }
-
-def get_lvalue_reg_type(lvalue : @translator::lvalue_values_t) : @nlasm::reg_type {
-	return lvalue[array::len(lvalue) - 1] as :value->type;
-}
-
