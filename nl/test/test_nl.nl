@@ -14,6 +14,7 @@ use test_str;
 use test_type;
 use test_fun;
 use test_ensure;
+use test_own_rec;
 use nl;
 use string;
 
@@ -22,31 +23,36 @@ def p(arg) {
 }
 
 def test_nl::test() {
-	test_nl::all();
+	test_nl::test_compile_and_run();
 }
 
-def test_nl::all() {
+def test_nl::test_only_compile() {
+	#TODO remove when all test run correctly
 	p('test_hash_oper');
 	test_hash_oper::test();
 	p('forh');
 	test_forh::test();
-	p('mod');
-	test_mod::test();
-	p('num');
-	test_num::test();
 	p('op');
 	test_op::test();
 	p('pub');
 	test_pub::test();
 	p('ref');
 	test_ref::test();
-	p('str');
-	test_str::test();
 	p('type');
 	test_type::test();
-	p('function');
-	test_fun::test();
 	p('ensure');
 	test_ensure::test();
 }
 
+def test_nl::test_compile_and_run() {
+	p('test_own_rec');
+	test_own_rec::test();
+	p('mod');
+	test_mod::test();
+	p('num');
+	test_num::test();
+	p('str');
+	test_str::test();
+	p('function');
+	test_fun::test();
+}

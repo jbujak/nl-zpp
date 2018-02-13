@@ -54,6 +54,7 @@ def nlasm::reg_t() {
 	return ptd::rec({
 		type => @nlasm::reg_type,
 		reg_no => ptd::sim(),
+		access_type => @nlasm::reg_access_type_t,
 	});
 }
 
@@ -100,7 +101,9 @@ def nlasm::order_t() {
 			if_goto => ptd::rec({dest => @nlasm::label_t, src => @nlasm::reg_t}),
 			goto => @nlasm::label_t,
 			clear => @nlasm::reg_t,
-			var_decl => @nlasm::var_decl_t
+			var_decl => @nlasm::var_decl_t,
+			use_field => @nlasm::use_field_t,
+			release_field => @nlasm::release_field_t,
 		});
 }
 
@@ -108,6 +111,21 @@ def nlasm::var_decl_t() {
 	return ptd::rec({
 		type => @tct::meta_type,
 		register => @nlasm::reg_t
+	});
+}
+
+def nlasm::use_field_t() {
+	return ptd::rec({
+		new_owner => @nlasm::reg_t,
+		old_owner => @nlasm::reg_t,
+		field_name => ptd::sim(),
+	});
+}
+
+def nlasm::release_field_t() {
+	return ptd::rec({
+		current_owner => @nlasm::reg_t,
+		field_name => ptd::sim(),
 	});
 }
 
@@ -158,6 +176,13 @@ def nlasm::reg_type() {
 		string => ptd::none(),
 		bool => ptd::none(),
 		rec => @tct::meta_type,
+	});
+}
+
+def nlasm::reg_access_type_t() {
+	return ptd::var({
+		value => ptd::none(),
+		reference => ptd::none(),
 	});
 }
 
