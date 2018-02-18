@@ -1508,7 +1508,7 @@ def check_var_decl_try(var_decl : @nast::variable_declaration_t, is_try : @boole
 		} case :ok(var ok) {
 			ret_types->ok->type = ok;
 			check_types_imported(ok, ref modules, ref errors);
-			if (tct::is_own_type(ok)) {
+			if (tct::is_own_type(ok, {})) {
 				match (var_decl->value) case :value(var value){
 				} case :none {
 					add_error(ref errors, 'own types must be initialized');

@@ -184,7 +184,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		add_error(ref errors, 'cannnot assign these two types to one variable - types merge failed.');
 		return :tct_im;
 	}
-	if (tct::is_own_type(a) || tct::is_own_type(b)) {
+	if (tct::is_own_type(a, {}) || tct::is_own_type(b, {})) {
 		add_error(ref errors, 'own type cannot take part in assignment');
 	}
 	return a if (b is :tct_empty);

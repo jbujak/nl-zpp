@@ -434,19 +434,9 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 			var number = array::len(func->args_type);
 			println(ref state, get_fun_lib('func_num_args', ['_num', number, get_string(fun_name)]) . ';');
 			rep var arg_id (number) {
-				var unpack_function = '';
 				var type = get_type_to_c(func->args_type[arg_id]->type as :type, '');
-				match (func->args_type[arg_id]->register->type) case :im {
-				} case :int {
-					unpack_function = 'getIntFromImm';
-				} case :bool {
-					unpack_function = 'c_rt_lib0check_true_native';
-				} case :string {
-					#TODO
-				} case :rec(var r_type) {
-					die; #TODO: should we allow casting ptd::rec to im?
-				}
-				print(ref state, type . 'var' . arg_id . ' = ' . unpack_function . '(_tab[' . arg_id . ']);' . string::lf());
+				var value = get_value_from_im(func->args_type[arg_id]->register->type, '(_tab[' . arg_id . '])');
+				print(ref state, type . 'var' . arg_id . ' = ' . value . ';' . string::lf());
 			}
 			print(ref state, 'return ' . fun_name . '(');
 			rep var arg_id (number) {
@@ -750,14 +740,14 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
 		} case :int {
-			print(ref state, get_reg(ref state, const->dest) . ' = ' . const->val);
+			print(ref state, get_reg_value(ref state, const->dest) . ' = ' . const->val);
 		} case :string {
 			#TODO string
 			print(ref state, get_lib_fun('move') . '(' . get_reg_ref(ref state, const->dest) . ',');
 			generate_imm(ref state, const->val);
 			print(ref state, ')');
 		} case :bool {
-			print(ref state, get_reg(ref state, const->dest) . ' = ');
+			print(ref state, get_reg_value(ref state, const->dest) . ' = ');
 			generate_imm(ref state, const->val);			
 		} case :rec(var typ_fun) {
 			die;
@@ -776,7 +766,14 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		match (get->src->access_type) case :value {
 			r = get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
 		} case :reference {
-			r = get_reg(ref state, get->src) . '->' . get_field_name(get->key);
+			if (get->src->type is :rec) {
+				r = get_reg(ref state, get->src) . '->' . get_field_name(get->key);
+			} elsif (get->src->type is :im){
+				r = get_value_from_im(get->dest->type,
+					get_fun_lib('hash_get_value_dec', ['*' . get_reg(ref state, get->src), get_const_sim(ref state, get->key)]));
+			} else {
+				die;
+			}
 		}
 		print(ref state, get_assign(ref state, get->dest, r));
 	} case :set_val(var set) {
@@ -926,6 +923,20 @@ def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : pt
 	}
 }
 
+def get_value_from_im(type : @nlasm::reg_type, im : ptd::sim()) : ptd::sim() {
+	match (type) case :im {
+		return im;
+	} case :int {
+		return 'getIntFromImm(' . im . ')';
+	} case :bool {
+		return get_fun_lib('check_true_native', [im]);
+	} case :string {
+		return im; #TODO string
+	} case :rec(var r_type) {
+		die;
+	}
+}
+
 def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : ptd::void() {
 	var op = hash::get_value(get_bin_ops(), bin_op->op);
 	if (nlasm::eq_reg(bin_op->dest, bin_op->left) && hash::has_key(get_bin_ops_mod(), bin_op->op)) {
@@ -1010,7 +1021,7 @@ def generate_call(ref state : @generator_c::state_t, call : @nlasm::call_t) : pt
 	rep var i (array::len(call->args)) {
 		ret .= ', ' unless 0 == i;
 		match (call->args[i]) case :val(var val) {
-			ret .= get_reg(ref state, val);
+			ret .= get_reg_value(ref state, val);
 		} case :ref(var ref_val) {
 			ret .= get_reg_ref(ref state, ref_val);
 		}

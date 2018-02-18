@@ -153,7 +153,11 @@ def print_var_decl(var_decl : @nast::variable_declaration_t, ref state : @transl
 	}
 	match (var_decl->value) case :none {
 	} case :value(var value) {
-		print_val(value, reg, ref state);
+		if (tct::is_own_type(value->type, state->logic->defined_types)) {
+			print_own_val_init(value, reg, ref state);
+		} else {
+			print_val(value, reg, ref state);
+		}
 	}
 	return reg;
 }
@@ -720,17 +724,23 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 		ptd::sim(), ref state : @translator::state_t) {
 	var real_arg_1 = arg_1;
 	var real_arg_2 = arg_2;
-	var expected_operand_type = :int;
+	var real_dest = destination;
+	var real_dest_different = false;
+	var expected_type = :int;
 	if (operator eq '.' || operator eq '.=' || operator eq 'eq') {
-		expected_operand_type = :string;
+		expected_type = :string;
 	}
-	if (!nlasm::eq_reg_type(arg_1->type, expected_operand_type)) {
-		real_arg_1 = new_register(ref state, expected_operand_type);
+	if (!nlasm::eq_reg_type(arg_1->type, expected_type)) {
+		real_arg_1 = new_register(ref state, expected_type);
 		move(real_arg_1, arg_1, ref state);
 	}
-	if (!nlasm::eq_reg_type(arg_2->type, expected_operand_type)) {
-		real_arg_2 = new_register(ref state, expected_operand_type);
+	if (!nlasm::eq_reg_type(arg_2->type, expected_type)) {
+		real_arg_2 = new_register(ref state, expected_type);
 		move(real_arg_2, arg_2, ref state);
+	}
+	if (!nlasm::eq_reg_type(destination->type, expected_type)) {
+		real_dest = new_register(ref state, expected_type);
+		real_dest_different = true;
 	}
 	if (operator eq '+' || operator eq '+=') {
 		operator = '+';
@@ -743,7 +753,10 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 	} elsif (operator eq '.' || operator eq '.=') {
 		operator = '.';
 	}
-	print(ref state, :bin_op({dest => destination, left => real_arg_1, right => real_arg_2, op => operator}));
+	print(ref state, :bin_op({dest => real_dest, left => real_arg_1, right => real_arg_2, op => operator}));
+	if (real_dest_different) {
+		move(destination, real_dest, ref state);
+	}
 }
 
 def print(ref state : @translator::state_t, ord : @nlasm::order_t) {
@@ -1002,7 +1015,7 @@ def dest_val(value : @nast::value_t, ref state : @translator::state_t) : @nlasm:
 		value_type = state->logic->defined_types{value_type as :tct_ref};
 	}
 	var destination;
-	if (value_type is :tct_own_rec) {
+	if (value->value is :bin_op && (value->value as :bin_op)->op eq '->' && tct::is_own_type((value->value as :bin_op)->left->type, state->logic->defined_types)) {
 		destination = new_reference_register(ref state, reg_type);
 	} else {
 		destination = new_register(ref state, reg_type);
@@ -1119,5 +1132,54 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 		die;
 	} case :tct_im {
 		return :im;
+	}
+}
+
+def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
+	state->debug->nast_debug = val->debug;
+	if (!tct::is_own_type(val->type, state->logic->defined_types)) {
+		print_val(val, destination, ref state);
+		return;
+	}
+	match (val->value) case :const(var const) {
+		load_const(const, destination, ref state);
+	} case :string(var str) {
+		die; #TODO string
+	} case :ternary_op(var op) {
+		die;
+	} case :hash_key(var key) {
+		die;
+	} case :variant(var variant) {
+		die; #TODO variant
+	} case :var(var variable) {
+		die;
+	} case :parenthesis(var parenthesis) {
+		die;
+	} case :bin_op(var bin_op) {
+		die;
+	} case :var_op(var var_op) {
+		die;
+	} case :unary_op(var unary_op) {
+		die;
+	} case :fun_val(var fun_val) {
+		die; #TODO
+	} case :arr_decl(var arr_decl) {
+		die; #TODO array
+	} case :hash_decl(var hash_decl) {
+		fora var hash_el (hash_decl) {
+			var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
+			var field_name = hash_el->key->value as :hash_key;
+			use_field(new_reg, destination, field_name, ref state);
+			print_own_val_init(hash_el->val, new_reg, ref state);
+			release_field(new_reg, field_name, ref state);
+		}
+	} case :nop {
+		die;
+	} case :fun_label(var fun_label) {
+		die;
+	} case :post_inc(var inc) {
+		die;
+	} case :post_dec(var dec) {
+		die;
 	}
 }
