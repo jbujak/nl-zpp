@@ -42,6 +42,8 @@ def test_nl::test_only_compile() {
 	test_type::test();
 	p('ensure');
 	test_ensure::test();
+	p('function');
+	test_fun::test();
 }
 
 def test_nl::test_compile_and_run() {
@@ -53,6 +55,4 @@ def test_nl::test_compile_and_run() {
 	test_num::test();
 	p('str');
 	test_str::test();
-	p('function');
-	test_fun::test();
 }
