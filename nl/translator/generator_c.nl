@@ -15,6 +15,7 @@ use boolean_t;
 use string_utils;
 use tct;
 use generator_c_struct_dependence_sort;
+use anon_naming;
 
 def get_bin_ops() : ptd::hash(ptd::sim()) {
 	return singleton::sigleton_do_not_use_without_approval(gen_bin_ops());
@@ -100,7 +101,7 @@ def generator_c::state_t() {
 					sim => @generator_c::const_t,
 					singleton => @generator_c::const_t,
 					dynamic_nr => ptd::sim()
-				})
+				}),
 		});
 }
 
@@ -282,12 +283,12 @@ def get_function_name(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::s
 def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
 	var fun_header = '';
 	var fun_name = get_function_name(func, mod_name);
-	fun_header .= get_type_name(func->ret_type) . fun_name . '(';
+	fun_header .= get_type_name(func->ret_type) . ' ' . fun_name . '(';
 	var reg_mem = 0;
 	fora var arg_type (func->args_type) {
 		fun_header .= ',' unless 0 == reg_mem;
 		match (arg_type->by) case :val {
-			fun_header .=  get_type_name(arg_type->type as :type) . '___nl__' . reg_suffix(arg_type->register);
+			fun_header .=  get_type_name(arg_type->type as :type) . ' ___nl__' . reg_suffix(arg_type->register);
 		} case :ref {
 			fun_header .= get_type_name(arg_type->type as :type) . '* ___ref___' . reg_suffix(arg_type->register);
 		}
@@ -365,7 +366,7 @@ def get_const_singleton(ref state : @generator_c::state_t, sim : ptd::sim()) : p
 }
 
 def get_func_ptr_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
-	return get_type_name(func->ret_type) . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
+	return get_type_name(func->ret_type) . ' ' . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
 }
 
 def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
@@ -389,11 +390,11 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	println(ref state, im_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr);');
 	println(ref state, im_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr);' . string::lf());
 	var struct_order = generator_c_struct_dependence_sort::sort(asm->functions, state->mod_name);
-	var hash_typedef_funs : ptd::hash(@nlasm::function_t) = {};
+	var hash_typedef_funs : ptd::hash(ptd::sim()) = {};
 	fora var f (asm->functions) {
 		match (f->access) case :pub {
 			match (f->defines_type) case :yes(var type) {
-				hash::set_value(ref hash_typedef_funs, f->name, f);
+				hash::set_value(ref hash_typedef_funs, f->name, '');
 			} case :no {
 			}
 		} case :priv {
@@ -401,17 +402,14 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	}
 	match (struct_order) case :result(var s) {
 		fora var func (s) {
-			match (func) case :definition(var name) {
-				print_to_header(ref state, get_func_type_struct_def(
-					hash::get_value(hash_typedef_funs, name), state->mod_name) . string::lf());
-			} case :declaration(var name) {
-				print_to_header(ref state, get_func_type_struct_decl(
-					hash::get_value(hash_typedef_funs, name), state->mod_name) . string::lf());
-			} case :both(var name) {
-				print_to_header(ref state, get_func_type_struct_decl(
-					hash::get_value(hash_typedef_funs, name), state->mod_name) . string::lf());
-				print_to_header(ref state, get_func_type_struct_def(
-					hash::get_value(hash_typedef_funs, name), state->mod_name) . string::lf());
+			var anon : @boolean_t::type = !hash::has_key(hash_typedef_funs, func->name);
+			match (func->c_type) case :definition {
+				print_to_header(ref state, get_func_type_struct_def(func->name, func->tct_type, state->mod_name, anon) . string::lf());
+			} case :declaration {
+				print_to_header(ref state, get_func_type_struct_decl(func->name, func->tct_type, state->mod_name, anon) . string::lf());
+			} case :both {
+				print_to_header(ref state, get_func_type_struct_def(func->name, func->tct_type, state->mod_name, anon) . string::lf());
+				print_to_header(ref state, get_func_type_struct_decl(func->name, func->tct_type, state->mod_name, anon) . string::lf());
 			}
 		}
 	} case :cycle {
@@ -446,7 +444,7 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 				} case :string {
 					#TODO
 				} case :rec(var r_type) {
-					die; #TODO: should we allow casting own::rec to im?
+					die; #TODO: should we allow casting ptd::rec to im?
 				}
 				print(ref state, type . 'var' . arg_id . ' = ' . unpack_function . '(_tab[' . arg_id . ']);' . string::lf());
 			}
@@ -536,7 +534,6 @@ def print_function_block(ref state : @generator_c::state_t, func : @nlasm::funct
 	for(var i = array::len(func->args_type); i < array::len(func->registers); i++) {
 		print_declaration(ref state, func->registers[i]);
 	}
-	
 	fora var cmd (func->commands) {
 		match (cmd->annotation) case :none {
 			print_cmd(ref state, cmd);
@@ -850,7 +847,11 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 		target_type_name = im_t(); #TODO string
 		default_value = 'NULL';
 	} case :rec(var type) {
-		target_type_name = get_type_to_c(type, state->mod_name) . ' ';
+		if (type is :tct_own_rec) {
+			target_type_name = anon_naming::get_anon_name(type) . ' ';
+		} else {
+			target_type_name = get_type_to_c(type, '') . ' ';
+		}
 		default_value = '{}';
 	}
 	match (reg->access_type) case :value {
@@ -882,7 +883,12 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
 		}
 	} case :rec(var type_fun) {
-		die;
+		if(src->type is :im) {
+			#TODO allow im to own_rec cast?
+			die;
+		} else {
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		}
 	}
 }
 
@@ -1068,12 +1074,16 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_own_rec(var records) {
 		var ret = 'struct ' . name . ' {' . string::lf();
 		forh var r_name, var r_type (records) {
-			ret .= get_type_to_c(r_type, '') . ' ' . get_field_name(r_name)  . ';' .  string::lf();
+			if (r_type is :tct_own_rec) {
+				ret .= anon_naming::get_anon_name(r_type) . ' ' . get_field_name(r_name)  . ';' .  string::lf();
+			} else {
+				ret .= get_type_to_c(r_type, '') . ' ' . get_field_name(r_name)  . ';' .  string::lf();
+			}
 		}
 		ret .= '}';
 		return ret;
 	} case :tct_ref(var ref_name) {
-		return func_ref_to_struct_name(ref_name);
+		return anon_naming::func_ref_to_struct_name(ref_name) . ' ';
 	} case :tct_void {
 		return 'void ';
 	} case :tct_sim {
@@ -1098,34 +1108,60 @@ def get_field_name(field : ptd::sim()) : ptd::sim() {
 }
 
 def get_type_name(type : @tct::meta_type) {
-	return get_type_to_c(type, '');
-}
-
-def func_ref_to_struct_name(f : ptd::sim()) : ptd::sim() {
-	if(f eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
-		return bool_t();
+	if (type is :tct_own_rec) {
+		return anon_naming::get_anon_name(type);
+	} else {
+		return get_type_to_c(type, '');
 	}
-	return string::replace(f, '::', '0') . '0type ';
 }
 
-def get_func_type_struct_decl(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
-	var type = func->defines_type as :yes;
-	var c_name = get_function_name(func, mod_name) . '0type';
+def get_func_type_struct_decl(name : ptd::sim(), type : @tct::meta_type, mod_name : ptd::sim(), anon : @boolean_t::type) : ptd::sim() {
+	var c_def = '';
+	if (anon) {
+		c_def .= '#ifndef ANON_TYPE_DECL' . name . string::lf();
+		c_def .= '#define ANON_TYPE_DECL' . name . string::lf();
+	}
+	var c_name = '';
+	if (anon) {
+		c_name = name;
+	} else {
+		c_name = get_fun_name(mod_name, name, mod_name) . '00type';
+	}
 	if (generator_c_struct_dependence_sort::is_divisible(type)) {
-		return 'typedef struct ' . c_name . ' ' . c_name . ';';
+		c_def .= 'typedef struct ' . c_name . ' ' . c_name . ';' . string::lf();
+		if (anon) {
+			c_def .= '#endif';
+		}
+		return c_def;
 	}
-	var c_def = get_type_to_c(type, '');
-	return 'typedef ' . c_def . ' ' . c_name . ';';
+	c_def .= 'typedef ' . get_type_to_c(type, '') . ' ' . c_name . ';' . string::lf();
+	if (anon) {
+		c_def .= '#endif';
+	}
+	return c_def;
 }
 
-def get_func_type_struct_def(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
-	var type = func->defines_type as :yes;
+def get_func_type_struct_def(name : ptd::sim(), type : @tct::meta_type, mod_name : ptd::sim(), anon : @boolean_t::type) : ptd::sim() {
 	if (!generator_c_struct_dependence_sort::is_divisible(type)) {
 		return '';
 	}
-	var c_name = get_function_name(func, mod_name) . '0type';
-	var c_def = get_type_to_c(type, c_name);
-	return c_def . ';';
+	var c_def = '';
+	if (anon) {
+		c_def .= '#ifndef ANON_TYPE_DEF' . name . string::lf();
+		c_def .= '#define ANON_TYPE_DEF' . name . string::lf();
+	}
+	var c_name = '';
+	if (anon) {
+		c_name = name;
+	} else {
+		c_name = get_fun_name(mod_name, name, mod_name) . '00type';
+	}
+	c_def .= get_type_to_c(type, c_name);
+	c_def .= ';' . string::lf();
+	if (anon) {
+		c_def .= '#endif';
+	}
+	return c_def;
 }
 
 def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
@@ -1170,7 +1206,6 @@ def get_empty_value(type : @tct::meta_type) : ptd::sim() {
 		return 'NULL';
 	} case :tct_ref(var ref_name) {
 		return 'NULL';
-
 	} case :tct_void {
 		return '';
 	} case :tct_sim {
