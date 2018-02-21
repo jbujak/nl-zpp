@@ -44,15 +44,15 @@ def test_nl::test_only_compile() {
 	test_ensure::test();
 	p('function');
 	test_fun::test();
+	p('mod');
+	test_mod::test();
+	p('num');
+	test_num::test();
 }
 
 def test_nl::test_compile_and_run() {
 	p('test_own_rec');
 	test_own_rec::test();
-	p('mod');
-	test_mod::test();
-	p('num');
-	test_num::test();
 	p('str');
 	test_str::test();
 }

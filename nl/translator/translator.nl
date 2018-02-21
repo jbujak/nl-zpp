@@ -563,7 +563,7 @@ def print_fora(as_fora : @nast::fora_t, ref state : @translator::state_t) {
 	print_sim_label(condition_instruction_no, ref state);
 	print_bin_op_operator_command(condition_register, index_register, arr_size, '>=', ref state);
 	print_if_goto(after_fora_instruction_no, condition_register, ref state);
-	print(ref state, :get_frm_idx({dest => iter_reg, src => arg, idx => index_register}));
+	print_get_from_index(iter_reg, arg, index_register, ref state);
 	var loop_label = save_loop_break(ref state, after_fora_instruction_no, increment_instruction_no);
 	print_cmd(as_fora->cmd, ref state);
 	print_sim_label(increment_instruction_no, ref state);
@@ -727,7 +727,7 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 	var real_dest = destination;
 	var real_dest_different = false;
 	var expected_type = :int;
-	if (operator eq '.' || operator eq '.=' || operator eq 'eq') {
+	if (operator eq '.' || operator eq '.=' || operator eq 'eq' || operator eq 'ne') {
 		expected_type = :string;
 	}
 	if (!nlasm::eq_reg_type(arg_1->type, expected_type)) {
@@ -771,12 +771,14 @@ def print_if_goto(destination : ptd::sim(), reg : @nlasm::reg_t, ref state : @tr
 
 def print_get_from_index(destination : @nlasm::reg_t, label : @nlasm::reg_t, index : @nlasm::reg_t, ref state : 
 	@translator::state_t) {
-	print(ref state, :get_frm_idx({dest => destination, src => label, idx => index}));
+	var real_index = get_cast(index, :int, ref state);
+	print(ref state, :get_frm_idx({dest => destination, src => label, idx => real_index}));
 }
 
 def print_set_at_index(label : @nlasm::reg_t, index : @nlasm::reg_t, value : @nlasm::reg_t, ref state : 
 	@translator::state_t) {
-	print(ref state, :set_at_idx({src => label, idx => index, val => value}));
+	var real_index = get_cast(index, :int, ref state);
+	print(ref state, :set_at_idx({src => label, idx => real_index, val => value}));
 }
 
 def print_get_value(destination : @nlasm::reg_t, label : @nlasm::reg_t, key : ptd::sim(), ref state : 
@@ -1092,6 +1094,15 @@ def get_sim_label(ref state : @translator::state_t) : ptd::sim() {
 
 def value_type_to_reg_type(value : @nast::value_t, ref state : @translator::state_t) : @nlasm::reg_type {
 	return var_type_to_reg_type(value->type, state->logic->defined_types);
+}
+
+def get_cast(reg : @nlasm::reg_t, expected_type : @nlasm::reg_type, ref state : @translator::state_t) : @nlasm::reg_t {
+	if (nlasm::eq_reg_type(reg->type, expected_type))  {
+		return reg;
+	}
+	var reg_after_cast = new_register(ref state, expected_type);
+	move(reg_after_cast, reg, ref state);
+	return reg_after_cast;
 }
 
 def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @nlasm::reg_type {

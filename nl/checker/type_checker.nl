@@ -174,20 +174,16 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 	rep var i (array::len(module->fun_def)) {
 		var fun_def = module->fun_def[i];
 		var fun_vars : @tc_types::vars_t = {};
-		fora var fun_arg (fun_def->args) {
+		rep var j (array::len(fun_def->args)) {
+			var fun_arg = fun_def->args[j];
 			var arg_type = type_to_ptd(fun_arg->type, ref errors);
 			check_types_imported(arg_type, ref modules, ref errors);
 			add_var_decl_to_vars(arg_type, fun_arg->name, ref fun_vars);
+			module->fun_def[i]->args[j]->tct_type = :type(arg_type);
 		}
 		modules->env->ret_type = return_type_to_tct(fun_def->ret_type->type, ref errors);
 		check_types_imported(modules->env->ret_type, ref modules, ref errors);
 		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
-		if (array::is_empty(errors->errors)) {
-			fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
-		}
-		rep var j (array::len(fun_def->args)) {
-			module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
-		}
 		var fun_name = get_function_name(module->name, fun_def->name);
 		if (hash::has_key(get_special_functions(), fun_name)) {
 			var special_fun_def = get_special_functions(){fun_name};
@@ -198,12 +194,10 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 			}
 		} else {
 			module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
-			rep var j (array::len(fun_def->args)) {
-				module->fun_def[i]->args[j]->tct_type = :type(fun_vars{module->fun_def[i]->args[j]->name}->type);
-			}
 		}
-		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors);
-		fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
+		if (array::is_empty(errors->errors)) {
+			fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors);
+		}
 	}
 	def_fun = modules->funs;
 	deref = modules->env->deref;
@@ -554,8 +548,10 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 				add_error(ref errors, 'variant `:' . variant_name . ' should has param');
 			}
 		}
-		check_cmd(ref branches[i]->cmd, ref modules, ref vars_case, ref errors);
+		check_cmd(ref as_match->branch_list[i]->cmd, ref modules, ref vars_case, ref errors);
 		match (branch->variant->value) case :value(var var_decl) {
+			var_decl->tct_type = :type(vars_case{var_decl->name}->type);
+			as_match->branch_list[i]->variant->value = :value(var_decl);
 			hash::delete(ref vars_case, var_decl->name) unless hash::has_key(vars_op, var_decl->name);
 		} case :none {
 		}
@@ -888,8 +884,8 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::void(),
 			a => [
 				{mod => :none, type => tct::tct_im(), name => ''},
-				{mod => :none, type => tct::int(), name => ''},
-				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''},
 			]
 		});
@@ -1647,6 +1643,8 @@ def fill_value_types_in_cmd(ref cmd : @nast::cmd_t, b_vars : @tc_types::vars_t, 
 	} case :break {
 	} case :continue {
 	} case :match(var as_match) {
+		fill_value_types_in_match(ref as_match, vars, modules, ref errors);
+		cmd->cmd = :match(as_match);
 	} case :value(var val) {
 		fill_value_types(ref val, vars, modules, ref errors);
 		cmd->cmd = :value(val);
@@ -1758,6 +1756,21 @@ def fill_value_types_in_if_mod(ref if_mod : @nast::if_mod_t, vars : @tc_types::v
 def fill_value_types_in_unless_mod(ref unless_mod : @nast::unless_mod_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) {
 	fill_value_types(ref unless_mod->cond, vars, modules, ref errors);
 	fill_value_types_in_cmd(ref unless_mod->cmd, vars, modules, ref errors);
+}
+
+def fill_value_types_in_match(ref as_match : @nast::match_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) {
+	fill_value_types(ref as_match->val, vars, modules, ref errors);
+	rep var i (array::len(as_match->branch_list)) {
+		match (as_match->branch_list[i]->variant->value) case :none {
+		} case :value(var value) {
+			match (value->tct_type) case :type(var type) {
+				add_var_to_vars({overwrited => :no, type => type}, value->name, ref vars);
+			} case :none {
+				die;
+			}
+		}
+		fill_value_types_in_cmd(ref as_match->branch_list[i]->cmd, vars, modules, ref errors);
+	}
 }
 
 def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) {

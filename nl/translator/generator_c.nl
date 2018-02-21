@@ -2,7 +2,6 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-
 use ptd;
 use nlasm;
 use string;
@@ -707,7 +706,9 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		var op = hash::get_value(get_unary_ops(), una_op->op);
 		var r;
 		if (op eq 'not') {
-            r = '!' . get_reg(ref state, una_op->src);
+			r = '!' . get_reg(ref state, una_op->src);
+		} elsif (op eq 'unary_minus' && una_op->src->type is :int) {
+			r = '-' . get_reg(ref state, una_op->src);
 		} else {
 			r = get_fun_lib(op, [get_reg(ref state, una_op->src)]);
 		}
@@ -764,7 +765,8 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :get_val(var get) {
 		var r;
 		match (get->src->access_type) case :value {
-			r = get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
+			r = get_value_from_im(get->dest->type,
+				get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]));
 		} case :reference {
 			if (get->src->type is :rec) {
 				r = get_reg(ref state, get->src) . '->' . get_field_name(get->key);
