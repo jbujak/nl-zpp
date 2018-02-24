@@ -374,7 +374,13 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_arr(var arr_type) {
-		die; #TODO
+		return mk_err(to, from) unless from is :tct_own_arr;
+		match (check_assignment_info(arr_type, from as :tct_own_arr, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			return :ok;
+		} case :err(var info) {
+			array::push(ref info->stack, :own_arr);
+			return :err(info);
+		}
 	} case :tct_hash(var hash_type) {
 		if (from is :tct_rec && !type_src is :known) {
 			forh var name, var record (from as :tct_rec) {
@@ -435,7 +441,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			var cand_record : @tct::meta_type = hash::get_value(cand_records, name);
 			match (check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			} case :err(var info) {
-				array::push(ref info->stack, :ptd_rec(name));
+				array::push(ref info->stack, :own_rec(name));
 				return :err(info);
 			}
 		}

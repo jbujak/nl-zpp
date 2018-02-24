@@ -152,7 +152,16 @@ def tc_types::ref_t() {
 }
 
 def tc_types::stack_info_type() {
-	return ptd::var({ptd_hash => ptd::none(), ptd_arr => ptd::none(), ptd_rec => ptd::sim(), ptd_var => ptd::sim()});
+	return ptd::var({
+		ptd_hash => ptd::none(),
+		own_hash => ptd::none(),
+		ptd_arr => ptd::none(),
+		own_arr => ptd::none(),
+		ptd_rec => ptd::sim(),
+		own_rec => ptd::sim(),
+		ptd_var => ptd::sim(),
+		own_var => ptd::sim(),
+	});
 }
 
 def tc_types::check_info() {
