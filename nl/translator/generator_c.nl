@@ -1077,7 +1077,12 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_arr(var arr_type) {
 		return im_t();
 	} case :tct_own_arr(var arr_type) {
-		return get_type_to_c(arr_type, '') . '* ';
+		var ret = 'struct ' . name . ' {
+			'INT capacity;
+			'INT size;
+			'' . get_type_to_c(arr_type, '') . '*value;
+			'}';
+		return ret;
 	} case :tct_hash(var hash_type) {
 		return im_t();
 	} case :tct_own_hash(var hash_type) {

@@ -109,6 +109,7 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
+		return true;
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
