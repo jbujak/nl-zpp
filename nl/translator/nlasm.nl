@@ -94,6 +94,7 @@ def nlasm::order_t() {
 			load_const => ptd::rec({dest => @nlasm::reg_t, val => ptd::ptd_im()}),
 			get_frm_idx => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, idx => @nlasm::reg_t}),
 			set_at_idx => ptd::rec({src => @nlasm::reg_t, idx => @nlasm::reg_t, val => @nlasm::reg_t}),
+			array_push => ptd::rec({dest => @nlasm::reg_t, val => @nlasm::reg_t}),
 			get_val => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, key => ptd::sim()}),
 			set_val => ptd::rec({src => @nlasm::reg_t, key => ptd::sim(), val => @nlasm::reg_t}),
 			ov_mk => @nlasm::ov_mk_t,
@@ -176,6 +177,7 @@ def nlasm::reg_type() {
 		string => ptd::none(),
 		bool => ptd::none(),
 		rec => @tct::meta_type,
+		arr => @tct::meta_type,
 	});
 }
 
@@ -203,8 +205,10 @@ def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @bool
 		return reg2 is :bool;
 	} case :string {
 		return reg2 is :string;
-	} case :rec(var type_fun) {
+	} case :rec(var type) {
 		return reg2 is :rec;
+	} case :arr(var type) {
+		return reg2 is :arr;
 	}
 }
 

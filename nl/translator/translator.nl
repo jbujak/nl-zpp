@@ -117,7 +117,11 @@ def print_array_declaration(arr : ptd::arr(@nast::value_t), destination : @nlasm
 	@translator::state_t) {
 	var args : ptd::arr(@nlasm::reg_t) = [];
 	fora var elem (arr) {
-		array::push(ref args, calc_val(elem, ref state));
+		var elem_reg = calc_val(elem, ref state);
+		if (destination->type is :im) {
+			elem_reg = get_cast(elem_reg, :im, ref state);
+		}
+		array::push(ref args, elem_reg);
 	}
 	print(ref state, :arr_decl({dest => destination, src => args}));
 }
@@ -313,13 +317,9 @@ def print_bin_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref stat
 		}
 		set_value_of_lvalue(lvalue, false, ref state);
 	} elsif (bin_op->op eq '[]=') {
-		print_fun_val({
-			name => 'array_push',
-			module => 'c_rt_lib',
-			args => [
-				{val => bin_op->left, mod => :ref, expected_type => :tct_im},
-				{val => bin_op->right, mod => :none, expected_type => :tct_im}
-			]}, destination, ref state);
+		var left = calc_val(bin_op->left, ref state);
+		var right = calc_val(bin_op->right, ref state);
+		print_array_push(left, right, ref state);
 	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->') {
 		var left_val = dest_val(bin_op->left, ref state);
 		if (bin_op->op eq 'ARRAY_INDEX') {
@@ -781,6 +781,14 @@ def print_set_at_index(label : @nlasm::reg_t, index : @nlasm::reg_t, value : @nl
 	print(ref state, :set_at_idx({src => label, idx => real_index, val => value}));
 }
 
+def print_array_push(dest : @nlasm::reg_t, value : @nlasm::reg_t, ref state : @translator::state_t) {
+	var real_value = value;
+	if (dest->type is :im) {
+		real_value = get_cast(value, :im, ref state);
+	}
+	print(ref state, :array_push({dest => dest, val => real_value}));
+}
+
 def print_get_value(destination : @nlasm::reg_t, label : @nlasm::reg_t, key : ptd::sim(), ref state : 
 	@translator::state_t) {
 	print(ref state, :get_val({dest => destination, src => label, key => key}));
@@ -1116,8 +1124,8 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 		return :im;
 	} case :tct_arr(var arr_type) {
 		return :im;
-	} case :tct_own_arr(var arr_typ) {
-		return :im;
+	} case :tct_own_arr(var arr_type) {
+		return :arr(type);
 	} case :tct_var(var var_type) {
 		return :im;
 	} case :tct_own_var(var var_type) {
@@ -1125,8 +1133,10 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 	} case :tct_ref(var ref_type) {
 		if (ref_type eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
 			return :bool;
-		} elsif (defined_types{ref_type} is :tct_own_rec) {
+		} elsif (defined_types{ref_type} is :tct_own_rec) { #TODO unwrap ref
 			return :rec(type);
+		} elsif (defined_types{ref_type} is :tct_own_arr) {
+			return :arr(type);
 		}
 		return :im;
 	} case :tct_sim {
@@ -1175,7 +1185,10 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 	} case :fun_val(var fun_val) {
 		die; #TODO
 	} case :arr_decl(var arr_decl) {
-		die; #TODO array
+		fora var el (arr_decl) {
+			var el_value = calc_val(el, ref state);
+			print_array_push(destination, el_value, ref state);
+		}
 	} case :hash_decl(var hash_decl) {
 		fora var hash_el (hash_decl) {
 			var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));

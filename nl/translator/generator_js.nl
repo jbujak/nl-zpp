@@ -226,6 +226,8 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 	} case :set_at_idx(var set_at_idx) {
 		result = print_internal_call('c_rt_lib', 'set_ref_arr', [:ref(set_at_idx->src),
 			:str(print_register(set_at_idx->idx)), :str(print_register(set_at_idx->val))], ref call_counter) . ';';
+	} case :array_push(var push) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		result = print_register_to_assign(get_val->dest) . print_internal_call('c_rt_lib', 'hash_get_value',
 			[:str(print_register(get_val->src)), :str(print_str_imm(get_val->key, ref consts))], ref call_counter) . ';';

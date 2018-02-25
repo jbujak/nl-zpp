@@ -1355,7 +1355,8 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return left_type2;
 	}
 	if (op eq '[]=') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
 			add_error(ref errors, 'array operator ''[]='' can be applied only to array');
 			return ret_type;
 		}
@@ -1859,15 +1860,18 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 	} case :const(var as_const) {
 		value->type = :tct_int;
 	} case :arr_decl(var arr_decl) {
-		#TODO
-		value->type = :tct_arr(:tct_im);
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
+		rep var i (array::len(arr_decl)) {
+			if (value_type is :tct_own_arr) {
+				arr_decl[i]->type = value_type as :tct_own_arr;
+			}
+			fill_value_types(ref arr_decl[i], vars, modules, ref errors, known_types);
+		}
+		value->value = :arr_decl(arr_decl);
 	} case :hash_decl(var hash_decl) {
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
 		rep var i (array::len(hash_decl)) {
 			hash_decl[i]->key->type = :tct_string;
-			var value_type = value->type;
-			while (value_type is :tct_ref) {
-				value_type = ptd_system::get_ref_type(value_type as :tct_ref, ref modules, ref errors);
-			}
 			if (value_type is :tct_own_rec) {
 				hash_decl[i]->val->type = (value_type as :tct_own_rec){hash_decl[i]->key->value as :hash_key};
 			}
@@ -2003,4 +2007,12 @@ def fill_try_ensure_type(ref try_ensure : @nast::try_ensure_t, vars : @tc_types:
 		#TODO
 	}
 	return ret;
+}
+
+def unwrap_ref(type : @tct::meta_type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t)
+		: @tct::meta_type {
+	while (type is :tct_ref) {
+		type = ptd_system::get_ref_type(type as :tct_ref, ref modules, ref errors);
+	}
+	return type;
 }

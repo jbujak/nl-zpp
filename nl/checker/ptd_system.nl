@@ -374,8 +374,14 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_arr(var arr_type) {
-		return mk_err(to, from) unless from is :tct_own_arr;
-		match (check_assignment_info(arr_type, from as :tct_own_arr, ref_inf, type_src, ref modules, ref errors)) case :ok {
+		return mk_err(to, from) unless from is :tct_own_arr || from is :tct_arr;
+		var from_inner;
+		if (from is :tct_arr) {
+			from_inner = from as :tct_arr;
+		} elsif (from is :tct_own_arr) {
+			from_inner = from as :tct_own_arr;
+		}
+		match (check_assignment_info(arr_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			return :ok;
 		} case :err(var info) {
 			array::push(ref info->stack, :own_arr);

@@ -222,6 +222,8 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 			check_sub_val(ref const, regs[set_at_idx->val->reg_no]);
 			const_dest = [set_at_idx->src];
 			evaluate_const(func, module, ins_nr, ref const, ref regs, interpreter_state, const_dest);
+		} case :array_push(var push) {
+			die; #TODO
 		} case :get_val(var get_val) {
 			check_sub_val(ref const, regs[get_val->src->reg_no]);
 			const_dest = [get_val->dest];
