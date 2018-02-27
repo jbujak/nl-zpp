@@ -35,10 +35,10 @@ ImmT c_std_lib0fast_substr(ImmT ___nl__0, ImmT ___nl__1, ImmT ___nl__2) {
 	return c_std_lib0string_sub(strg, ___nl__1, ___nl__2);
 }
 
-ImmT c_std_lib0array_sub(ImmT ___nl__array, ImmT ___nl__begin, ImmT ___nl__length) {
+ImmT c_std_lib0array_sub(ImmT ___nl__array, INT ___nl__begin, INT ___nl__length) {
 	ImmT _out = c_rt_lib0array_new();
-	int beg = getIntFromImm(___nl__begin);
-	int len = getIntFromImm(___nl__length);
+	int beg = ___nl__begin;
+	int len = ___nl__length;
 	NlArray *arr = (NlArray*)___nl__array;
 	if(arr->size >= beg+len){
 		len +=beg;
@@ -230,13 +230,13 @@ ImmT c_std_lib0string_replace(ImmT ___nl__str, ImmT ___nl__old, ImmT ___nl__new_
 	c_rt_lib0clear((void**)&nI);
 	return c_rt_lib0string_new_alloc(_out, l, _len);
 }
-ImmT c_std_lib0string_compare(ImmT ___nl__a, ImmT ___nl__b) {
+INT c_std_lib0string_compare(ImmT ___nl__a, ImmT ___nl__b) {
 	NlString *sI = toStringIfSim(___nl__a);
 	NlString *oI = toStringIfSim(___nl__b);
 	int ret = compare_strings(sI, oI);
 	c_rt_lib0clear((void**)&sI);
 	c_rt_lib0clear((void**)&oI);
-	return c_rt_lib0int_new(ret);
+	return ret;
 }
 
 ImmT c_std_lib0is_array(ImmT ___nl__imm) {

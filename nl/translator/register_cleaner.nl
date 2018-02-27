@@ -35,11 +35,11 @@ def clean_f(func : @nlasm::function_t) : @nlasm::function_t {
 	var map : ptd::hash(@nlasm::reg_t) = {};
 	rep var i (array::len(func->registers)) {
 		if (regs{i}) {
-			map{i} = {type => :im, reg_no => new_reg_index};
+			map{i} = {type => :im, reg_no => new_reg_index, access_type => :value};
 			++new_reg_index;
 		}
 	}
-	map{''} = {type => :im, reg_no => ''};
+	map{''} = {type => :im, reg_no => '', access_type => :value};
 	var new_func = func;
 	new_func->commands = recalculate_registers(func->commands, map);
 	return new_func;
@@ -53,26 +53,26 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 		match (cmd->cmd) case :arr_decl(var arr) {
 			var new_src = [];
 			fora var el (arr->src) {
-				new_src []= map{el->reg_no}; #TODO non-im
+				new_src []= map{el->reg_no};
 			}
 			new_cmd = :arr_decl({
-				dest => map{arr->dest->reg_no}, #TODO non-im
+				dest => map{arr->dest->reg_no},
 				src => new_src,
 			});
 		} case :hash_decl(var hash) {
 			var new_keys = [];
 			fora var el (hash->src) {
 				new_keys []= {
-					key => el->key, val => map{el->val->reg_no} #TODO non-im
+					key => el->key, val => map{el->val->reg_no}
 				};
 			}
 			new_cmd = :hash_decl({
-				dest => map{hash->dest->reg_no}, #TODO non-im
+				dest => map{hash->dest->reg_no},
 				src => new_keys,
 			});
 		} case :func(var func) {
 			new_cmd = :func({
-				dest => map{func->dest->reg_no}, #TODO non-im
+				dest => map{func->dest->reg_no},
 				module => func->module,
 				name => func->name,
 			});
@@ -81,94 +81,94 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			fora var el (call->args) {
 				var new_el;
 				match (el) case :val(var reg) {
-					new_el = :val(map{reg->reg_no}); #TODO non-im
+					new_el = :val(map{reg->reg_no});
 				} case :ref(var reg) {
-					new_el = :ref(map{reg->reg_no}); #TODO non-im
+					new_el = :ref(map{reg->reg_no});
 				}
 				new_args []= new_el;
 			}
 			new_cmd = :call({
-				dest => map{call->dest->reg_no}, #TODO non-im
+				dest => map{call->dest->reg_no},
 				mod => call->mod,
 				fun_name => call->fun_name,
 				args => new_args,
 			});
 		} case :una_op(var op) {
 			new_cmd = :una_op({
-				dest => map{op->dest->reg_no}, #TODO non-im
-				src => map{op->src->reg_no}, #TODO non-im
+				dest => map{op->dest->reg_no},
+				src => map{op->src->reg_no},
 				op => op->op,
 			});
 		} case :bin_op(var op) {
 			new_cmd = :bin_op({
-				dest => map{op->dest->reg_no}, #TODO non-im
-				left => map{op->left->reg_no}, #TODO non-im
-				right => map{op->right->reg_no}, #TODO non-im
+				dest => map{op->dest->reg_no},
+				left => map{op->left->reg_no},
+				right => map{op->right->reg_no},
 				op => op->op,
 			});
 		} case :ov_is(var op) {
 			new_cmd = :ov_is({
-				dest => map{op->dest->reg_no}, #TODO non-im
-				src => map{op->src->reg_no}, #TODO non-im
+				dest => map{op->dest->reg_no},
+				src => map{op->src->reg_no},
 				type => op->type,
 			});
 		} case :ov_as(var op) {
 			new_cmd = :ov_as({
-				dest => map{op->dest->reg_no}, #TODO non-im
-				src => map{op->src->reg_no}, #TODO non-im
+				dest => map{op->dest->reg_no},
+				src => map{op->src->reg_no},
 				type => op->type,
 			});
 		} case :return(var ret) {
 			match (ret) case :val(var val) {
-				new_cmd = :return(:val(map{val->reg_no})); #TODO non-im
+				new_cmd = :return(:val(map{val->reg_no}));
 			} case :emp {
 				new_cmd = :return(:emp);
 			}
 		} case :die(var as_die) {
-			new_cmd = :die(map{as_die->reg_no}); #TODO non-im
+			new_cmd = :die(map{as_die->reg_no});
 		} case :move(var move) {
 			new_cmd = :move({
-				dest => map{move->dest->reg_no}, #TODO non-im
-				src => map{move->src->reg_no}, #TODO non-im
+				dest => map{move->dest->reg_no},
+				src => map{move->src->reg_no},
 			});
 		} case :load_const(var l) {
 			new_cmd = :load_const({
-				dest => map{l->dest->reg_no}, #TODO non-im
+				dest => map{l->dest->reg_no},
 				val => l->val,
 			});
 		} case :get_frm_idx(var idx) {
 			new_cmd = :get_frm_idx({
-				dest => map{idx->dest->reg_no}, #TODO non-im
-				src => map{idx->src->reg_no}, #TODO non-im
-				idx => map{idx->idx->reg_no}, #TODO non-im
+				dest => map{idx->dest->reg_no},
+				src => map{idx->src->reg_no},
+				idx => map{idx->idx->reg_no},
 			});
 		} case :set_at_idx(var idx) {
 			new_cmd = :set_at_idx({
-				src => map{idx->src->reg_no}, #TODO non-im
-				idx => map{idx->idx->reg_no}, #TODO non-im
-				val => map{idx->val->reg_no}, #TODO non-im
+				src => map{idx->src->reg_no},
+				idx => map{idx->idx->reg_no},
+				val => map{idx->val->reg_no},
 			});
 		} case :get_val(var val) {
 			new_cmd = :get_val({
 				key => val->key,
-				dest => map{val->dest->reg_no}, #TODO non-im
-				src => map{val->src->reg_no}, #TODO non-im
+				dest => map{val->dest->reg_no},
+				src => map{val->src->reg_no},
 			});
 		} case :set_val(var val) {
 			new_cmd = :set_val({
-				src => map{val->src->reg_no}, #TODO non-im
-				val => map{val->val->reg_no}, #TODO non-im
+				src => map{val->src->reg_no},
+				val => map{val->val->reg_no},
 				key => val->key,
 			});
 		} case :ov_mk(var ov) {
 			var new_arg;
 			match (ov->src) case :arg(var arg) {
-				new_arg = :arg(map{arg->reg_no}); #TODO non-im
+				new_arg = :arg(map{arg->reg_no});
 			} case :emp {
 				new_arg = :emp;
 			}
 			new_cmd = :ov_mk({
-				dest => map{ov->dest->reg_no}, #TODO non-im
+				dest => map{ov->dest->reg_no},
 				src => new_arg,
 				name => ov->name,
 			});
@@ -177,14 +177,25 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 		} case :if_goto(var cond) {
 			new_cmd = :if_goto({
 				dest =>  cond->dest,
-				src => map{cond->src->reg_no}, #TODO non-im
+				src => map{cond->src->reg_no},
 			});
 		} case :goto(var goto) {
 			new_cmd = :goto(goto);
 		} case :clear(var clear) {
-			new_cmd = :clear(map{clear->reg_no}); #TODO non-im
+			new_cmd = :clear(map{clear->reg_no});
 		} case :var_decl(var decl) {
 			die;
+		} case :use_field(var use_field) {
+			new_cmd = :use_field({
+				new_owner => map{use_field->new_owner->reg_no},
+				old_owner => map{use_field->old_owner->reg_no},
+				field_name => use_field->field_name,
+			});
+		} case :release_field(var release_field) {
+			new_cmd = :release_field({
+				current_owner => map{release_field->current_owner->reg_no},
+				field_name => release_field->field_name,
+			});
 		}
 		new_cmds []= {
 			annotation => recalculate_annotation(cmd->annotation, map),
@@ -201,7 +212,7 @@ def recalculate_annotation(annotation : @nlasm::annotation_t, map : ptd::hash(@n
 	} case :const(var regs) {
 		var new_regs = [];
 		fora var reg (regs) {
-			new_regs []= map{reg->reg_no}; #TODO non-im
+			new_regs []= map{reg->reg_no};
 		}
 		return :const(new_regs);
 	}
@@ -209,7 +220,7 @@ def recalculate_annotation(annotation : @nlasm::annotation_t, map : ptd::hash(@n
 
 def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 	var regs : ptd::hash(@boolean_t::type) = {};
-	rep var i (array::len(func->registers)) { #TODO non-im
+	rep var i (array::len(func->registers)) {
 		regs{i} = false;
 	}
 
@@ -219,79 +230,83 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 
 	fora var cmd (func->commands) {
 		match (cmd->cmd) case :arr_decl(var arr) {
-			regs{arr->dest->reg_no} = true; #TODO non-im
+			regs{arr->dest->reg_no} = true;
 			fora var el (arr->src) {
-				regs{el->reg_no} = true; #TODO non-im
+				regs{el->reg_no} = true;
 			}
 		} case :hash_decl(var hash) {
-			regs{hash->dest->reg_no} = true; #TODO non-im
+			regs{hash->dest->reg_no} = true;
 			fora var el (hash->src) {
-				regs{el->val->reg_no} = true; #TODO non-im
+				regs{el->val->reg_no} = true;
 			}
 		} case :func(var func_cmd) {
-			regs{func_cmd->dest->reg_no} = true; #TODO non-im
+			regs{func_cmd->dest->reg_no} = true;
 		} case :call(var call) {
-			regs{call->dest->reg_no} = true; #TODO non-im
+			regs{call->dest->reg_no} = true;
 			fora var el (call->args) {
 				match (el) case :val(var reg) {
-					regs{reg->reg_no} = true; #TODO non-im
+					regs{reg->reg_no} = true;
 				} case :ref(var reg) {
-					regs{reg->reg_no} = true; #TODO non-im
+					regs{reg->reg_no} = true;
 				}
 			}
 		} case :una_op(var op) {
-			regs{op->dest->reg_no} = true; #TODO non-im
-			regs{op->src->reg_no} = true; #TODO non-im
+			regs{op->dest->reg_no} = true;
+			regs{op->src->reg_no} = true;
 		} case :bin_op(var op) {
-			regs{op->dest->reg_no} = true; #TODO non-im
-			regs{op->left->reg_no} = true; #TODO non-im
-			regs{op->right->reg_no} = true; #TODO non-im
+			regs{op->dest->reg_no} = true;
+			regs{op->left->reg_no} = true;
+			regs{op->right->reg_no} = true;
 		} case :ov_is(var op) {
-			regs{op->dest->reg_no} = true; #TODO non-im
-			regs{op->src->reg_no} = true; #TODO non-im
+			regs{op->dest->reg_no} = true;
+			regs{op->src->reg_no} = true;
 		} case :ov_as(var op) {
-			regs{op->dest->reg_no} = true; #TODO non-im
-			regs{op->src->reg_no} = true; #TODO non-im
+			regs{op->dest->reg_no} = true;
+			regs{op->src->reg_no} = true;
 		} case :return(var ret) {
 			match (ret) case :val(var val) {
-				regs{val->reg_no} = true; #TODO non-im
+				regs{val->reg_no} = true;
 			} case :emp {
 			}
 		} case :die(var as_die) {
-			regs{as_die->reg_no} = true; #TODO non-im
+			regs{as_die->reg_no} = true;
 		} case :move(var move) {
-			regs{move->dest->reg_no} = true; #TODO non-im
-			regs{move->src->reg_no} = true; #TODO non-im
+			regs{move->dest->reg_no} = true;
+			regs{move->src->reg_no} = true;
 		} case :load_const(var l) {
-			regs{l->dest->reg_no} = true; #TODO non-im
+			regs{l->dest->reg_no} = true;
 		} case :get_frm_idx(var idx) {
-			regs{idx->dest->reg_no} = true; #TODO non-im
-			regs{idx->src->reg_no} = true; #TODO non-im
-			regs{idx->idx->reg_no} = true; #TODO non-im
+			regs{idx->dest->reg_no} = true;
+			regs{idx->src->reg_no} = true;
+			regs{idx->idx->reg_no} = true;
 		} case :set_at_idx(var idx) {
-			regs{idx->val->reg_no} = true; #TODO non-im
-			regs{idx->src->reg_no} = true; #TODO non-im
-			regs{idx->idx->reg_no} = true; #TODO non-im
+			regs{idx->val->reg_no} = true;
+			regs{idx->src->reg_no} = true;
+			regs{idx->idx->reg_no} = true;
 		} case :get_val(var val) {
-			regs{val->dest->reg_no} = true; #TODO non-im
-			regs{val->src->reg_no} = true; #TODO non-im
+			regs{val->dest->reg_no} = true;
+			regs{val->src->reg_no} = true;
 		} case :set_val(var val) {
-			regs{val->src->reg_no} = true; #TODO non-im
-			regs{val->val->reg_no} = true; #TODO non-im
+			regs{val->src->reg_no} = true;
+			regs{val->val->reg_no} = true;
 		} case :ov_mk(var ov) {
-			regs{ov->dest->reg_no} = true;	 #TODO non-im
+			regs{ov->dest->reg_no} = true;	
 			match (ov->src) case :arg(var arg) {
-				regs{arg->reg_no} = true; #TODO non-im
+				regs{arg->reg_no} = true;
 			} case :emp {
 			}
 		} case :prt_lbl(var lbl) {
 		} case :if_goto(var cond) {
-			regs{cond->src->reg_no} = true; #TODO non-im
+			regs{cond->src->reg_no} = true;
 		} case :goto(var goto) {
 		} case :clear(var clear) {
-			regs{clear->reg_no} = true; #TODO non-im
+			regs{clear->reg_no} = true;
 		} case :var_decl(var decl) {
 			die;
+		} case :use_field(var use_field) {
+			regs{use_field->src->reg_no} = true;
+			regs{use_field->val->reg_no} = true;
+		} case :release_field(var release_field) {
 		}
 	}
 	return regs;

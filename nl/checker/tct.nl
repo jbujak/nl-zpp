@@ -128,7 +128,7 @@ def tct::meta_type() {
 		});
 }
 
-def tct::is_own_type(type : @tct::meta_type) : @boolean_t::type {
+def tct::is_own_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
 	match (type) case :tct_rec (var p) {
 		return false;
 	} case :tct_own_rec (var p) {
@@ -146,7 +146,8 @@ def tct::is_own_type(type : @tct::meta_type) : @boolean_t::type {
 	} case :tct_own_var (var p) {
 		return true;
 	} case :tct_ref (var p) {
-		return false;
+		return false unless hash::has_key(defined_types, p);
+		return tct::is_own_type(defined_types{p}, defined_types);
 	} case :tct_sim {
 		return false;
 	} case :tct_int {

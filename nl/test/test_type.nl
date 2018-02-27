@@ -67,7 +67,7 @@ def test_is(arg) : @boolean_t::type {
 
 def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => ptd::sim()}), d => @test_type::rekord})) 
 	: @test_type::typ2 {
-	var ret;
+	var ret = '';
 	var emp : @test_type::rekord;
 	match (a) case :a(var t) {
 		return '';

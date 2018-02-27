@@ -6,19 +6,40 @@ use boolean_t;
 use ptd;
 use nlasm;
 use ov;
+use anon_naming;
 
-def generator_c_struct_dependence_sort::result_t(){
+def generator_c_struct_dependence_sort::result_t() {
 	return ptd::var({
-			result => ptd::arr(@generator_c_struct_dependence_sort::sorted_element),
+			result => ptd::arr(@generator_c_struct_dependence_sort::result_element),
 			cycle => ptd::none()
 		});
 }
 
-def generator_c_struct_dependence_sort::graph_node(){
+def generator_c_struct_dependence_sort::result_element() {
+	return ptd::rec({
+			name => ptd::sim(),
+			tct_type => @tct::meta_type,
+			c_type => ptd::var({
+					definition => ptd::none(),
+					declaration => ptd::none(),
+					both => ptd::none(),
+				})
+		});
+}
+
+def generator_c_struct_dependence_sort::graph_node() {
 	return ptd::rec({
 			pointer => ptd::arr(ptd::sim()),
 			struct => ptd::arr(ptd::sim()),
 			is_divisible => @boolean_t::type,
+			type => @tct::meta_type
+		});
+}
+
+def generator_c_struct_dependence_sort::function_t() {
+	return ptd::rec({
+			defined_type => @tct::meta_type,
+			name => ptd::sim(),
 		});
 }
 
@@ -26,7 +47,7 @@ def generator_c_struct_dependence_sort::graph(){
 	return ptd::hash(@generator_c_struct_dependence_sort::graph_node);
 }
 
-def generator_c_struct_dependence_sort::sorted_element(){
+def generator_c_struct_dependence_sort::sorted_element() {
 	return ptd::var({
 			definition => ptd::sim(),
 			declaration => ptd::sim(),
@@ -106,19 +127,13 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 	return false;
 }
 
-def nlasm_to_graph(funs : ptd::arr(@nlasm::function_t), module : ptd::sim()) : @generator_c_struct_dependence_sort::graph {
+def in_funs_to_graph(funs : ptd::arr(@generator_c_struct_dependence_sort::function_t), module : ptd::sim()) : @generator_c_struct_dependence_sort::graph {
 	var graph : @generator_c_struct_dependence_sort::graph = {};
 	fora var func (funs) {
-		match (func->access) case :pub {
-			match (func->defines_type) case :yes(var type) {
-				var node = {pointer => [], struct => [], is_divisible =>
-					generator_c_struct_dependence_sort::is_divisible(type)};
-				get_required_types_list(type, ref node, module, false);
-				hash::set_value(ref graph, func->name, node);
-			} case :no {
-			}
-		} case :priv {
-		}
+		var node = {pointer => [], struct => [], is_divisible =>
+			generator_c_struct_dependence_sort::is_divisible(func->defined_type), type => func->defined_type};
+		get_required_types_list(func->defined_type, ref node, module, false);
+		hash::set_value(ref graph, func->name, node);
 	}
 	var graph2 = graph;
 	forh var func, var rec (graph2) {
@@ -288,11 +303,94 @@ def sort_graph(graph : @generator_c_struct_dependence_sort::graph)
 	if (cycle) {
 		return :cycle;
 	}
-	return :result(output);
+	var result = [];
+	var types = {};
+	forh var func, var node (graph) {
+		hash::set_value(ref types, func, node->type);
+	}
+	fora var el (output) {
+		match (el) case :both (var n) {
+			array::push(ref result, {name => n, tct_type => hash::get_value(types, n), c_type => :both});
+		} case :declaration (var n) {
+			array::push(ref result, {name => n, tct_type => hash::get_value(types, n), c_type => :declaration});
+		} case :definition (var n) {
+			array::push(ref result, {name => n, tct_type => hash::get_value(types, n), c_type => :definition});
+		}
+	}
+	return :result(result);
+}
+
+def type_to_anon_function(type : @tct::meta_type) : @generator_c_struct_dependence_sort::function_t {
+	return {
+			defined_type => type,
+			name => anon_naming::get_anon_name(type),
+		};
+}
+
+def anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_struct_dependence_sort::function_t)) {
+	if (type is :tct_own_rec) {
+		var anon_name = anon_naming::get_anon_name(type);
+		if (hash::has_key(anons, anon_name)) {
+			return;
+		}
+		hash::set_value(ref anons, anon_name, type_to_anon_function(type));
+	}
+}
+
+def deep_anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_struct_dependence_sort::function_t)) {
+	if (type is :tct_own_rec) {
+		forh var r_name, var r_type (type as :tct_own_rec) {
+			deep_anon_add(r_type, ref anons);
+		}
+		anon_add(type, ref anons);
+	}
+}
+
+def get_anons(funs : ptd::arr(@nlasm::function_t)) : ptd::arr(@generator_c_struct_dependence_sort::function_t) {
+	var anons : ptd::hash(@generator_c_struct_dependence_sort::function_t) = {};
+	fora var f (funs) {
+		deep_anon_add(f->ret_type, ref anons);
+		fora var g (f->args_type) {
+			match (g->type) case :none {
+			} case :type(var type) {
+				deep_anon_add(type, ref anons);
+			}
+		}
+		fora var r (f->registers) {
+			if (r->type is :rec) {
+				deep_anon_add(r->type as :rec, ref anons);
+			}
+		}
+		match (f->defines_type) case :no {
+		} case :yes(var type) {
+			deep_anon_add(type, ref anons);
+		}
+	}
+	var ret = [];
+	forh var n, var f (anons) {
+		array::push(ref ret, f);
+	}
+	return ret;
+}
+
+def nlasm_to_internal_function_t(nl_funs : ptd::arr(@nlasm::function_t)) : ptd::arr(@generator_c_struct_dependence_sort::function_t) {
+	var in_funs : ptd::arr(@generator_c_struct_dependence_sort::function_t) = [];
+	fora var f (nl_funs) {
+		match (f->access) case :priv {
+		} case :pub {
+			match (f->defines_type) case :yes(var type) {
+				array::push(ref in_funs, {defined_type => type, name => f->name});
+			} case :no {
+			}
+		}
+	}
+	return in_funs;
 }
 
 def generator_c_struct_dependence_sort::sort(funs : ptd::arr(@nlasm::function_t), module : ptd::sim())
 		: @generator_c_struct_dependence_sort::result_t {
-	var graph = nlasm_to_graph(funs, module);
+	var in_funs : ptd::arr(@generator_c_struct_dependence_sort::function_t)  = get_anons(funs);
+	array::append(ref in_funs, nlasm_to_internal_function_t(funs));
+	var graph = in_funs_to_graph(in_funs, module);
 	return sort_graph(graph);
 }

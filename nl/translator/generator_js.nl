@@ -245,6 +245,10 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 		result = print_register_to_assign(reg) . 'null;';
 	} case :var_decl(var decl) {
 		die;
+	} case :use_field(var use_field) {
+		die;
+	} case :release_field(var release_field) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }

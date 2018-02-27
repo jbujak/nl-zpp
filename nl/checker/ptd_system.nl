@@ -184,7 +184,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		add_error(ref errors, 'cannnot assign these two types to one variable - types merge failed.');
 		return :tct_im;
 	}
-	if (tct::is_own_type(a) || tct::is_own_type(b)) {
+	if (tct::is_own_type(a, {}) || tct::is_own_type(b, {})) {
 		add_error(ref errors, 'own type cannot take part in assignment');
 	}
 	return a if (b is :tct_empty);
@@ -421,8 +421,14 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		}
 		return :ok;
 	} case :tct_own_rec(var records) {
-		return mk_err(to, from) unless from is :tct_rec;
-		var cand_records : ptd::hash(@tct::meta_type) = from as :tct_rec;
+		var cand_records : ptd::hash(@tct::meta_type);
+		if (from is :tct_rec) {
+			cand_records = from as :tct_rec;
+		} elsif (from is :tct_own_rec) {
+			cand_records = from as :tct_own_rec;
+		} else {
+			return mk_err(to, from);
+		}
 		return mk_err(to, from) if hash::size(cand_records) != hash::size(records);
 		forh var name, var record (records) {
 			return mk_err(to, from) unless hash::has_key(cand_records, name);
