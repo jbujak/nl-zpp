@@ -158,7 +158,7 @@ def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim()
 	var args = state->fun_args;
 	var reg_no = reg->reg_no;
 	if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
-		return '*___ref___' . reg_suffix(reg);
+		return '(*___ref___' . reg_suffix(reg) . ')';
 	} else {
 		return '___nl__' . reg_suffix(reg);
 	}
