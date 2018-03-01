@@ -1,4 +1,4 @@
-all: old compiler tester
+all: clean old compiler tester
 
 compiler: compiler_nl compiler_gcc
 
