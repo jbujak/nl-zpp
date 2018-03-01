@@ -1,0 +1,65 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Prezentacja po feriach
+		
+		01.03.2018
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co zrobiliśmy przez ferie}
+		\begin{itemize}
+			\item Dokończenie dostępów do struktur, włącznie z zagnieżdżonymi -- Jakub Bujak
+			\item Dalsze poprawki warningów kompilacji gcc -- Marian Dziubiak, Jakub Bujak, warningi:
+			$74 \rightarrow 6$
+			\item Dodanie nazewnictwa anonimowych struktur -- Michał Borkowski
+			\item Przerobienie inicjalizacji na ciąg przypisań -- Jakub Bujak
+			\item Poprawki do testów -- Jakub Bujak
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Kolejne benchmarki}
+		\begin{itemize}
+			\item Przypomnienie: po kompilacji intów 9s $\rightarrow$ 0.3s
+			\item Teraz jest jeszcze lepiej
+			\begin{Verbatim}[commandchars=\\\{\}]
+rep var i (10000000) \{
+       a->b->c = 2;
+       a->b->c++;
+\}
+			\end{Verbatim}
+			\pause
+			\item ptd::rec -- 71s
+			\item own::rec -- 0.6s
+		\end{itemize}
+
+	\end{frame}
+
+	
+	\begin{frame}
+		\frametitle{Plany na najbliższy tydzień}
+		\begin{itemize}
+			\item Ruszenie kompilacji tablic
+			\item Doprowadzenie do uruchomienia wszystkich testów
+			\item Duża prezentacja
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+	 \frametitle{Dziękuję za uwagę}
+	\end{frame}
+
+\end{document}
