@@ -31,5 +31,4 @@ def main::main() {
 	test_ref_rec(ref cos);
 
 	var ii : ptd::int() = cos->ttt;
-	#nl::print(ii);
 }
