@@ -169,13 +169,13 @@ def is_cycle_ref(ref a : @tct::meta_type, ref b : @tct::meta_type, ref ref_inf :
 }
 
 def ptd_system::cross_type(a : @tct::meta_type, b : @tct::meta_type, ref modules : @tc_types::modules_t, ref errors : 
-	@tc_types::errors_t) : @tct::meta_type {
+	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	var ref_inf = {level => 1, from => {}, to => {}, check => false, cast => false};
-	return cross_type(a, b, ref_inf, ref modules, ref errors);
+	return cross_type(a, b, ref_inf, ref modules, ref errors, known_types);
 }
 
 def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::ref_t, ref modules : @tc_types::modules_t, 
-	ref errors : @tc_types::errors_t) : @tct::meta_type {
+	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	return :tct_im if (b is :tct_im || a is :tct_im);
 	if (is_cycle_ref(ref a, ref b, ref ref_inf, true, false, ref modules, ref errors)) {
 		return a;
@@ -184,7 +184,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		add_error(ref errors, 'cannnot assign these two types to one variable - types merge failed.');
 		return :tct_im;
 	}
-	if (tct::is_own_type(a, {}) || tct::is_own_type(b, {})) {
+	if (tct::is_own_type(a, known_types) || tct::is_own_type(b, known_types)) {
 		add_error(ref errors, 'own type cannot take part in assignment');
 	}
 	return a if (b is :tct_empty);
@@ -214,7 +214,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		die;
 	} case :tct_arr(var arr) {
 		if (b is :tct_arr) {
-			return tct::arr(cross_type(arr, b as :tct_arr, ref_inf, ref modules, ref errors));
+			return tct::arr(cross_type(arr, b as :tct_arr, ref_inf, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_arr(var arr) {
 		die; #TODO
@@ -227,7 +227,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 					var t2 = hash::get_value(ret, field);
 					match (t2) case :with_param(var typ) {
 						match (type) case :with_param(var typ2) {
-							hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors));
+							hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors, known_types));
 						} case :no_param {
 							return :tct_im;
 						}
@@ -269,21 +269,21 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 				err = true if (!hash::has_key(reca, field));
 			}
 			if (err) {
-				var reta = ptd_system::rec_to_hash(a, ref_inf, ref modules, ref errors);
-				var retb = ptd_system::rec_to_hash(b, ref_inf, ref modules, ref errors);
-				return tct::hash(cross_type(reta, retb, ref_inf, ref modules, ref errors));
+				var reta = ptd_system::rec_to_hash(a, ref_inf, ref modules, ref errors, known_types);
+				var retb = ptd_system::rec_to_hash(b, ref_inf, ref modules, ref errors, known_types);
+				return tct::hash(cross_type(reta, retb, ref_inf, ref modules, ref errors, known_types));
 			} else {
 				var ret = {};
 				forh var field, var type (reca) {
 					hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules, 
-							ref errors));
+							ref errors, known_types));
 				}
 				return tct::rec(ret);
 			}
 		}
 		if (b is :tct_hash) {
-			var sum = ptd_system::rec_to_hash(a, ref_inf, ref modules, ref errors);
-			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors));
+			var sum = ptd_system::rec_to_hash(a, ref_inf, ref modules, ref errors, known_types);
+			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_rec(var reca) {
 		if (b is :tct_own_rec) {
@@ -301,7 +301,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 				var ret = {};
 				forh var field, var type (reca) {
 					hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
-							ref errors));
+							ref errors, known_types));
 				}
 				return tct::own_rec(ret);
 			}
@@ -310,11 +310,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		}
 	} case :tct_hash(var hash) {
 		if (b is :tct_hash) {
-			return tct::hash(cross_type(hash, b as :tct_hash, ref_inf, ref modules, ref errors));
+			return tct::hash(cross_type(hash, b as :tct_hash, ref_inf, ref modules, ref errors, known_types));
 		}
 		if (b is :tct_rec) {
-			var sum = ptd_system::rec_to_hash(b, ref_inf, ref modules, ref errors);
-			return tct::hash(ptd_system::cross_type(hash, sum, ref modules, ref errors));
+			var sum = ptd_system::rec_to_hash(b, ref_inf, ref modules, ref errors, known_types);
+			return tct::hash(ptd_system::cross_type(hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_hash(var hash) {
 		die; #TODO
@@ -323,10 +323,10 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 }
 
 def ptd_system::rec_to_hash(a : @tct::meta_type, ref_inf : @tc_types::ref_t, ref modules : @tc_types::modules_t, ref 
-	errors : @tc_types::errors_t) : @tct::meta_type {
+	errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	var ret = tct::empty();
 	forh var field, var type (a as :tct_rec) {
-		ret = cross_type(type, ret, ref_inf, ref modules, ref errors);
+		ret = cross_type(type, ret, ref_inf, ref modules, ref errors, known_types);
 	}
 	return ret;
 }
