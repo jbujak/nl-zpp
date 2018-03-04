@@ -6,8 +6,6 @@
 use hash;
 use ptd;
 use boolean_t;
-use nl;
-use dfile;
 
 def tct::arr(arr_type : @tct::meta_type) : @tct::meta_type {
 	return :tct_arr(arr_type);
