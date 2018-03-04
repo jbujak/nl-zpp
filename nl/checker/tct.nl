@@ -6,6 +6,8 @@
 use hash;
 use ptd;
 use boolean_t;
+use nl;
+use dfile;
 
 def tct::arr(arr_type : @tct::meta_type) : @tct::meta_type {
 	return :tct_arr(arr_type);
@@ -146,7 +148,7 @@ def tct::is_own_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::met
 	} case :tct_own_var (var p) {
 		return true;
 	} case :tct_ref (var p) {
-		return false unless hash::has_key(defined_types, p);
+		return false unless hash::has_key(defined_types, p); #assume somebody else handles the problem
 		return tct::is_own_type(defined_types{p}, defined_types);
 	} case :tct_sim {
 		return false;
