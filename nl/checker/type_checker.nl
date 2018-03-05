@@ -15,7 +15,6 @@ use nast;
 use ptd_parser;
 use ptd_system;
 use singleton;
-use c_fe_lib;
 
 def type_to_ptd(type : @nast::variable_type_t, ref errors : @tc_types::errors_t) : @tct::meta_type {
 	match (type) case :type(var tt) {
