@@ -794,7 +794,7 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 					var var_name = var_tab[0] as :var;	
 					if (hash::has_key(prev_ref, var_name)) {
 						if(tct::is_own_type(vars{var_name}->type, known_types)) {
-							add_error(ref errors, 'many ref-arguments come from the same onw-type variable: ' . var_name);
+							add_error(ref errors, 'many ref-arguments come from the same own-type variable: ' . var_name);
 						} else {
 							add_warning(ref errors, 'many ref-arguments come from the same variable: ' . var_name);
 						}
