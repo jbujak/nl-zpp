@@ -34,7 +34,7 @@ def test_ref_rec(ref r : @main::own_rec) {
 	r->ttt = 42;
 }
 
-def test_own_double_pass(ref fst : @main::own_rec, ref snd : @main::own_rec) {
+def test_own_double_pass(ref fst : @main::rec, ref snd : @main::own_rec) {
 	var tmp = fst->ttt;
 	fst->ttt = snd->ttt;
 	snd->ttt = tmp;
@@ -63,6 +63,7 @@ def main::main() {
 		fst => fst,
 		snd => snd
 	};
+
 	test_own_double_pass(ref bigger->fst, ref bigger->snd);
 	#nl::print(ii);
 }

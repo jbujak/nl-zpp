@@ -15,6 +15,7 @@ use nast;
 use ptd_parser;
 use ptd_system;
 use singleton;
+use c_fe_lib;
 
 def type_to_ptd(type : @nast::variable_type_t, ref errors : @tc_types::errors_t) : @tct::meta_type {
 	match (type) case :type(var tt) {
@@ -791,9 +792,9 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 				var err_len = array::len(errors->errors);
 				var var_tab = rec_get_var_from_lval(fun_val_arg->val, ref errors);
 				if (err_len == array::len(errors->errors)) {
-					var var_name = var_tab[0] as :var;
+					var var_name = var_tab[0] as :var;	
 					if (hash::has_key(prev_ref, var_name)) {
-						if(tct::is_own_type(fun_val_arg->val->type, known_types)) {
+						if(tct::is_own_type(vars{var_name}->type, known_types)) {
 							add_error(ref errors, 'many ref-arguments come from the same onw-type variable: ' . var_name);
 						} else {
 							add_warning(ref errors, 'many ref-arguments come from the same variable: ' . var_name);
