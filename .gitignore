@@ -6,3 +6,6 @@ main
 nl_logs
 obj
 bin
+asts.df
+nlasm.df
+main.nl
