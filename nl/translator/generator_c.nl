@@ -767,7 +767,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :array_push(var push) {
 		if (push->dest->type is :arr) {
 			var type_name = get_type_name(push->dest->type as :arr);
-			print(ref state, get_array_push_fun_name(type_name) . '(' .
+			print(ref state, get_array_push_fun_name(type_name, state->mod_name) . '(' .
 				get_reg_ref(ref state, push->dest) . ', ' .
 				get_reg(ref state, push->val) . ')');
 		} elsif (push->dest->type is :im) {
@@ -845,6 +845,10 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print_use_field(ref state, use_field);
 	} case :release_field(var release_field) {
 		print(ref state, get_reg(ref state, release_field->current_owner) . ' = NULL');
+	} case :use_index(var use_index) {
+		print_use_index(ref state, use_index);
+	} case :release_index(var release_index) {
+		print(ref state, get_reg(ref state, release_index->current_owner) . ' = NULL');
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }
@@ -889,9 +893,9 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		print_move_to_im(ref state, src, dest);
 	} case :int {
 		if(src->type is :im) {
-			print(ref state, get_reg_value(ref state, dest) . ' = getIntFromImm(' . get_reg(ref state, src) . ')');
+			print(ref state, get_reg_value(ref state, dest) . ' = getIntFromImm(' . get_reg_value(ref state, src) . ')');
 		} else {
-			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg_value(ref state, src));
 		}
 	} case :string {
 		#TODO string
@@ -899,19 +903,22 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
 		if(src->type is :im) {
-			print(ref state, get_reg_value(ref state, dest) . ' = c_rt_lib0check_true_native(' . get_reg(ref state, src) . ')');
+			print(ref state, get_reg_value(ref state, dest) . ' = c_rt_lib0check_true_native(' . get_reg_value(ref state, src) . ')');
 		} else {
-			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg_value(ref state, src));
 		}
 	} case :rec(var type) {
-		if(src->type is :im) {
-			#TODO allow im to own_rec cast?
-			die;
-		} else {
+		if(src->type is :rec) {
 			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		} else {
+			die;
 		}
 	} case :arr(var type) {
-		die; #TODO
+		if(src->type is :arr) {
+			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg(ref state, src));
+		} else {
+			die;
+		}
 	}
 }
 
@@ -1029,6 +1036,18 @@ def print_use_field(ref state : @generator_c::state_t, use_field : @nlasm::use_f
 	print(ref state, ret);
 }
 
+def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_index_t) : ptd::void() {
+	var ret =  get_reg(ref state, use_index->new_owner) . ' = ' .
+		get_array_get_fun_name(get_type_name(use_index->old_owner->type as :arr), state->mod_name) . '(';
+	match (use_index->old_owner->access_type) case :value {
+		ret .= '&';
+	} case :reference {
+	}
+	ret .= get_reg(ref state, use_index->old_owner) . ', ';
+	ret .=  get_reg_value(ref state, use_index->index) . ')';
+	print(ref state, ret);
+}
+
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
@@ -1043,9 +1062,9 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		} case :bool {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :rec(var type) {
-			return get_reg_value(ref state, reg) . ' = ' . right; #TODO remove?
+			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :arr(var type) {
-			die;
+			return get_reg_value(ref state, reg) . ' = ' . right;
 		}
 	}
 }
@@ -1112,7 +1131,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 		var ret = 'struct ' . name . ' {
 			'INT capacity;
 			'INT size;
-			'' . get_type_to_c(arr_type, '') . ' *value;
+			'' . get_type_name(arr_type) . ' *value;
 			'}';
 		return ret;
 	} case :tct_hash(var hash_type) {
@@ -1179,7 +1198,7 @@ def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::s
 	} else {
 		c_def .= 'typedef ' . get_type_to_c(type, '') . ' ' . c_name . ';' . string::lf();
 	}
-	c_def .= get_additional_type_functions_decl(c_name, type);
+	c_def .= get_additional_type_functions_decl(c_name, type, state);
 	if (anon) {
 		c_def .= '#endif';
 	}
@@ -1208,7 +1227,7 @@ def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::si
 		c_def .= '#endif';
 	}
 	print_to_header(ref state, c_def . string::lf());
-	print(ref state, get_additional_type_functions_def(c_name, type));
+	print(ref state, get_additional_type_functions_def(c_name, type, state));
 }
 
 def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
@@ -1274,12 +1293,13 @@ def get_empty_value(type : @tct::meta_type) : ptd::sim() {
 	}
 }
 
-def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta_type) : ptd::sim() {
+def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta_type, state : @generator_c::state_t) : ptd::sim() {
 	var ret = '';
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
-		ret .= get_array_push_fun_header(type_name, arr_type) . ';' . string::lf();
+		ret .= get_array_push_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
+		ret .= get_array_get_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
@@ -1297,12 +1317,14 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	return ret;
 }
 
-def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_type) : ptd::sim() {
+def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_type, state : @generator_c::state_t)
+		: ptd::sim() {
 	var ret = '';
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
-		ret .= get_array_push_fun_def(type_name, arr_type) . string::lf();
+		ret .= get_array_push_fun_def(type_name, arr_type, state->mod_name) . string::lf();
+		ret .= get_array_get_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
@@ -1320,22 +1342,22 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 	return ret;
 }
 
-def get_array_push_fun_name(array_type_name : ptd::sim()) {
-	return array_type_name . '0push';
+def get_array_push_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . array_type_name . '0push';
 }
 
-def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::meta_type) {
+def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
 	var ret = '';
-	ret .= 'void ' . get_array_push_fun_name(array_type_name) . '(';
+	ret .= 'void ' . get_array_push_fun_name(array_type_name, mod_name) . '(';
 	ret .= array_type_name . ' *arr, ';
-	ret .= get_type_to_c(array_type, '') . 'arg)';
+	ret .= get_type_name(array_type) . ' arg)';
 	return ret;
 }
 
-def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type) {
+def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
 	var ret = '';
 	var default_size = 16;
-	ret .= get_array_push_fun_header(array_type_name, array_type) . '{
+	ret .= get_array_push_fun_header(array_type_name, array_type, mod_name) . ' {
 		'if (arr->value == NULL) {
 		'arr->value = alloc_mem(' . default_size . '*sizeof(' . array_type_name . '));
 		'arr->capacity = ' . default_size . ';
@@ -1345,6 +1367,29 @@ def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta
 		'realloc_mem(arr->value, arr->capacity, arr->capacity*2);
 		'}
 		'arr->value[arr->size++] = arg;
+		'}';
+	return ret;
+}
+
+def get_array_get_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . array_type_name . '0get_ptr';
+}
+
+def get_array_get_fun_header(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= get_type_name(array_type) . ' *' . get_array_get_fun_name(array_type_name, mod_name) . '(';
+	ret .= array_type_name . ' *arr, ';
+	ret .= int_t() . 'index)';
+	return ret;
+}
+
+def get_array_get_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= get_array_get_fun_header(array_type_name, array_type, mod_name) . ' {
+		'if (index < 0 || index >= arr->size) {
+		'nl_die();
+		'}
+		'return &(arr->value[index]);
 		'}';
 	return ret;
 }

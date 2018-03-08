@@ -105,6 +105,8 @@ def nlasm::order_t() {
 			var_decl => @nlasm::var_decl_t,
 			use_field => @nlasm::use_field_t,
 			release_field => @nlasm::release_field_t,
+			use_index => @nlasm::use_index_t,
+			release_index => @nlasm::release_index_t,
 		});
 }
 
@@ -127,6 +129,21 @@ def nlasm::release_field_t() {
 	return ptd::rec({
 		current_owner => @nlasm::reg_t,
 		field_name => ptd::sim(),
+	});
+}
+
+def nlasm::use_index_t() {
+	return ptd::rec({
+		new_owner => @nlasm::reg_t,
+		old_owner => @nlasm::reg_t,
+		index => @nlasm::reg_t,
+	});
+}
+
+def nlasm::release_index_t() {
+	return ptd::rec({
+		current_owner => @nlasm::reg_t,
+		index => @nlasm::reg_t,
 	});
 }
 

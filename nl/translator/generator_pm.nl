@@ -262,6 +262,10 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		die;
 	} case :release_field(var release_field) {
 		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
+		die;
 	}
 	print(ref state, string::lf());
 }

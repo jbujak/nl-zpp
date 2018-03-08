@@ -201,6 +201,17 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 				current_owner => map{release_field->current_owner->reg_no},
 				field_name => release_field->field_name,
 			});
+		} case :use_index(var use_index) {
+			new_cmd = :use_index({
+				new_owner => map{use_index->new_owner->reg_no},
+				old_owner => map{use_index->old_owner->reg_no},
+				index => map{use_index->index->reg_no},
+			});
+		} case :release_index(var release_index) {
+			new_cmd = :release_index({
+				current_owner => map{release_index->current_owner->reg_no},
+				index => map{release_index->index->reg_no},
+			});
 		}
 		new_cmds []= {
 			annotation => recalculate_annotation(cmd->annotation, map),
@@ -315,6 +326,11 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{use_field->src->reg_no} = true;
 			regs{use_field->val->reg_no} = true;
 		} case :release_field(var release_field) {
+		} case :use_index(var use_index) {
+			regs{use_index->src->reg_no} = true;
+			regs{use_index->val->reg_no} = true;
+			regs{use_index->index->reg_no} = true;
+		} case :release_index(var release_index) {
 		}
 	}
 	return regs;

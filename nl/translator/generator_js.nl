@@ -251,6 +251,10 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 		die;
 	} case :release_field(var release_field) {
 		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }

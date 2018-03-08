@@ -329,7 +329,7 @@ def type_to_anon_function(type : @tct::meta_type) : @generator_c_struct_dependen
 }
 
 def anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_struct_dependence_sort::function_t)) {
-	if (type is :tct_own_rec) {
+	if (type is :tct_own_rec || type is :tct_own_arr) {
 		var anon_name = anon_naming::get_anon_name(type);
 		if (hash::has_key(anons, anon_name)) {
 			return;
@@ -343,6 +343,9 @@ def deep_anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_str
 		forh var r_name, var r_type (type as :tct_own_rec) {
 			deep_anon_add(r_type, ref anons);
 		}
+		anon_add(type, ref anons);
+	} elsif (type is :tct_own_arr) {
+		deep_anon_add(type as :tct_own_arr, ref anons);
 		anon_add(type, ref anons);
 	}
 }
@@ -360,6 +363,8 @@ def get_anons(funs : ptd::arr(@nlasm::function_t)) : ptd::arr(@generator_c_struc
 		fora var r (f->registers) {
 			if (r->type is :rec) {
 				deep_anon_add(r->type as :rec, ref anons);
+			} elsif (r->type is :arr){
+				deep_anon_add(r->type as :arr, ref anons);
 			}
 		}
 		match (f->defines_type) case :no {

@@ -272,6 +272,10 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 			#TODO
 		} case :release_field(var release_field) {
 			#TODO
+		} case :use_index(var use_index) {
+			die; #TODO
+		} case :release_index(var release_index) {
+			die; #TODO
 		}
 		var set_len = array::len(set_c);
 		if (set_len > 0 && set_c[set_len - 1] ->reg_no eq '') {

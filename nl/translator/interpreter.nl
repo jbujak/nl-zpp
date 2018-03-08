@@ -546,6 +546,10 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 		die;
 	} case :release_field(var release_field) {
 		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
+		die;
 	}
 	handle_new_declarations(ref state);
 }
@@ -619,6 +623,10 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :use_field(var use_field) {
 		die;
 	} case :release_field(var release_field) {
+		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
 		die;
 	}
 	return true;

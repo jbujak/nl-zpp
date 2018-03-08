@@ -211,6 +211,10 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 		die;
 	} case :release_field(var release_field) {
 		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }

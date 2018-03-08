@@ -1332,7 +1332,8 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return get_type_record_key(bin_op, ref modules, ref vars, ref errors, known_types);
 	}
 	if (op eq 'ARRAY_INDEX') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
 			add_error(ref errors, 'array operator ''[]'' can be applied only to array, not for: '.
 				get_print_tct_type_name(left_type2->type));
 			return ret_type;
@@ -1341,6 +1342,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 			add_error(ref errors, 'array index should be number');
 		}
 		left_type2->type = left_type2->type as :tct_arr if left_type2->type is :tct_arr;
+		left_type2->type = left_type2->type as :tct_own_arr if left_type2->type is :tct_own_arr;
 		return left_type2;
 	}
 	if (op eq 'HASH_INDEX') {
@@ -1925,25 +1927,27 @@ def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::va
 	var binary_op = binary_op_val->value as :bin_op;
 
 	fill_value_types(ref binary_op->left, vars, modules, ref errors, known_types);
-	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types);
-	binary_op_val->value = :bin_op(binary_op);
 
 	if (binary_op->op eq '=') {
 		binary_op_val->type = binary_op->left->type;
 	} elsif (binary_op->op eq 'ARRAY_INDEX') {
-		#TODO set type
-		binary_op_val->type = :tct_im;
+		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq 'HASH_INDEX') {
 		#TODO set type
 		binary_op_val->type = :tct_im;
 	} elsif (binary_op->op eq '->') {
 		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq '[]=') {
+		if (unwrap_ref(binary_op->left->type, ref modules, ref errors) is :tct_own_arr) {
+			binary_op->right->type = unwrap_ref(binary_op->left->type, ref modules, ref errors) as :tct_own_arr;
+		}
 		binary_op_val->type = :tct_void;
 	} else {
 		var op_def = tc_types::get_bin_op_def(binary_op->op);
 		binary_op_val->type = op_def->ret;
 	}
+	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types);
+	binary_op_val->value = :bin_op(binary_op);
 }
 
 def fill_ternary_op_type(ref ternary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
