@@ -1,0 +1,74 @@
+\documentclass[11pt]{article}
+
+\usepackage{polski}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+
+\setlength{\parindent}{0pt} % brak wcięć
+
+\title{Optymalizacja kompilatora języka NianioLang do języka C}
+\author{Jakub Bujak, Marek Puzyna, Marian Dziubiak, Michał Borkowski}
+\date{2017/2018}
+
+\begin{document}
+
+    \maketitle
+
+    \subsection*{Abstrakt}
+    NianioLang jest językiem programowania ogólnego przeznaczenia, który można
+    skompilować do wykonania na kilku platformach. Między innymi są to Java, 
+    JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
+    utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
+    pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
+    jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
+    niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
+    jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia 
+    w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
+    zwiększy wydajność kompilowanych aplikacji.
+
+    \tableofcontents
+
+    \newpage
+
+    \section{Wstęp}
+    \emph{O tym że jest to praca licencjacka, o tym kto nam to zadanie zlecił,
+          itp.}
+    \subsection{Czym jest NianioLang?}
+    \subsection{Typy w NianioLangu}
+
+    \section{Metodyka pracy}
+    \subsection{Korzystanie z systemu kontroli wersji}
+    \subsection{Zgłaszanie zmian i code review}
+    \subsection{Techniki komunikacji w zespole}
+
+    \section{Kompilator NianioLang}
+    \subsection{Budowanie drzewa AST}
+    \subsection{Architektura nlasma}
+    \emph{Rejestry, wywołania funkcji, deklaracje typów, itp.}
+    \subsection{Translacja drzewa AST do nlasma}
+    \subsection{Generowanie kodu C na podstawie nlasma}
+    \subsection{Runtime NianioLang w języku C}
+    \subsection{Implementacja typów NianioLangu w C}
+
+    \section{Rozszerzenie systemu typów}
+    \subsection{Rozdzielenie typu \texttt{ptd::sim}}
+    \subsection{Typy \texttt{own}}
+    \emph{Jaki jest cel tych typów, jakie są ograniczenia jakie na ich użycie
+          nakładamy (w stosunku do typów ptd).}
+
+    \section{Rozszerzenie nlasma}
+    \subsection{Przekazywanie informacji o typach z drzewa AST}
+
+    \section{Nowe implementacje typów}
+    \emph{W tej sekcji w każdym podrozdziale będziemy opisywać dlaczego
+          dotychczasowe rozwiązanie było nieefektywne, jak można je
+          było poprawić, które rozwiązanie wybraliśmy, dlaczego.}
+    \subsection{Typy proste}
+    \subsection{Tablice}
+    \subsection{Struktury}
+    \subsection{Typy wariantowe}
+
+    \section{Skutki optymalizacji}
+    \subsection{Porównanie czasu wykonania programów}
+
+\end{document}
