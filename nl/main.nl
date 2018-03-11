@@ -40,9 +40,12 @@ def test_own_double_pass(ref fst : @main::rec, ref snd : @main::own_rec) {
 	snd->ttt = tmp;
 }
 
+
 def foobar(i : ptd::int()) : ptd::int() {
 	return i*i;
 }
+
+
 
 def main::main() {
 	var cos : @main::own_rec = ({
@@ -54,12 +57,16 @@ def main::main() {
 	test_ref_rec(ref cos);
 
 	var iii;
+
 	#iii = cos->ttt;
 
 	var not_inittted : ptd::int();
 	for (;not_inittted < 42; not_inittted++) {
 		foobar(not_inittted);
 	}
+
+	iii = cos->ttt;
+
 
 	var fst : @main::rec = {
 		ttt => 1
