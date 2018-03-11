@@ -78,6 +78,7 @@ def module_checker::var_t() {
 	return ptd::rec({
 			write => ptd::var({const => ptd::none(), none => ptd::none(), value => ptd::none()}),
 			read => @boolean_t::type,
+			initialized => @boolean_t::type,
 			is_required => @boolean_t::type
 		});
 }
@@ -105,6 +106,13 @@ def module_checker::state_t() {
 
 def module_checker::save_t() {
 	return ptd::rec({in_loop => @boolean_t::type, vars => ptd::hash(@module_checker::var_t)});
+}
+
+def module_checker::init_checker_t() {
+	return ptd::rec({
+		prev => @module_checker::save_t,
+		each_init => ptd::hash(@boolean_t::type)
+	});
 }
 
 def add_error(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
@@ -145,7 +153,7 @@ def module_checker::check_module(module : @nast::module_t, check_public_fun, ref
 		state->return = {was => false, arg => check_return_type(fun_def->ret_type->type, ref state)};
 		var prev = save_block(ref state);
 		fora var fun_arg (fun_def->args) {
-			add_var(fun_arg->name, false, false, ref state);
+			add_var(fun_arg->name, false, false, true, ref state);
 			check_type(fun_arg->type, ref state);
 			use_var(fun_arg->name, :set, ref state);
 		}
@@ -301,12 +309,12 @@ def check_type(type : @nast::variable_type_t, ref state : @module_checker::state
 	}
 }
 
-def add_var(name : ptd::sim(), is_const : @boolean_t::type, is_required : @boolean_t::type, ref state : 
-	@module_checker::state_t) : ptd::void() {
+def add_var(name : ptd::sim(), is_const : @boolean_t::type, is_required : @boolean_t::type, initialized :
+	@boolean_t::type, ref state : @module_checker::state_t) : ptd::void() {
 	if (hash::has_key(state->vars, name)) {
 		add_error(ref state->errors, 'redeclaration variable: ' . name);
 	}
-	var val = {write => :none, read => false, is_required => is_required};
+	var val = {write => :none, read => false, is_required => is_required, initialized => initialized};
 	val->write = :const if (is_const);
 	hash::set_value(ref state->vars, name, val);
 }
@@ -320,11 +328,15 @@ def use_var(name : ptd::sim(), mode : ptd::var({mod => ptd::none(), set => ptd::
 	var info = hash::get_value(state->vars, name);
 	match (mode) case :get {
 		info->read = true;
+		if (!info->initialized) {	
+			add_error(ref state->errors, 'can''t use uninitialized variable: ' . name); 
+		}
 	} case :set {
 		if (info->write is :const) {
 			add_error(ref state->errors, 'can''t change const variable: ' . name);
 			return;
 		}
+		info->initialized = true;
 		info->write = :value;
 	} case :mod {
 		info->read = true;
@@ -338,8 +350,8 @@ def use_var(name : ptd::sim(), mode : ptd::var({mod => ptd::none(), set => ptd::
 }
 
 def add_var_dec(var_dec : @nast::variable_declaration_t, is_const : @boolean_t::type, is_required : @boolean_t::type, 
-	ref state : @module_checker::state_t) : ptd::void() {
-	add_var(var_dec->name, is_const, is_required, ref state);
+	is_initialized : @boolean_t::type, ref state : @module_checker::state_t) : ptd::void() {
+	add_var(var_dec->name, is_const, is_required, is_initialized, ref state);
 	check_type(var_dec->type, ref state);
 	match (var_dec->value) case :value(var value) {
 		check_val(value, ref state);
@@ -357,16 +369,25 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	}
 	match (cmd->cmd) case :if(var as_if) {
 		check_val(as_if->cond, ref state);
+		var inits = inits(ref state);
 		check_cmd(as_if->if, ref state);
+		update_inits(ref state, ref inits);
+		restore_block(ref state, ref inits->prev);
 		var was = state->return->was;
 		fora var elsif_s (as_if->elsif) {
 			state->return->was = false;
 			check_val(elsif_s->cond, ref state);
+			inits->prev = save_block(ref state);
 			check_cmd(elsif_s->cmd, ref state);
+			update_inits(ref state, ref inits);
+			restore_block(ref state, ref inits->prev);
 			was = false unless state->return->was;
 		}
+		inits->prev = save_block(ref state);
 		state->return->was = false;
 		check_cmd(as_if->else, ref state);
+		update_inits(ref state, ref inits);
+		flush_inits(ref state, ref inits);
 		was = false unless state->return->was;
 		state->return->was = was;
 	} case :for(var as_for) {
@@ -374,7 +395,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		match (as_for->start) case :value(var value) {
 			check_val(value, ref state);
 		} case :var_decl(var var_decl) {
-			add_var_dec(var_decl, false, false, ref state);
+			add_var_dec(var_decl, false, false, var_decl->value is :value, ref state);
 		}
 		check_val(as_for->cond, ref state);
 		state->in_loop = true;
@@ -385,7 +406,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :fora(var as_fora) {
 		var prev = save_block(ref state);
 		check_val(as_fora->array, ref state);
-		add_var_dec(as_fora->iter, true, true, ref state);
+		add_var_dec(as_fora->iter, true, true, true, ref state);
 		state->in_loop = true;
 		check_cmd(as_fora->cmd, ref state);
 		load_block(ref state, prev);
@@ -393,8 +414,8 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :forh(var as_forh) {
 		var prev = save_block(ref state);
 		check_val(as_forh->hash, ref state);
-		add_var_dec(as_forh->val, true, true, ref state);
-		add_var_dec(as_forh->key, true, true, ref state);
+		add_var_dec(as_forh->val, true, true, true, ref state);
+		add_var_dec(as_forh->key, true, true, true, ref state);
 		state->in_loop = true;
 		check_cmd(as_forh->cmd, ref state);
 		load_block(ref state, prev);
@@ -407,7 +428,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :rep(var as_rep) {
 		var prev = save_block(ref state);
 		check_val(as_rep->count, ref state);
-		add_var_dec(as_rep->iter, true, true, ref state);
+		add_var_dec(as_rep->iter, true, true, true, ref state);
 		state->in_loop = true;
 		check_cmd(as_rep->cmd, ref state);
 		load_block(ref state, prev);
@@ -421,11 +442,15 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		state->return->was = false;
 	} case :if_mod(var if_mod) {
 		check_val(if_mod->cond, ref state);
+		var prev = save_block(ref state);
 		check_cmd(if_mod->cmd, ref state);
+		restore_block(ref state, ref prev);
 		state->return->was = false;
 	} case :unless_mod(var unless_mod) {
 		check_val(unless_mod->cond, ref state);
+		var prev = save_block(ref state);
 		check_cmd(unless_mod->cmd, ref state);
+		restore_block(ref state, ref prev);
 		state->return->was = false;
 	} case :break {
 		if (!state->in_loop) {
@@ -438,18 +463,22 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :match(var as_match) {
 		check_val(as_match->val, ref state);
 		var was = true;
+		var inits = inits(ref state);
 		fora var branch (as_match->branch_list) {
 			state->return->was = false;
-			var prev = save_block(ref state);
+			inits->prev = save_block(ref state);
 			match (branch->variant->value) case :none {
 			} case :value(var value) {
-				add_var_dec(value, false, true, ref state);
+				add_var_dec(value, false, true, true, ref state);
 			}
 			check_cmd(branch->cmd, ref state);
 			was = false unless state->return->was;
-			load_block(ref state, prev);
+			update_inits(ref state, ref inits);
+			load_block(ref state, inits->prev);
+			restore_block(ref state, ref inits->prev);
 		}
 		state->return->was = was;
+		flush_inits(ref state, ref inits);
 	} case :value(var val) {
 		check_val(val, ref state);
 	} case :return(var as_return) {
@@ -480,10 +509,10 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		}
 		state->return->was = true;
 	} case :var_decl(var var_decl) {
-		add_var_dec(var_decl, false, false, ref state);
+		add_var_dec(var_decl, false, false, var_decl->value is :value, ref state);
 	} case :try(var as_try) {
 		match (as_try) case :decl(var var_decl) {
-			add_var_dec(var_decl, false, false, ref state);
+			add_var_dec(var_decl, false, false, var_decl->value is :value, ref state);
 		} case :lval(var lval) {
 			check_val({debug => cmd->debug, value => :bin_op(lval), type => lval->left->type}, ref state);
 		} case :expr(var expr) {
@@ -491,7 +520,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		}
 	} case :ensure(var as_ensure) {
 		match (as_ensure) case :decl(var var_decl) {
-			add_var_dec(var_decl, false, false, ref state);
+			add_var_dec(var_decl, false, false, var_decl->value is :value, ref state);
 		} case :lval(var lval) {
 			check_val({debug => cmd->debug, value => :bin_op(lval), type => lval->left->type}, ref state);
 		} case :expr(var expr) {
@@ -592,3 +621,32 @@ def load_block(ref state : @module_checker::state_t, prev : @module_checker::sav
 	}
 }
 
+def restore_block(ref state : @module_checker::state_t, ref prev : @module_checker::save_t) : ptd::void() {
+	var keys = hash::keys(state->vars);
+	fora var key (keys) {
+		state->vars{key}->initialized = prev->vars{key}->initialized;
+	}
+}
+
+def inits(ref state : @module_checker::state_t) : @module_checker::init_checker_t {
+	var res_inits = {};
+	fora var key (hash::keys(state->vars)) {
+		hash::set_value(ref res_inits, key, true);
+	}
+	return {
+		prev => save_block(ref state),
+		each_init => res_inits
+	};
+}
+
+def update_inits(ref state : @module_checker::state_t, ref inits : @module_checker::init_checker_t) : ptd::void() {
+	fora var key (hash::keys(inits->each_init)) {
+		hash::set_value(ref inits->each_init, key, false) unless state->vars{key}->initialized;
+	}
+}
+
+def flush_inits(ref state : @module_checker::state_t, ref inits : @module_checker::init_checker_t) : ptd::void() {
+	fora var key (hash::keys(inits->each_init)) {
+		state->vars{key}->initialized = inits->each_init{key};
+	}
+}
