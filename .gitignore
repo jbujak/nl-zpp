@@ -9,3 +9,6 @@ bin
 asts.df
 nlasm.df
 main.nl
+
+# vim
+*.swp
