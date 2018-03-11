@@ -330,6 +330,7 @@ def use_var(name : ptd::sim(), mode : ptd::var({mod => ptd::none(), set => ptd::
 		info->read = true;
 		if (!info->initialized) {	
 			add_error(ref state->errors, 'can''t use uninitialized variable: ' . name); 
+			info->initialized = true; # already failed so don't propagate error
 		}
 	} case :set {
 		if (info->write is :const) {

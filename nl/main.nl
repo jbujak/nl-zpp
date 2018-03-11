@@ -61,9 +61,23 @@ def main::main() {
 	#iii = cos->ttt;
 
 	var not_inittted : ptd::int();
-	for (;not_inittted < 42; not_inittted++) {
-		foobar(not_inittted);
+	if (im > 10) {
+		not_inittted = 5;
+	} elsif (im < 10) {
+		not_inittted = 10;
+	} elsif ((not_inittted = 15) < 10) {
+		
+	} else {
+		not_inittted = 20;
 	}
+	var tmp : ptd::var({hai => ptd::none(), iie => ptd::none()}) = :hai;
+	match (tmp) case :hai {
+		not_inittted = 5;
+	} case :iie {
+		not_inittted = 10;
+	}
+
+	foobar(not_inittted);
 
 	iii = cos->ttt;
 
@@ -80,6 +94,6 @@ def main::main() {
 		snd => snd
 	};
 
-	test_own_double_pass(ref bigger->fst, ref bigger->snd);
+	#test_own_double_pass(ref bigger->fst, ref bigger->snd);
 	#nl::print(ii);
 }
