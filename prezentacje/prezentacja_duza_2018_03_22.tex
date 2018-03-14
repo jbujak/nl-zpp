@@ -701,6 +701,48 @@ L1:
 		\includegraphics[width=\textwidth]{llvm.png}
 	\end{frame}
 
+	\begin{frame}
+		\frametitle{.NET Common Intermidiate Language}
+		\begin{itemize}
+			\item Silnie typowany kod dla maszyny stosowej
+			\item Punkt integracji języków C\#, F\#, VB.NET
+			\item Wspiera ideę programowania obiektowego, na której oparta jest cała platforma
+			\item Wszystkie operacje dzieją się przy użyciu stosu (dodawanie, porównywanie, wołanie metod)
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}[fragile]
+		\frametitle{.NET CIL}
+		\begin{lstlisting}[language=CIL]
+.class public abstract auto ansi beforefieldinit Sample
+extends [mscorlib]System.Object
+{
+	.field public static string SomeText
+	.method public hidebysig static void  Main() cil managed
+	{
+		.entrypoint
+		.maxstack  1
+		.locals init (int32 V_0)
+		IL_0000:  ldc.i4.0
+		IL_0001:  stloc.0
+		IL_0002:  ldloc.0
+		IL_0003:  call     void [mscorlib]System.Console::WriteLine(int32)
+		IL_0008:  ret
+	} // end of method Sample::Main
+} // end of class Sample
+		\end{lstlisting}
+	\end{frame}
+
+	\begin{frame}
+		\frametitle{Optymizacje kompilatora}
+		\begin{itemize}
+			\item Upraszczanie kodu wynikowego (np. zamiana mnożenia przez 2 przez left-shift)
+			\item Zmniejszanie wielkości pliku wynikowego (XOR na rejestrze, zamiast przypisania 0)
+			\item Zmiana ogonowych funkcji rekurencyjnych na iteracyjne
+			\item Cache'owanie wyniku funkcji bez skutków ubocznych przy wielokrotnym jej wołaniu
+			\item Zmiana kolejności zagnieżdżonych pętli, aby czytać wartości z pamięci blisko siebie (najlepiej jak się zmieszczą w cache'u procesora)
+		\end{itemize}
+	\end{frame}
 
 	\begin{frame}
 	 \frametitle{Dziękuję za uwagę}
