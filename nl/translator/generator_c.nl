@@ -419,7 +419,9 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 		var fun_header = get_function_header(func, state->mod_name);
 		match (func->access) case :pub {
 			print_to_header(ref state, fun_header . ';' . string::lf());
-			print_to_header(ref state, get_func_ptr_header(func, state->mod_name) . ';' . string::lf());
+			if (!takes_own_arg(func)) {
+				print_to_header(ref state, get_func_ptr_header(func, state->mod_name) . ';' . string::lf());
+			}
 		} case :priv {
 			println(ref state, fun_header . ';');
 		}
@@ -427,7 +429,7 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	
 	println(ref state, string::lf());
 	fora var func (asm->functions) {
-		if (func->access is :pub) {
+		if (func->access is :pub && !takes_own_arg(func)) {
 			var fun_name = get_function_name(func, state->mod_name);
 			println(ref state, get_func_ptr_header(func, state->mod_name) . '{');
 			var number = array::len(func->args_type);
@@ -1392,4 +1394,11 @@ def get_array_get_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_
 		'return &(arr->value[index]);
 		'}';
 	return ret;
+}
+
+def takes_own_arg(function : @nlasm::function_t) : @boolean_t::type {
+	fora var arg (function->args_type) {
+		return true unless arg->register->type is :im;
+	}
+	return false;
 }

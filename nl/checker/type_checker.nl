@@ -734,6 +734,9 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		ret->type = tct::int();
 	} case :fun_label(var fun_label) {
 		check_function_exists(fun_label->module, fun_label->name, ref modules, ref errors);
+		if (takes_own_arg(get_function(fun_label->module, fun_label->name, ref modules), known_types)) {
+			add_error(ref errors, 'cannot reference functions which takes own argument');
+		}
 		ret->type = tct::func();
 	} case :fun_val(var fun_val) {
 		ret = check_fun_val(fun_val, ref modules, ref vars, ref errors, known_types);
@@ -1661,6 +1664,12 @@ def check_function_exists(fun_module : ptd::sim(), fun_name : ptd::sim(), ref mo
 	return true;
 }
 
+def get_function(fun_module : ptd::sim(), fun_name : ptd::sim(), ref modules : @tc_types::modules_t) : @tc_types::def_fun_t {
+	var module : ptd::sim() = get_fun_module(fun_module, modules->env->current_module);
+	return hash::get_value(hash::get_value(modules->funs, module), get_fun_key(fun_name, fun_module));
+}
+
+
 def add_error(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
 	array::push(ref errors->errors, {message => msg, line => errors->current_line, module => errors->module, column => -1, type => :error});
 }
@@ -2019,4 +2028,11 @@ def unwrap_ref(type : @tct::meta_type, ref modules : @tc_types::modules_t, ref e
 		type = ptd_system::get_ref_type(type as :tct_ref, ref modules, ref errors);
 	}
 	return type;
+}
+
+def takes_own_arg(function : @tc_types::def_fun_t, defined_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
+	fora var arg (function->args) {
+		return true if tct::is_own_type(arg->type, defined_types);
+	}
+	return false;
 }
