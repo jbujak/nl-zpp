@@ -734,6 +734,9 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		ret->type = tct::int();
 	} case :fun_label(var fun_label) {
 		check_function_exists(fun_label->module, fun_label->name, ref modules, ref errors);
+		if (takes_own_arg(get_function(fun_label->module, fun_label->name, ref modules), known_types)) {
+			add_error(ref errors, 'cannot reference functions which takes own argument');
+		}
 		ret->type = tct::func();
 	} case :fun_val(var fun_val) {
 		ret = check_fun_val(fun_val, ref modules, ref vars, ref errors, known_types);
@@ -1332,7 +1335,8 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return get_type_record_key(bin_op, ref modules, ref vars, ref errors, known_types);
 	}
 	if (op eq 'ARRAY_INDEX') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
 			add_error(ref errors, 'array operator ''[]'' can be applied only to array, not for: '.
 				get_print_tct_type_name(left_type2->type));
 			return ret_type;
@@ -1341,6 +1345,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 			add_error(ref errors, 'array index should be number');
 		}
 		left_type2->type = left_type2->type as :tct_arr if left_type2->type is :tct_arr;
+		left_type2->type = left_type2->type as :tct_own_arr if left_type2->type is :tct_own_arr;
 		return left_type2;
 	}
 	if (op eq 'HASH_INDEX') {
@@ -1355,7 +1360,8 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return left_type2;
 	}
 	if (op eq '[]=') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
 			add_error(ref errors, 'array operator ''[]='' can be applied only to array');
 			return ret_type;
 		}
@@ -1392,15 +1398,15 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_int {
 		return 'ptd::int()';
 	} case :tct_string {
-		return ''; #TODO
+		return 'ptd::string()';
 	} case :tct_bool {
-		return ''; #TODO
+		return 'ptd::bool()';
 	} case :tct_ref(var ref_name) {
 		return '@' . ref_name;
 	} case :tct_arr(var arr) {
 		return 'ptd::arr(' . get_print_tct_type_name(arr) . ')';
 	} case :tct_own_arr(var arr) {
-		return ''; #TODO
+		return 'own::arr(' . get_print_tct_type_name(arr) . ')';
 	} case :tct_var(var variants) {
 		var ret = 'ptd::var(';
 		forh var field, var tt (variants) {
@@ -1412,7 +1418,15 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 		}
 		return ret . ')';
 	} case :tct_own_var(var variants) {
-		return ''; #TODO
+		var ret = 'own::var(';
+		forh var field, var tt (variants) {
+			match (tt) case :with_param(var typ) {
+				ret .= field . ' => ' . get_print_tct_type_name(typ) . ', ';
+			} case :no_param {
+				ret .= field . ', ';
+			}
+		}
+		return ret . ')';
 	} case :tct_rec(var recs) {
 		var ret = 'ptd::rec(';
 		forh var field, var tt (recs) {
@@ -1420,11 +1434,16 @@ def get_print_tct_type_name(type : @tct::meta_type) : ptd::sim() {
 		}
 		return ret . ')';
 	} case :tct_own_rec(var recs) {
-		return ''; #TODO
+		var ret = 'own::rec(';
+		forh var field, var tt (recs) {
+			ret .= field . ' => ' . get_print_tct_type_name(tt) . ', ';
+		}
+		return ret . ')';
+
 	} case :tct_hash(var hash) {
 		return 'ptd::hash(' . get_print_tct_type_name(hash) . ')';
 	} case :tct_own_hash(var hash) {
-		return ''; #TODO
+		return 'own::hash(' . get_print_tct_type_name(hash) . ')';
 	}
 }
 
@@ -1440,27 +1459,27 @@ def get_print_tct_label(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_int {
 		return 'ptd::int';
 	} case :tct_string {
-		return ''; #TODO
+		return 'ptd::string';
 	} case :tct_bool {
-		return ''; #TODO
+		return 'ptd::bool';
 	} case :tct_ref(var ref_name) {
 		return 'ptd::ref';
 	} case :tct_arr(var arr) {
 		return 'ptd::arr';
 	} case :tct_own_arr(var arr) {
-		return ''; #TODO
+		return 'own::arr';
 	} case :tct_var(var variants) {
 		return 'ptd::var';
 	} case :tct_own_var(var variants) {
-		return ''; #TODO
+		return 'own::var';
 	} case :tct_rec(var recs) {
 		return 'ptd::rec';
 	} case :tct_own_rec(var recs) {
-		return ''; #TODO
+		return 'own::rec';
 	} case :tct_hash(var hash) {
 		return 'ptd::hash';
 	} case :tct_own_hash(var hash) {
-		return ''; #TODO
+		return 'own::hash';
 	}
 }
 
@@ -1472,12 +1491,20 @@ def get_print_check_info(check_info : @tc_types::check_info) : ptd::sim() {
 		for(var i = array::len(info->stack) - 1; i >= 0; i -= 1) {
 			match (info->stack[i]) case :ptd_arr {
 				ret .= 'ptd::arr';
+			} case :own_arr {
+				ret .= 'own::arr';
 			} case :ptd_var(var variant) {
 				ret .= 'ptd::var(' . variant . ')';
+			} case :own_var(var variant) {
+				ret .= 'own::var(' . variant . ')';
 			} case :ptd_rec(var field) {
 				ret .= 'ptd::rec(' . field . ')';
+			} case :own_rec(var field) {
+				ret .= 'own::rec(' . field . ')';
 			} case :ptd_hash {
 				ret .= 'ptd::hash';
+			} case :own_hash {
+				ret .= 'own::hash';
 			}
 			ret .= '->';
 		}
@@ -1636,6 +1663,12 @@ def check_function_exists(fun_module : ptd::sim(), fun_name : ptd::sim(), ref mo
 	}
 	return true;
 }
+
+def get_function(fun_module : ptd::sim(), fun_name : ptd::sim(), ref modules : @tc_types::modules_t) : @tc_types::def_fun_t {
+	var module : ptd::sim() = get_fun_module(fun_module, modules->env->current_module);
+	return hash::get_value(hash::get_value(modules->funs, module), get_fun_key(fun_name, fun_module));
+}
+
 
 def add_error(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
 	array::push(ref errors->errors, {message => msg, line => errors->current_line, module => errors->module, column => -1, type => :error});
@@ -1838,15 +1871,18 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 	} case :const(var as_const) {
 		value->type = :tct_int;
 	} case :arr_decl(var arr_decl) {
-		#TODO
-		value->type = :tct_arr(:tct_im);
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
+		rep var i (array::len(arr_decl)) {
+			if (value_type is :tct_own_arr) {
+				arr_decl[i]->type = value_type as :tct_own_arr;
+			}
+			fill_value_types(ref arr_decl[i], vars, modules, ref errors, known_types);
+		}
+		value->value = :arr_decl(arr_decl);
 	} case :hash_decl(var hash_decl) {
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
 		rep var i (array::len(hash_decl)) {
 			hash_decl[i]->key->type = :tct_string;
-			var value_type = value->type;
-			while (value_type is :tct_ref) {
-				value_type = ptd_system::get_ref_type(value_type as :tct_ref, ref modules, ref errors);
-			}
 			if (value_type is :tct_own_rec) {
 				hash_decl[i]->val->type = (value_type as :tct_own_rec){hash_decl[i]->key->value as :hash_key};
 			}
@@ -1900,25 +1936,27 @@ def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::va
 	var binary_op = binary_op_val->value as :bin_op;
 
 	fill_value_types(ref binary_op->left, vars, modules, ref errors, known_types);
-	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types);
-	binary_op_val->value = :bin_op(binary_op);
 
 	if (binary_op->op eq '=') {
 		binary_op_val->type = binary_op->left->type;
 	} elsif (binary_op->op eq 'ARRAY_INDEX') {
-		#TODO set type
-		binary_op_val->type = :tct_im;
+		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq 'HASH_INDEX') {
 		#TODO set type
 		binary_op_val->type = :tct_im;
 	} elsif (binary_op->op eq '->') {
 		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq '[]=') {
+		if (unwrap_ref(binary_op->left->type, ref modules, ref errors) is :tct_own_arr) {
+			binary_op->right->type = unwrap_ref(binary_op->left->type, ref modules, ref errors) as :tct_own_arr;
+		}
 		binary_op_val->type = :tct_void;
 	} else {
 		var op_def = tc_types::get_bin_op_def(binary_op->op);
 		binary_op_val->type = op_def->ret;
 	}
+	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types);
+	binary_op_val->value = :bin_op(binary_op);
 }
 
 def fill_ternary_op_type(ref ternary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
@@ -1982,4 +2020,19 @@ def fill_try_ensure_type(ref try_ensure : @nast::try_ensure_t, vars : @tc_types:
 		#TODO
 	}
 	return ret;
+}
+
+def unwrap_ref(type : @tct::meta_type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t)
+		: @tct::meta_type {
+	while (type is :tct_ref) {
+		type = ptd_system::get_ref_type(type as :tct_ref, ref modules, ref errors);
+	}
+	return type;
+}
+
+def takes_own_arg(function : @tc_types::def_fun_t, defined_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
+	fora var arg (function->args) {
+		return true if tct::is_own_type(arg->type, defined_types);
+	}
+	return false;
 }

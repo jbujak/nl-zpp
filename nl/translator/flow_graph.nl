@@ -210,6 +210,8 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			read_reg(ref block, set_at_idx->idx, nr);
 			read_reg(ref block, set_at_idx->val, nr);
 			write_reg(ref block, set_at_idx->src, nr);
+		} case :array_push(var push) {
+			die; #TODO
 		} case :get_val(var get_val) {
 			read_reg(ref block, get_val->src, nr);
 			write_reg(ref block, get_val->dest, nr);
@@ -262,6 +264,10 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 		} case :use_field(var use_field) {
 			#TODO
 		} case :release_field(var release_field) {
+			#TODO
+		} case :use_index(var use_index) {
+			#TODO
+		} case :release_index(var release_index) {
 			#TODO
 		}
 		++nr;

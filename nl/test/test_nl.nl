@@ -15,6 +15,7 @@ use test_type;
 use test_fun;
 use test_ensure;
 use test_own_rec;
+use test_own_arr;
 use nl;
 use string;
 
@@ -52,6 +53,8 @@ def test_nl::test_only_compile() {
 
 def test_nl::test_compile_and_run() {
 	p('test_own_rec');
+	test_own_rec::test();
+	p('test_own_arr');
 	test_own_rec::test();
 	p('str');
 	test_str::test();

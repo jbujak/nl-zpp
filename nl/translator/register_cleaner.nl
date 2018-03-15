@@ -148,6 +148,11 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 				idx => map{idx->idx->reg_no},
 				val => map{idx->val->reg_no},
 			});
+		} case :array_push(var push) {
+			new_cmd = :array_push({
+				dest => map{push->dest->reg_no},
+				val => map{push->val->reg_no},
+			});
 		} case :get_val(var val) {
 			new_cmd = :get_val({
 				key => val->key,
@@ -195,6 +200,17 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			new_cmd = :release_field({
 				current_owner => map{release_field->current_owner->reg_no},
 				field_name => release_field->field_name,
+			});
+		} case :use_index(var use_index) {
+			new_cmd = :use_index({
+				new_owner => map{use_index->new_owner->reg_no},
+				old_owner => map{use_index->old_owner->reg_no},
+				index => map{use_index->index->reg_no},
+			});
+		} case :release_index(var release_index) {
+			new_cmd = :release_index({
+				current_owner => map{release_index->current_owner->reg_no},
+				index => map{release_index->index->reg_no},
 			});
 		}
 		new_cmds []= {
@@ -283,6 +299,9 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{idx->val->reg_no} = true;
 			regs{idx->src->reg_no} = true;
 			regs{idx->idx->reg_no} = true;
+		} case :array_push(var push) {
+			regs{push->dest->reg_no} = true;
+			regs{push->val->reg_no} = true;
 		} case :get_val(var val) {
 			regs{val->dest->reg_no} = true;
 			regs{val->src->reg_no} = true;
@@ -307,6 +326,11 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{use_field->src->reg_no} = true;
 			regs{use_field->val->reg_no} = true;
 		} case :release_field(var release_field) {
+		} case :use_index(var use_index) {
+			regs{use_index->src->reg_no} = true;
+			regs{use_index->val->reg_no} = true;
+			regs{use_index->index->reg_no} = true;
+		} case :release_index(var release_index) {
 		}
 	}
 	return regs;

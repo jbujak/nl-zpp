@@ -507,6 +507,8 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 		var val = state->top->vars[set_at_idx->val->reg_no];
 		arr[idx] = val;
 		state->top->vars[set_at_idx->src->reg_no] = arr;
+	} case :array_push(var push) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		var val = hash::get_value(state->top->vars[get_val->src->reg_no], get_val->key);
 		state->top->vars[get_val->dest->reg_no] = val unless nlasm::is_empty(get_val->dest);
@@ -543,6 +545,10 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 	} case :use_field(var use_field) {
 		die;
 	} case :release_field(var release_field) {
+		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
 		die;
 	}
 	handle_new_declarations(ref state);
@@ -592,6 +598,8 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 		var idx = state->top->vars[set_at_idx->idx->reg_no];
 		return false unless nl::is_sim(idx);
 		return false unless idx < array::len(arr);
+	} case :array_push(var push) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		var hash = state->top->vars[get_val->src->reg_no];
 		return false unless nl::is_hash(hash);
@@ -615,6 +623,10 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :use_field(var use_field) {
 		die;
 	} case :release_field(var release_field) {
+		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
 		die;
 	}
 	return true;

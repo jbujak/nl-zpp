@@ -186,6 +186,8 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 		result .= '((ImmArray)' . print_register_getter(set_at_idx->src) . ')' . print_getter() . '[';
 		result .= '((ImmDouble)' . print_register_getter(set_at_idx->idx) . ')' . print_getter() . print_int_value() . 
 			'] = ' . print_register_getter(set_at_idx->val) . ';';
+	} case :array_push(var push) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		result = print_register_setter(get_val->dest, print_get_hash_value(get_val)) . ';';
 	} case :set_val(var set_val) {
@@ -208,6 +210,10 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 	} case :use_field(var use_field) {
 		die;
 	} case :release_field(var release_field) {
+		die;
+	} case :use_index(var use_index) {
+		die;
+	} case :release_index(var release_index) {
 		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
