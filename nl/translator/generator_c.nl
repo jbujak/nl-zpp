@@ -901,7 +901,7 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		}
 	} case :string {
 		#TODO string
-		var arg = [get_reg_ref(ref state, dest), get_reg(ref state, src)];
+		var arg = [get_reg_ref(ref state, dest), get_reg_value(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
 		if(src->type is :im) {
@@ -947,14 +947,14 @@ def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, des
 
 def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
 	match (reg->type) case :im {
-		return get_reg(ref state, reg);
+		return get_reg_value(ref state, reg);
 	} case :int {
-		return get_fun_lib('int_new', [get_reg(ref state, reg)]);
+		return get_fun_lib('int_new', [get_reg_value(ref state, reg)]);
 	} case :bool {
-		return get_fun_lib('bool_to_nl_native', [get_reg(ref state, reg)]);
+		return get_fun_lib('bool_to_nl_native', [get_reg_value(ref state, reg)]);
 	} case :string {
 		#TODO string
-		return get_reg(ref state, reg);
+		return get_reg_value(ref state, reg);
 	} case :rec(var type) {
 		die;
 	} case :arr(var type) {
