@@ -365,5 +365,3 @@ def reconstruct(value, type, f, args : ptd::arr(ptd::ptd_im())) : ptd::var({
 		}
 	}
 }
-
-

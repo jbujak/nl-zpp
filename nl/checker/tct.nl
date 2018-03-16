@@ -128,6 +128,55 @@ def tct::meta_type() {
 		});
 }
 
+def tct::own_type_to_ptd(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
+	match (type) case :tct_rec (var p) {
+		return :tct_rec(p);
+	} case :tct_own_rec (var p) {
+		var h : ptd::hash(@tct::meta_type) = {};
+		forh var name, var t (p) {
+			hash::set_value(ref h, name, tct::own_type_to_ptd(t, defined_types));
+		}
+		return :tct_rec(h);
+	} case :tct_hash (var p) {
+		return :tct_hash(p);
+	} case :tct_own_hash (var p) {
+		return :tct_hash(tct::own_type_to_ptd(p, defined_types));
+	} case :tct_arr (var p) {
+		return :tct_arr(p);
+	} case :tct_own_arr (var p) {
+		return :tct_arr(tct::own_type_to_ptd(p, defined_types));
+	} case :tct_var (var p) {
+		return :tct_var(p);
+	} case :tct_own_var (var p) {
+		var h : ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})) = {};
+		forh var name, var t (p) {
+			match (t) case :no_param {
+				hash::set_value(ref h, name, :no_param);
+			} case :with_param(var param) {
+				hash::set_value(ref h, name, :with_param(tct::own_type_to_ptd(param, defined_types)));
+			}
+		}
+		return :tct_var(h);
+	} case :tct_ref (var p) {
+		return :tct_ref(p) unless hash::has_key(defined_types, p);
+		return tct::own_type_to_ptd(defined_types{p}, defined_types);
+	} case :tct_sim {
+		return :tct_sim;
+	} case :tct_int {
+		return :tct_int;
+	} case :tct_string {
+		return :tct_string;
+	} case :tct_bool {
+		return :tct_bool;
+	} case :tct_empty {
+		return :tct_empty;
+	} case :tct_void {
+		return :tct_void;
+	} case :tct_im {
+		return :tct_im;
+	}
+}
+
 def tct::is_own_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
 	match (type) case :tct_rec (var p) {
 		return false;

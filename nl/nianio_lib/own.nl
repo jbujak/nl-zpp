@@ -25,3 +25,7 @@ def own::var(h) : @ptd::meta_type {
 	}
 	return ptd::ensure_only_static_do_not_touch_without_permission(@ptd::meta_type, :own_var(types));
 }
+
+def own::to_im(arg) {
+	return arg;
+}
