@@ -40,6 +40,13 @@ def test_own_double_pass(ref fst : @main::rec, ref snd : @main::own_rec) {
 	snd->ttt = tmp;
 }
 
+
+def foobar(i : ptd::int()) : ptd::int() {
+	return i*i;
+}
+
+
+
 def main::main() {
 	var cos : @main::own_rec = ({
 		ttt => 22
@@ -50,7 +57,30 @@ def main::main() {
 	test_ref_rec(ref cos);
 
 	var iii;
+
+	#iii = cos->ttt;
+
+	var not_inittted : ptd::int();
+	if (im > 10) {
+		not_inittted = 5;
+	} elsif (im < 10) {
+		not_inittted = 10;
+	} elsif ((not_inittted = 15) < 10) {
+		
+	} else {
+		not_inittted = 20;
+	}
+	var tmp : ptd::var({hai => ptd::none(), iie => ptd::none()}) = :hai;
+	match (tmp) case :hai {
+		not_inittted = 5;
+	} case :iie {
+		not_inittted = 10;
+	}
+
+	foobar(not_inittted);
+
 	iii = cos->ttt;
+
 
 	var fst : @main::rec = {
 		ttt => 1
@@ -64,6 +94,6 @@ def main::main() {
 		snd => snd
 	};
 
-	test_own_double_pass(ref bigger->fst, ref bigger->snd);
+	#test_own_double_pass(ref bigger->fst, ref bigger->snd);
 	#nl::print(ii);
 }

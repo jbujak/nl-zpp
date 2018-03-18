@@ -93,7 +93,9 @@ def tc_types::env() {
 }
 
 def tc_types::var_t() {
-	return ptd::rec({overwrited => ptd::var({yes => ptd::none(), no => ptd::none()}), type => @tct::meta_type});
+	return ptd::rec({
+		overwrited => ptd::var({yes => ptd::none(), no => ptd::none()}), 
+		type => @tct::meta_type});
 }
 
 def tc_types::fun_arg_t() {
