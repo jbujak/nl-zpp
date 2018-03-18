@@ -4,6 +4,7 @@
 
 use ptd;
 use own;
+use own_array;
 
 def test_own_arr::prosta_tablica() {
 	return own::arr(ptd::int());
@@ -23,6 +24,13 @@ def test_own_arr::tablica_rekordow() {
 def test_own_arr::test() {
 	var a : @test_own_arr::prosta_tablica = [1, 2];
 	a []= 3;
+
+	die if own_array::len(ref a) != 3;
+	var i = 1;
+	fora var a_el (a) {
+		die if a_el != i;
+		i++;
+	}
 	a[0];
 	die if a[0] != 1;
 	die if a[1] != 2;

@@ -234,6 +234,8 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		print_set_at_idx(set_at_idx, ref state);
 	} case :array_push(var push) {
 		die; #TODO
+	} case :array_len(var len) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		print_register_to_assign(get_val->dest, ref state);
 		print_register(get_val->src, ref state);
