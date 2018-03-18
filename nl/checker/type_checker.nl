@@ -480,9 +480,17 @@ def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, 
 	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var fora_arr_type : @tc_types::type = ptd_system::can_delete(check_val(as_fora->array, ref modules, ref vars, ref 
 				errors, known_types), ref modules, ref errors);
-	add_error(ref errors, 'fora argument should be an array instead of ' . get_print_tct_type_name(fora_arr_type->type))
-		unless ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors);
-	fora_arr_type->type = fora_arr_type->type is :tct_arr ? fora_arr_type->type as :tct_arr : tct::tct_im();
+	if (!ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors) &&
+			!ptd_system::is_accepted(fora_arr_type, tct::own_arr(tct::empty()), ref modules, ref errors)) {
+		add_error(ref errors, 'fora argument should be an array instead of ' . get_print_tct_type_name(fora_arr_type->type));
+	}
+	if (fora_arr_type->type is :tct_arr) {
+		fora_arr_type->type = fora_arr_type->type as :tct_arr;
+	} elsif (fora_arr_type->type is :tct_own_arr) {
+		fora_arr_type->type = fora_arr_type->type as :tct_own_arr;
+	} else {
+		fora_arr_type->type = tct::tct_im();
+	}
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(ref as_fora->iter, fora_arr_type, ref vars_op, ref errors);
 	break_continue_block(ref as_fora->cmd, ref modules, ref vars_op, ref errors, known_types);
@@ -921,6 +929,12 @@ def get_special_functions() : @tc_types::special_functions {
 				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'own_array::len', {
+			r => tct::int(),
+			a => [
+				{mod => :ref, type => tct::own_arr(tct::empty()), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'hash::set_value', {

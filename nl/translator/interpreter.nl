@@ -509,6 +509,8 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 		state->top->vars[set_at_idx->src->reg_no] = arr;
 	} case :array_push(var push) {
 		die; #TODO
+	} case :array_len(var len) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		var val = hash::get_value(state->top->vars[get_val->src->reg_no], get_val->key);
 		state->top->vars[get_val->dest->reg_no] = val unless nlasm::is_empty(get_val->dest);
@@ -599,6 +601,8 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 		return false unless nl::is_sim(idx);
 		return false unless idx < array::len(arr);
 	} case :array_push(var push) {
+		die; #TODO
+	} case :array_len(var len) {
 		die; #TODO
 	} case :get_val(var get_val) {
 		var hash = state->top->vars[get_val->src->reg_no];

@@ -188,6 +188,8 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 			'] = ' . print_register_getter(set_at_idx->val) . ';';
 	} case :array_push(var push) {
 		die; #TODO
+	} case :array_len(var len) {
+		die; #TODO
 	} case :get_val(var get_val) {
 		result = print_register_setter(get_val->dest, print_get_hash_value(get_val)) . ';';
 	} case :set_val(var set_val) {

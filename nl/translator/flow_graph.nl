@@ -212,6 +212,8 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			write_reg(ref block, set_at_idx->src, nr);
 		} case :array_push(var push) {
 			die; #TODO
+		} case :array_len(var len) {
+			die; #TODO
 		} case :get_val(var get_val) {
 			read_reg(ref block, get_val->src, nr);
 			write_reg(ref block, get_val->dest, nr);
