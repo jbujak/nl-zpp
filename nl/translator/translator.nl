@@ -583,18 +583,20 @@ def print_fora(as_fora : @nast::fora_t, ref state : @translator::state_t) {
 	print_sim_label(condition_instruction_no, ref state);
 	print_bin_op_operator_command(condition_register, index_register, arr_size, '>=', ref state);
 	print_if_goto(after_fora_instruction_no, condition_register, ref state);
+	var new_owner;
 	if (arg->type is :im) {
-		print_get_from_index(iter_reg, arg, index_register, ref state); #TODO remove
+		new_owner = new_register(ref state, :im);
+		use_index(new_owner, arg, index_register, ref state);
+		move(iter_reg, new_owner, ref state);
 	} elsif (arg->type is :arr) {
+		new_owner = iter_reg;
 		use_index(iter_reg, arg, index_register, ref state);
 	} else {
 		die;
 	}
 	var loop_label = save_loop_break(ref state, after_fora_instruction_no, increment_instruction_no);
 	print_cmd(as_fora->cmd, ref state);
-	if (arg->type is :arr) {
-		release_index(iter_reg, index_register, ref state);
-	}
+	release_index(new_owner, index_register, ref state);
 	print_sim_label(increment_instruction_no, ref state);
 	start_new_instruction(translator::last_debug_char(fora_debug), ref state) unless as_fora->short;
 	print(ref state, :bin_op({dest => index_register, left => index_register, right => one_register, op => '+'}));

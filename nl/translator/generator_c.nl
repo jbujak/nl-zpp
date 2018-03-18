@@ -1052,15 +1052,23 @@ def print_use_field(ref state : @generator_c::state_t, use_field : @nlasm::use_f
 }
 
 def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_index_t) : ptd::void() {
-	var ret =  get_reg(ref state, use_index->new_owner) . ' = ' .
-		get_array_get_fun_name(get_type_name(use_index->old_owner->type as :arr), state->mod_name) . '(';
-	match (use_index->old_owner->access_type) case :value {
-		ret .= '&';
-	} case :reference {
+	if (use_index->old_owner->type is :arr) {
+		var ret =  get_reg(ref state, use_index->new_owner) . ' = ' .
+			get_array_get_fun_name(get_type_name(use_index->old_owner->type as :arr), state->mod_name) . '(';
+		match (use_index->old_owner->access_type) case :value {
+			ret .= '&';
+		} case :reference {
+		}
+		ret .= get_reg(ref state, use_index->old_owner) . ', ';
+		ret .=  get_reg_value(ref state, use_index->index) . ')';
+		print(ref state, ret);
+	} elsif (use_index->old_owner->type is :im) {
+		print(ref state, get_fun_lib('move', [get_reg_ref(ref state, use_index->new_owner), 
+			get_fun_lib('get_ref_arr', [get_reg(ref state, use_index->old_owner), get_reg_value(ref state, use_index->index)])
+		]));
+	} else {
+		die;
 	}
-	ret .= get_reg(ref state, use_index->old_owner) . ', ';
-	ret .=  get_reg_value(ref state, use_index->index) . ')';
-	print(ref state, ret);
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
@@ -1374,14 +1382,16 @@ def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::m
 def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
 	var ret = '';
 	var default_size = 16;
+	var sizeof = 'sizeof(' . get_type_name(array_type) . ')';
 	ret .= get_array_push_fun_header(array_type_name, array_type, mod_name) . ' {
 		'if (arr->value == NULL) {
-		'arr->value = alloc_mem(' . default_size . '*sizeof(' . array_type_name . '));
+		'arr->value = alloc_mem(' . default_size . '*' . sizeof .');
 		'arr->capacity = ' . default_size . ';
 		'arr->size = 0;
 		'}
 		'if (arr->size+1 == arr->capacity) {
-		'realloc_mem(arr->value, arr->capacity, arr->capacity*2);
+		'arr->value = realloc_mem(arr->value, arr->capacity*' . sizeof . ', arr->capacity*2*' . sizeof .');
+		'arr->capacity *= 2;
 		'}
 		'arr->value[arr->size++] = arg;
 		'}';
