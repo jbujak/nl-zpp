@@ -1,0 +1,92 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usetheme{Warsaw}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		Krótka prezentacja
+		
+		08.03.2018
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co było do zrobienia}
+		\begin{itemize}
+			\item Ruszenie kompilacji tablic -- \textcolor{green}{ok}
+			\item Przygotowania do dużej prezentacji -- \textcolor{green}{ok}
+			\item Doprowadzenie do uruchomienia wszystkich testów -- \textcolor{red}{nie ok}
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Co zrobiliśmy}
+		\begin{itemize}
+			\item Prawie skończona kompilacja tablic -- Jakub Bujak
+			\item Obsługa ownów w type checkerze i bugfixy -- Marek Puzyna, Michał Borkowski
+			\begin{itemize}
+				\item Zakaz zwracania ownów z funkcji
+				\item Zakaz przekazywania ownów przez wartość
+				\item Zakaz wielokrotnego przekazywania tego samego owna jako ref
+			\end{itemize}
+
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Tablice own::arr}
+		\begin{columns}
+			\begin{column}{0.5\textwidth}
+				\begin{Verbatim}[commandchars=\\\{\}]
+def main::t() \{
+ return own::arr(ptd::int());
+\}
+
+def main::main() \{
+ var b : @main::t= [4, 2];
+ b[1] = 42;
+\}
+				\end{Verbatim}
+			\end{column}
+			\begin{column}{0.5\textwidth}  %%<--- here
+				\begin{Verbatim}[commandchars=\\\{\}]
+struct main0t0type \{
+ INT capacity;
+ INT size;
+ INT *value;
+\};
+
+main0t0type arr_0 = \{\};
+main0t0push(&arr_0, 4);
+main0t0push(&arr_0, 2);
+int_ptr_4 = main0t0get_ptr(
+  &arr_0, 1);
+*int_ptr_4 = 42;
+				\end{Verbatim}
+			\end{column}
+		\end{columns}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Plany na najbliższy tydzień}
+		\begin{itemize}
+			\item Zakończenie tablic
+			\item Testy do tablic
+			\item Slajdy do dużej prezentacji
+			\item Kolejne sprawdzania w type checkerze
+			\item Początek dodawania konwersji own $\rightarrow$ im
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}
+	 \frametitle{Dziękuję za uwagę}
+	\end{frame}
+\end{document}
