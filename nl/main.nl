@@ -54,7 +54,7 @@ def main::main() {
 	#	ttt => 22
 	#});
 
-	#var im = 1;
+	var im = 1;
 	#test_ref(ref im);
 	#test_ref_rec(ref cos);
 
@@ -82,7 +82,7 @@ def main::main() {
 
 	foobar(not_inittted);
 
-	iii = cos->ttt;
+	#iii = cos->ttt;
 
 
 	var fst : @main::rec = {
@@ -101,7 +101,7 @@ def main::main() {
 
 	#iii = cos->ttt;
 
-	var ii : ptd::int() = cos->ttt;
+	#var ii : ptd::int() = cos->ttt;
 
 	#var not_inittted : ptd::int();
 	#if (im > 10) {
@@ -138,7 +138,7 @@ def main::main() {
 	#};
 
 	#var fst_won : own::rec({ttt => ptd::int()}) = {ttt => -1};
-	var a : own::rec({int => ptd::int()}) = {int => -1};
+	#var a : own::rec({int => ptd::int()}) = {int => -1};
 	#var b : ptd::int() = a->int;
 	#nl::print(b);
 	#immer(bigger);
