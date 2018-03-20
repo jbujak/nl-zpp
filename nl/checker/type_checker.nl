@@ -257,7 +257,7 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 		var if_cond_type : @tc_types::type = check_val(as_if->cond, ref modules, ref vars, ref errors, known_types);
 		add_error(ref errors, 'if argument should be sim or boolean instead of ' . 
 				get_print_tct_type_name(if_cond_type->type))
-			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors);
+			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors, known_types);
 		var vars_op : @tc_types::vars_t = vars;
 		check_cmd(ref as_if->if, ref modules, ref vars_op, ref errors, known_types);
 
@@ -267,7 +267,7 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 			var elsif_cond : @tc_types::type = check_val(elsif_s->cond, ref modules, ref vars, ref errors, known_types);
 			add_error(ref errors, 'elsif condition should be sim or boolean instead of ' . 
 					get_print_tct_type_name(elsif_cond->type))
-				unless ptd_system::is_condition_type(elsif_cond, ref modules, ref errors);
+				unless ptd_system::is_condition_type(elsif_cond, ref modules, ref errors, known_types);
 			var vars_cmd : @tc_types::vars_t = vars;
 			check_cmd(ref as_if->elsif[i]->cmd, ref modules, ref vars_cmd, ref errors, known_types);
 			join_vars(ref vars_op, vars_cmd, ref modules, ref errors, known_types);
@@ -286,7 +286,7 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 			var for_cond : @tc_types::type = check_val(as_for->cond, ref modules, ref vars_op, ref errors, known_types);
 			add_error(ref errors, 'for condition should be sim or boolean instead of ' . 
 					get_print_tct_type_name(for_cond->type))
-				unless ptd_system::is_condition_type(for_cond, ref modules, ref errors);
+				unless ptd_system::is_condition_type(for_cond, ref modules, ref errors, known_types);
 			join_vars(ref vars_op, vars, ref modules, ref errors, known_types);
 		}
 		break_continue_block(ref as_for->cmd, ref modules, ref vars_op, ref errors, known_types);
@@ -317,7 +317,7 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 		var if_cond_type : @tc_types::type = check_val(if_mod->cond, ref modules, ref vars, ref errors, known_types);
 		add_error(ref errors, 'if argument should be sim or boolean type instead of ' . 
 				get_print_tct_type_name(if_cond_type->type))
-			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors);
+			unless ptd_system::is_condition_type(if_cond_type, ref modules, ref errors, known_types);
 		var vars_op : @tc_types::vars_t = vars;
 		check_cmd(ref if_mod->cmd, ref modules, ref vars_op, ref errors, known_types);
 		join_vars(ref vars, vars_op, ref modules, ref errors, known_types);
@@ -326,7 +326,7 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 		var unless_cond_type : @tc_types::type = check_val(unless_mod->cond, ref modules, ref vars, ref errors, known_types);
 		add_error(ref errors, 'unless argument should be sim or boolean type instead of ' . 
 				get_print_tct_type_name(unless_cond_type->type))
-			unless ptd_system::is_condition_type(unless_cond_type, ref modules, ref errors);
+			unless ptd_system::is_condition_type(unless_cond_type, ref modules, ref errors, known_types);
 		var vars_op : @tc_types::vars_t = vars;
 		check_cmd(ref unless_mod->cmd, ref modules, ref vars_op, ref errors, known_types);
 		join_vars(ref vars, vars_op, ref modules, ref errors, known_types);
@@ -362,7 +362,8 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 			:tct_empty) {
 			add_error(ref errors, 'must be returned value in non void function');
 		} elsif (!modules->env->ret_type is :tct_void && !ret_type->type is :tct_empty) {
-			var check_info = ptd_system::check_assignment(modules->env->ret_type, ret_type, ref modules, ref errors);
+			var check_info = ptd_system::check_assignment(modules->env->ret_type, ret_type, ref modules, ref errors, 
+				known_types);
 			if (check_info is :err) {
 				add_error(ref errors, 'return value has the wrong type: ' . get_print_check_info(check_info));
 			}
@@ -392,10 +393,12 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 	} case :try(var as_try) {
 		var type = {type => modules->env->ret_type, src => :speculation};
 		add_error(ref errors, 'function in which is used ''try'' must return variant: ok, err ')
-			unless ptd_system::is_try_ensure_type(type, ref modules, ref errors);
+			unless ptd_system::is_try_ensure_type(type, ref modules, ref errors, known_types);
 		var vars_err_type = check_try_ensure(as_try, ref modules, ref vars, ref errors, known_types);
-		var ok_err_types = ptd_system::try_get_ensure_sub_types({type=>modules->env->ret_type, src=>:known}, ref modules, ref errors);
-		var check_info = ptd_system::check_assignment(ok_err_types->err, vars_err_type->err_type, ref modules, ref errors);
+		var ok_err_types = ptd_system::try_get_ensure_sub_types({type=>modules->env->ret_type, src=>:known}, ref modules, 
+			ref errors, known_types);
+		var check_info = ptd_system::check_assignment(ok_err_types->err, vars_err_type->err_type, ref modules, ref errors, 
+			known_types);
 		if (check_info is :err) {
 			add_error(ref errors, 'the return value have the wrong type: ' . get_print_check_info(check_info));
 		}
@@ -441,7 +444,7 @@ def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::
 		var left_type : @tc_types::type = get_type_left_side_equation(lval->left, ref modules, ref vars, ref errors, known_types);
 		err_left_len = array::len(errors->errors) - err_left_len;
 		if (err_left_len == 0) {
-			var ok_err_types = ptd_system::try_get_ensure_sub_types(type, ref modules, ref errors);
+			var ok_err_types = ptd_system::try_get_ensure_sub_types(type, ref modules, ref errors, known_types);
 			type->type = ok_err_types->ok;
 			set_type_to_lval(lval->left, left_type, type, ref modules, ref vars, ref errors, known_types);
 			err_type = {type => ok_err_types->err, src => type->src};
@@ -449,7 +452,7 @@ def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::
 		}
 	} case :expr(var expr) {
 		var type = check_val(expr, ref modules, ref vars, ref errors, known_types);
-		var ok_err_types = ptd_system::try_get_ensure_sub_types(type, ref modules, ref errors);
+		var ok_err_types = ptd_system::try_get_ensure_sub_types(type, ref modules, ref errors, known_types);
 		err_type = {type => ok_err_types->err, src => type->src};
 		ok_type = ok_err_types->ok;
 	}
@@ -461,8 +464,8 @@ def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, 
 	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var hash_type : @tc_types::type = ptd_system::can_delete(check_val(as_forh->hash, ref modules, ref vars, ref errors, known_types),
 			ref modules, ref errors);
-	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors)) {
-	} elsif (ptd_system::is_accepted(hash_type, tct::rec({}), ref modules, ref errors)) {
+	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors, known_types)) {
+	} elsif (ptd_system::is_accepted(hash_type, tct::rec({}), ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'forh argument should be a hash not rec') if is_known(hash_type);
 	} else {
 		add_error(ref errors, 'forh argument should be a hash type instead of ' . 
@@ -480,8 +483,8 @@ def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, 
 	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var fora_arr_type : @tc_types::type = ptd_system::can_delete(check_val(as_fora->array, ref modules, ref vars, ref 
 				errors, known_types), ref modules, ref errors);
-	if (!ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors) &&
-			!ptd_system::is_accepted(fora_arr_type, tct::own_arr(tct::empty()), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors, known_types) &&
+			!ptd_system::is_accepted(fora_arr_type, tct::own_arr(tct::empty()), ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'fora argument should be an array instead of ' . get_print_tct_type_name(fora_arr_type->type));
 	}
 	if (fora_arr_type->type is :tct_arr) {
@@ -502,7 +505,7 @@ def check_while(ref as_while : @nast::while_t, ref modules : @tc_types::modules_
 	var cond_type : @tc_types::type = check_val(as_while->cond, ref modules, ref vars, ref errors, known_types);
 	add_error(ref errors, 'while argument should be sim or boolean type insteand of ' . 
 			get_print_tct_type_name(cond_type->type))
-		unless ptd_system::is_condition_type(cond_type, ref modules, ref errors);
+		unless ptd_system::is_condition_type(cond_type, ref modules, ref errors, known_types);
 	var vars_op : @tc_types::vars_t = vars;
 	break_continue_block(ref as_while->cmd, ref modules, ref vars_op, ref errors, known_types);
 	join_vars(ref vars, vars_op, ref modules, ref errors, known_types);
@@ -512,7 +515,7 @@ def check_rep(ref as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref
 	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var count_type : @tc_types::type = check_val(as_rep->count, ref modules, ref vars, ref errors, known_types);
 	add_error(ref errors, 'rep argument should be a number instead of ' . get_print_tct_type_name(count_type->type))
-		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors);
+		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors, known_types);
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(ref as_rep->iter, {type => tct::int(), src => :speculation}, ref vars_op, ref errors);
 	break_continue_block(ref as_rep->cmd, ref modules, ref vars_op, ref errors, known_types);
@@ -527,7 +530,7 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 	var type_is_match : @boolean_t::type = false;
 	var branch_var_types : ptd::hash(@tct::meta_type) = {};
 	var variants : ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})) = {};
-	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'wrong type used as match argument: ' . get_print_tct_type_name(val_type->type));
 	}
 	if (val_type->type is :tct_var) {
@@ -607,7 +610,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		var cond_type = check_val(ternary_op->fst, ref modules, ref vars, ref errors, known_types);
 		add_error(ref errors, 'ternary op first argument should be sim or boolean type instead of ' . 
 				get_print_tct_type_name(cond_type->type))
-			unless ptd_system::is_condition_type(cond_type, ref modules, ref errors);
+			unless ptd_system::is_condition_type(cond_type, ref modules, ref errors, known_types);
 		var rt = check_val(ternary_op->snd, ref modules, ref vars, ref errors, known_types)->type;
 		if (rt is :tct_void) {
 			ret->type = rt;
@@ -690,7 +693,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		} case :ov_as {
 			ret_type = {type => tct::tct_im(), src => left_type2->src};
 		}
-		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors)) {
+		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors, known_types)) {
 			return ret_type unless left_type2->type is :tct_var;
 			var variants = left_type2->type as :tct_var;
 			if (!hash::has_key(variants, var_op->case)) {
@@ -717,14 +720,14 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 	} case :unary_op(var unary_op) {
 		var type = check_val(unary_op->val, ref modules, ref vars, ref errors, known_types);
 		if (unary_op->op eq '!') {
-			if (!ptd_system::is_condition_type(type, ref modules, ref errors)) {
+			if (!ptd_system::is_condition_type(type, ref modules, ref errors, known_types)) {
 				add_error(ref errors, 'incorrect type of argument operator ''!'' : ' . 
 					get_print_tct_type_name(type->type));
 			}
 			ret->type = tct::bool();
 			return ret;
 		} elsif (unary_op->op eq '@') {
-			if (!ptd_system::is_accepted(type, tct::func(), ref modules, ref errors)) {
+			if (!ptd_system::is_accepted(type, tct::func(), ref modules, ref errors, known_types)) {
 				add_error(ref errors, 'incorrect type of argument operator ''' . unary_op->op . ''' : ' . 
 					get_print_tct_type_name(type->type));
 			}
@@ -734,7 +737,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 			return unary_op_dec_inc(unary_op->val, 'incorrect type of argument operator ''' . unary_op->op . ''' : ', 
 					ref modules, ref vars, ref errors, known_types);
 		} else {
-			if (!ptd_system::is_accepted(type, tct::int(), ref modules, ref errors)) {
+			if (!ptd_system::is_accepted(type, tct::int(), ref modules, ref errors, known_types)) {
 				add_error(ref errors, 'incorrect type of argument operator ''' . unary_op->op . ''' : ' . 
 					get_print_tct_type_name(type->type));
 			}
@@ -796,7 +799,7 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 		if (is_spec) {
 			var ist = args_values_types[i];
 			ist->src = :speculation;
-			check_info = ptd_system::is_accepted_info(ist, fun_def_arg->type, ref modules, ref errors);
+			check_info = ptd_system::is_accepted_info(ist, fun_def_arg->type, ref modules, ref errors, known_types);
 		} else {
 			if (fun_def_arg->mod is :ref) {
 				var err_len = array::len(errors->errors);
@@ -816,7 +819,7 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 				}
 			}
 			check_info = ptd_system::check_assignment(fun_def_arg->type, args_values_types[i], ref modules, ref 
-					errors);
+					errors, known_types);
 		}
 		if (check_info is :err) {
 			add_error(ref errors, 'In function call: ' . get_function_name(fun_val->module, fun_val->name) . 
@@ -831,7 +834,7 @@ def check_fun_val(fun_val : @nast::fun_val_t, ref modules : @tc_types::modules_t
 def unary_op_dec_inc(type : @nast::value_t, err_str : ptd::sim(), ref modules : @tc_types::modules_t, ref vars : 
 		@tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	var vtype = check_val(type, ref modules, ref vars, ref errors, known_types);
-	if (!ptd_system::is_accepted(vtype, tct::int(), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(vtype, tct::int(), ref modules, ref errors, known_types)) {
 		add_error(ref errors, err_str . get_print_tct_type_name(vtype->type));
 	}
 	vtype->type = tct::int();
@@ -1094,7 +1097,7 @@ def check_special_function(ret_type : @tc_types::type, fun_val : @nast::fun_val_
 			add_error(ref errors, err);
 			ret_type->type = tct::tct_im();
 		} case :ok(var ok) {
-			var check_info = ptd_system::cast_type(ok, fun_val_type[1], ref modules, ref errors);
+			var check_info = ptd_system::cast_type(ok, fun_val_type[1], ref modules, ref errors, known_types);
 			if (check_info is :err) {
 				add_error(ref errors, 'this casting of type cannot be correct: ' . get_print_check_info(check_info));
 			}
@@ -1110,7 +1113,7 @@ def check_special_function(ret_type : @tc_types::type, fun_val : @nast::fun_val_
 			var fun_def = get_function_def(fun_val->module, fun_val->name, modules);
 			var ok_err_var = {type => fun_def->ret_type, src=> :known};
 			ret_type->type = ptd_system::can_delete(ok_err_var, ref modules, ref errors)->type;
-			if(ptd_system::is_try_ensure_type(ret_type, ref modules, ref errors)){
+			if(ptd_system::is_try_ensure_type(ret_type, ref modules, ref errors, known_types)){
 				ensure var err_type = tct::try_var_as_case(ret_type->type, 'err');
 				ret_type->type = tct::var({ok => ok, err => err_type});
 			} else {
@@ -1165,10 +1168,10 @@ def check_special_function(ret_type : @tc_types::type, fun_val : @nast::fun_val_
 	}
 	
 	if (name eq 'ov::as') {
-		ptd_system::check_assignment(tct::tct_im(), fun_val_type[0], ref modules, ref errors);
+		ptd_system::check_assignment(tct::tct_im(), fun_val_type[0], ref modules, ref errors, known_types);
 	}
 	if (name eq 'dfile::ssave') {
-		ptd_system::check_assignment(tct::tct_im(), fun_val_type[0], ref modules, ref errors);
+		ptd_system::check_assignment(tct::tct_im(), fun_val_type[0], ref modules, ref errors, known_types);
 	}
 	if (name eq 'singleton::sigleton_do_not_use_without_approval') {
 		return fun_val_type[0];
@@ -1206,13 +1209,13 @@ def mk_new_type_lval(var_tab : @tc_types::lval_path, rtype : @tc_types::type, lt
 	var_tab = array::subarray(var_tab, 1, array::len(var_tab) - 1);
 	if (array::len(var_tab) == 0) {
 		if (is_known(ltype)) {
-			var check_info = ptd_system::check_assignment(ltype->type, rtype, ref modules, ref errors);
+			var check_info = ptd_system::check_assignment(ltype->type, rtype, ref modules, ref errors, known_types);
 			if (check_info is :err) {
 				add_error(ref errors, 'invalid type in assignment: ' . get_print_check_info(check_info));
 			}
 			return ltype->type;
 		} else {
-			ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors);
+			ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors, known_types);
 			ltype = ptd_system::can_create(ltype, ref modules, ref errors);
 			return rtype->type if ptd_system::is_equal(ltype->type, empty_type);
 			return ptd_system::cross_type(ltype->type, rtype->type, ref modules, ref errors, known_types);
@@ -1240,7 +1243,7 @@ def mk_new_type_lval(var_tab : @tc_types::lval_path, rtype : @tc_types::type, lt
 				if (array::len(var_tab) != 1) {
 					return tct::tct_im();
 				}
-				ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors);
+				ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors, known_types);
 				hash::set_value(ref tt, name, rtype->type);
 			}
 			return tct::rec(tt);
@@ -1318,8 +1321,8 @@ def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modul
 		left_type->type = left_type->type as :tct_hash;
 		return left_type;
 	}
-	if (!ptd_system::is_accepted(left_type, tct::rec({}), ref modules, ref errors)
-			&& !ptd_system::is_accepted(left_type, tct::own_rec({}), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(left_type, tct::rec({}), ref modules, ref errors, known_types)
+			&& !ptd_system::is_accepted(left_type, tct::own_rec({}), ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'binary operator -> can be applied only to record : ' . 
 			get_print_tct_type_name(left_type->type));
 	}
@@ -1349,13 +1352,13 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return get_type_record_key(bin_op, ref modules, ref vars, ref errors, known_types);
 	}
 	if (op eq 'ARRAY_INDEX') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
-				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors, known_types) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors, known_types)) {
 			add_error(ref errors, 'array operator ''[]'' can be applied only to array, not for: '.
 				get_print_tct_type_name(left_type2->type));
 			return ret_type;
 		}
-		if (!ptd_system::is_accepted(right_type, tct::int(), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(right_type, tct::int(), ref modules, ref errors, known_types)) {
 			add_error(ref errors, 'array index should be number');
 		}
 		left_type2->type = left_type2->type as :tct_arr if left_type2->type is :tct_arr;
@@ -1363,19 +1366,19 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return left_type2;
 	}
 	if (op eq 'HASH_INDEX') {
-		if (!ptd_system::is_accepted(left_type2, tct::hash(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::hash(tct::tct_im()), ref modules, ref errors, known_types)) {
 			add_error(ref errors, 'hash operator ''{}'' can be applied only to hash');
 			return ret_type;
 		}
-		if (!ptd_system::is_accepted(right_type, tct::sim(), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(right_type, tct::sim(), ref modules, ref errors, known_types)) {
 			add_error(ref errors, 'hash index should be string');
 		}
 		left_type2->type = left_type2->type as :tct_hash if left_type2->type is :tct_hash;
 		return left_type2;
 	}
 	if (op eq '[]=') {
-		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors) &&
-				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::arr(tct::tct_im()), ref modules, ref errors, known_types) &&
+				!ptd_system::is_accepted(left_type2, tct::own_arr(tct::tct_im()), ref modules, ref errors, known_types)) {
 			add_error(ref errors, 'array operator ''[]='' can be applied only to array');
 			return ret_type;
 		}
@@ -1387,12 +1390,12 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 
 	}
 	var op_def2 = tc_types::get_bin_op_def(op);
-	if (!ptd_system::is_accepted(left_type2, op_def2->arg1, ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(left_type2, op_def2->arg1, ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'incorrect type of the first argument operator ''' . op . '''');
 	} elsif(bin_op->left->value is :var) {
 		vars{bin_op->left->value as :var}->type = op_def2->arg1;
 	}
-	if (!ptd_system::is_accepted(right_type, op_def2->arg2, ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(right_type, op_def2->arg2, ref modules, ref errors, known_types)) {
 		add_error(ref errors, 'incorrect type of the second argument operator ''' . op . '''');
 	} elsif(bin_op->right->value is :var) {
 		vars{bin_op->right->value as :var}->type = op_def2->arg2;
@@ -1597,15 +1600,16 @@ def check_var_decl_try(var_decl : @nast::variable_declaration_t, is_try : @boole
 			return ret_types;
 		}
 		if (is_try) {
-			var ok_err_types = ptd_system::try_get_ensure_sub_types(assign_type, ref modules, ref errors);
+			var ok_err_types = ptd_system::try_get_ensure_sub_types(assign_type, ref modules, ref errors, known_types);
 			ret_types->err = {type => ok_err_types->err, src => assign_type->src};
 			assign_type->type = ok_err_types->ok;
 		}
 		if (ret_types->ok->type is :tct_empty) {
-			ptd_system::check_assignment(tct::tct_im(), assign_type, ref modules, ref errors);
+			ptd_system::check_assignment(tct::tct_im(), assign_type, ref modules, ref errors, known_types);
 			ret_types->ok->type = assign_type->type;
 		} else {
-			var check_info = ptd_system::check_assignment(ret_types->ok->type, assign_type, ref modules, ref errors);
+			var check_info = ptd_system::check_assignment(ret_types->ok->type, assign_type, ref modules, ref errors, 
+				known_types);
 			if (check_info is :err) {
 				add_error(ref errors, 'invalid type in variable declaration: ' . get_print_check_info(check_info));
 			}
