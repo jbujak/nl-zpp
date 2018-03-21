@@ -352,8 +352,9 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	@tc_types::value_src, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t, known_types : 
 	ptd::hash(@tct::meta_type)) : @tc_types::check_info {
 	return :ok if from is :tct_empty;
+	return mk_err(to, from) if from is :tct_void;
 	if (to is :tct_im) {
-		return mk_err(to, from) if from is :tct_void || tct::is_own_type(from, known_types);
+		return mk_err(to, from) if tct::is_own_type(from, known_types);
 		walk_on_type(from, :delete, ref_inf->from, ref modules, ref errors)
 			if ref_inf->check && ptd_system::is_known(type_src);
 		return :ok;
