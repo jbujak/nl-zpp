@@ -5,14 +5,12 @@
 \usepackage[OT4]{polski}
 \usepackage[normalem]{ulem}
 \usepackage{color}
-\usepackage{graphicx}
-\usepackage{listings}
+\usepackage{graphicx} \usepackage{listings}
 \usepackage{fancyvrb}
 \usepackage{tikz}
 \usepackage{listings}
 \usepackage{hyperref}
 \usetheme{Warsaw}
-
 \graphicspath{ {files/} }
 
 \tikzstyle{line} = [draw, -latex]
@@ -46,7 +44,7 @@
 \lstdefinelanguage
 	[x86fp]{Assembler}
 	[x86masm]{Assembler} 
-	{morekeywords={movss}}
+	{morekeywords={movss, xmm0, rip, rbp}}
    
 \lstdefinelanguage
    [my]{C}
@@ -102,12 +100,32 @@
   keywordsprefix={\%},
 }
 
+
+\lstdefinelanguage{nl}{
+  morecomment = [l]{\#},
+  morestring=[b]', 
+  sensitive = true,
+  classoffset=0,
+  morekeywords={
+    return, match, case, if, elsif, else, while, continue, try,
+  },
+  classoffset=1, keywordstyle=\color{purple},
+  morekeywords={
+	def, var,
+  },
+  alsoletter={:},
+  keywordsprefix={},
+}
+
 \begin{document}
 	\begin{frame}
 		\frametitle{ZPP -- NianioLang}
-		Prezentacja -- kompilatory
+		\center{Prezentacja -- kompilatory}
 		
-		22.03.2018
+		\center{22.03.2018}
+		
+		\vspace{1em}
+		\includegraphics[height=.6\textheight]{compiling.png}
 	\end{frame}
 	
 	\begin{frame}
@@ -310,6 +328,7 @@ _start:
 				\item Niestety nieczytelna dla ludzi :( 
 			\end{itemize}
 		\end{itemize}
+	\pause
 	\textbf{Napiszmy kompilator!}\newline
 	\end{frame}
 	
@@ -378,6 +397,7 @@ _start:
 					\path [line] (*) to[left] node[auto] {} (3);
 				\end{tikzpicture}
 			\end{column}
+			\pause
 			\begin{column}{0.5\textwidth}
 				\begin{tikzpicture}
 					\node [state] (*) at (8.5,9.5) {*};
@@ -601,6 +621,45 @@ void czynnik() {
 		\end{itemize}
 	\end{frame}
 	
+	\begin{frame}[fragile]
+		\frametitle{Parser NL}
+		\begin{lstlisting}[language=nl]
+def parse_block() {
+	eat('{');
+	var ret = [];
+	while (!try_eat('}')) {
+		try var tmp = parse_cmd();
+		array::push(ref ret, tmp);
+	}
+	return :block(ret);
+}
+		\end{lstlisting}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Parser NL}
+		\begin{lstlisting}[language=nl]
+def parse_cmd() {
+	if (try_eat('if')) {
+		var tmp = {};
+		try tmp->cond = parse_cond(ref state);
+		try tmp->if_cmd = parse_block(ref state);
+		if (try_eat('else')) {
+			try tmp->else_cmd = parse_block(ref state);
+		} else {
+			tmp->else_cmd = :nop;
+		}
+		return :if(tmp);
+	} elsif (try_eat('for')) {
+		...
+	}
+}
+		\end{lstlisting}
+	\end{frame}
+
+
+
+	
 	\begin{frame}
 		\frametitle{Automatyczne generowanie parserów}
 		\begin{itemize}
@@ -608,6 +667,9 @@ void czynnik() {
 			\item yacc (yet another compiler compiler) -- generator parserów
 			\item bison -- nowsza wersja programu yacc
 		\end{itemize}
+		\pause
+		\includegraphics[height=.4\textheight]{jak.jpg}
+		\includegraphics[height=.4\textheight]{bizon.jpg}
 	\end{frame}
 	
 	\begin{frame}[fragile]
@@ -618,6 +680,7 @@ void czynnik() {
 \n      return 0;
 .       return *yytext;
 		\end{lstlisting}
+		\pause
 		\center{yacc}
 		\begin{lstlisting}[language=c]
 %token LICZBA
@@ -639,6 +702,24 @@ E:  	E '+' E {printf("+ ");}
 			\item Sprawdzanie typów
 			\item Modyfikacja drzewa AST dla operacji implicite (np. rzutowanie w językach słabo typowanych)
 		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Type checker NL}
+		\begin{lstlisting}[language=nl]
+def check_cmd(cmd) {
+	match (cmd) case :if(var as_if) {
+		var cond_type = check_value(as_if->cond);
+		if (!type::is_accepted(cond_type, type::bool())) {
+			error();
+		}
+		check_cmd(as_if->if_cmd);
+		check_cmd(as_if->else_cmd);
+	} case :for(var as_for){
+		...
+	}
+}
+		\end{lstlisting}
 	\end{frame}
 	
 	\begin{frame}
@@ -682,14 +763,14 @@ E:  	E '+' E {printf("+ ");}
 	\begin{frame}[fragile]
 		\frametitle{LLVM -- przykład (ze smurfa [4])}
 		\begin{lstlisting}[language=llvm]
-define i32 @fact(i32 %n) {
+define i32 @func(i32 %n) {
 	%c0 = icmp eq i32 %n, 0
 	br i1 %c0, label %L0, label %L1
 L0:
 	ret i32 1
 L1:
 	%i1 = sub i32 %n, 1
-	%i2 = call i32 @fact(i32 %i1)
+	%i2 = call i32 @func(i32 %i1)
 	%i3 = mul i32 %n, %i2
 	ret i32 %i3 
 }
