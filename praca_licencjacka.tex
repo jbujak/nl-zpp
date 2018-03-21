@@ -1,78 +1,176 @@
-\documentclass[11pt]{article}
+%
+% Niniejszy plik stanowi przykład formatowania pracy magisterskiej na
+% Wydziale MIM UW.  Szkielet użytych poleceń można wykorzystywać do
+% woli, np. formatujac wlasna prace.
+%
+% Zawartosc merytoryczna stanowi oryginalnosiagniecie
+% naukowosciowe Marcina Wolinskiego.  Wszelkie prawa zastrzeżone.
+%
+% Copyright (c) 2001 by Marcin Woliński <M.Wolinski@gust.org.pl>
+% Poprawki spowodowane zmianami przepisów - Marcin Szczuka, 1.10.2004
+% Poprawki spowodowane zmianami przepisow i ujednolicenie
+% - Seweryn Karłowicz, 05.05.2006
+% Dodanie wielu autorów i tłumaczenia na angielski - Kuba Pochrybniak, 29.11.2016
 
-\usepackage{polski}
-\usepackage[polish]{babel}
-\usepackage[utf8]{inputenc}
+% dodaj opcję [licencjacka] dla pracy licencjackiej
+% dodaj opcję [en] dla wersji angielskiej (mogą być obie: [licencjacka,en])
+\documentclass[licencjacka]{pracamgr}
 
-\setlength{\parindent}{0pt} % brak wcięć
 
-\title{Optymalizacja kompilatora języka NianioLang do języka C}
-\author{Jakub Bujak, Marek Puzyna, Marian Dziubiak, Michał Borkowski}
-\date{2017/2018}
+% Dane magistrantów:
+\autori{Michał Borkowski}{370727}
+\autorii{Jakub Bujak}{370737}
+\autoriii{Marian Dziubiak}{370784}
+\autoriv{Marek Puzyna}{371359}
+
+\title{Kompilacja NianioLanga do efektywnych struktur języka C}
+
+
+%\tytulang{An implementation of a difference blabalizer based on the theory of $\sigma$ -- $\rho$ phetors}
+
+%kierunek:
+% - matematyka, informacyka, ...
+% - Mathematics, Computer Science, ...
+\kierunek{informatyka}
+
+% informatyka - nie okreslamy zakresu (opcja zakomentowana)
+% matematyka - zakres moze pozostac nieokreslony,
+% a jesli ma byc okreslony dla pracy mgr,
+% to przyjmuje jedna z wartosci:
+% {metod matematycznych w finansach}
+% {metod matematycznych w ubezpieczeniach}
+% {matematyki stosowanej}
+% {nauczania matematyki}
+% Dla pracy licencjackiej mamy natomiast
+% mozliwosc wpisania takiej wartosci zakresu:
+% {Jednoczesnych Studiow Ekonomiczno--Matematycznych}
+
+% \zakres{Tu wpisac, jesli trzeba, jedna z opcji podanych wyzej}
+
+% Praca wykonana pod kierunkiem:
+% (podać tytuł/stopień imię i nazwisko opiekuna
+% Instytut
+% ew. Wydział ew. Uczelnia (jeżeli nie MIM UW))
+\opiekun{mgr. Radosława Bartosiaka\\
+  Instytut TODO\\
+  }
+
+% miesiąc i~rok:
+\date{Maj 2018}
+
+%Podać dziedzinę wg klasyfikacji Socrates-Erasmus:
+\dziedzina{
+%11.0 Matematyka, Informatyka:\\
+%11.1 Matematyka\\
+%11.2 Statystyka\\
+11.3 Informatyka\\
+%11.4 Sztuczna inteligencja\\
+%11.5 Nauki aktuarialne\\
+%11.9 Inne nauki matematyczne i informatyczne
+}
+
+%Klasyfikacja tematyczna wedlug AMS (matematyka) lub ACM (informatyka)
+\klasyfikacja{D. Software\\
+  D.3. Programming languages\\
+  D.3.3. Language contructs and features}
+
+% Słowa kluczowe:
+\keywords{kompilacja, języki programowania, analiza semantyczna,
+  NianioLang, system typów}
+
+% Tu jest dobre miejsce na Twoje własne makra i~środowiska:
+\newtheorem{defi}{Definicja}[section]
+
+% koniec definicji
 
 \begin{document}
 
-    \maketitle
+\maketitle
 
-    \subsection*{Abstrakt}
-    NianioLang jest językiem programowania ogólnego przeznaczenia, który można
-    skompilować do wykonania na kilku platformach. Między innymi są to Java, 
-    JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
-    utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
-    pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
-    jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
-    niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
-    jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia 
-    w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
-    zwiększy wydajność kompilowanych aplikacji.
+%tu idzie streszczenie na strone poczatkowa
+\begin{abstract}
+  NianioLang jest językiem programowania ogólnego przeznaczenia, który można
+  skompilować do wykonania na kilku platformach. Między innymi są to Java,
+  JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
+  utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
+  pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
+  jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
+  niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
+  jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia
+  w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
+  zwiększy wydajność kompilowanych aplikacji.
+\end{abstract}
 
-    \tableofcontents
+\tableofcontents
+%\listoffigures
+%\listoftables
 
-    \newpage
+\chapter*{Wprowadzenie}
+  \addcontentsline{toc}{chapter}{Wprowadzenie}
+  \emph{O tym że jest to praca licencjacka, o tym kto nam to zadanie zlecił,
+    itp.}
 
-    \section{Wstęp}
-    \emph{O tym że jest to praca licencjacka, o tym kto nam to zadanie zlecił,
-          itp.}
-    \subsection{Czym jest NianioLang?}
-    \subsection{Typy w NianioLangu}
-    \subsection{Cele projektu}
+\chapter{Wstęp}
+\section{Czym jest NianioLang?}
+\section{Typy w NianioLangu}
+\section{Cele projektu}
 
-    \section{Metodyka pracy}
-    \subsection{Korzystanie z systemu kontroli wersji}
-    \subsection{Zgłaszanie zmian i code review}
-    \subsection{Techniki komunikacji w zespole}
+\chapter{Metodyka pracy}
+\section{Korzystanie z systemu kontroli wersji}
+\section{Zgłaszanie zmian i code review}
+\section{Techniki komunikacji w zespole}
 
-    \section{Kompilator NianioLang}
-    \subsection{Budowanie drzewa AST}
-    \subsection{Architektura nlasma}
-    \emph{Rejestry, wywołania funkcji, deklaracje typów, itp.}
-    \subsection{Translacja drzewa AST do nlasma}
-    \subsection{Generowanie kodu C na podstawie nlasma}
-    \subsection{Runtime NianioLang w języku C}
-    \subsection{Implementacja typów NianioLangu w C}
+\chapter{Kompilator NianioLanga}
+\section{Budowanie drzewa AST}
+\section{Analiza semantyczna}
+\section{Architektura nlasma}
+  \emph{Rejestry, wywołania funkcji, deklaracje typów, itp.}
+\section{Translacja drzewa AST do nlasma}
+\section{Generowanie kodu C na podstawie nlasma}
+\section{Implementacja typów NianioLanga w C}
 
-    \section{Rozszerzenie systemu typów}
-    \subsection{Rozdzielenie typu \texttt{ptd::sim}}
-    \subsection{Typy \texttt{own}}
-    \emph{Jaki jest cel tych typów, jakie są ograniczenia jakie na ich użycie
-          nakładamy (w stosunku do typów ptd).}
+\chapter{Rozszerzenie systemu typów}
+\section{Rozdzielenie typu \texttt{ptd::sim}}
+\section{Typy \texttt{own}}
+  \emph{Jaki jest cel tych typów, ich semantyka, jakie ograniczenia na ich użycie
+    nakładamy (w stosunku do typów ptd).}
 
-    \section{Rozszerzenie nlasma}
-    \subsection{Przekazywanie informacji o typach z drzewa AST}
 
-    \section{Nowe implementacje typów}
-    \emph{W tej sekcji w każdym podrozdziale będziemy opisywać dlaczego
-          dotychczasowe rozwiązanie było nieefektywne, jak można je
-          było poprawić, które rozwiązanie wybraliśmy, dlaczego.}
-    \subsection{Typy proste}
-    \subsection{Tablice}
-    \subsection{Struktury}
-    \subsection{Typy wariantowe}
+\chapter{Rozszerzenie nlasma}
+\section{Przekazywanie informacji o typach z drzewa AST}
+\section{Statyczne sprawdzanie poprawności}
 
-    \section{Efekty optymalizacji i wnioski}
-    \subsection{Porównanie czasu wykonania programów}
+\chapter{Nowe implementacje typów}
+  \emph{W tej sekcji w każdym podrozdziale będziemy opisywać dlaczego
+    dotychczasowe rozwiązanie było nieefektywne, jak można je
+    było poprawić, które rozwiązanie wybraliśmy, dlaczego.}
+\section{Typy proste}
+\section{Tablice}
+\section{Rekordy}
+\section{Typy wariantowe}
 
-    \section{Wkład własny}
-    \emph{Co zrobiliśmy w rozbiciu na osoby}
+\chapter{Efekty optymalizacji i wnioski}
+\section{Porównanie czasu wykonania programów}
+
+\chapter{Wkład własny}
+\emph{Co zrobiliśmy w rozbiciu na osoby}
+
+
+\appendix
+
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliografia}
+
+\bibitem[Bea65]{beaman} Juliusz Beaman, \textit{Morbidity of the Jolly
+    function}, Mathematica Absurdica, 117 (1965) 338--9.
+
+\end{thebibliography}
 
 \end{document}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% coding: latin-2
+%%% End:
