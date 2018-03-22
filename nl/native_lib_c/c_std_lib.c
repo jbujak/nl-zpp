@@ -69,7 +69,7 @@ ImmT c_std_lib0hash_get_value(ImmT ___nl__hash, ImmT ___nl__key) {
 	return c_rt_lib0hash_get_value(___nl__hash, ___nl__key);
 }
 
-ImmT c_std_lib0hash_has_key(ImmT ___nl__hash, ImmT ___nl__key) {
+bool c_std_lib0hash_has_key(ImmT ___nl__hash, ImmT ___nl__key) {
 	return c_rt_lib0hash_has_key(___nl__hash, ___nl__key);
 }
 
@@ -83,7 +83,7 @@ ImmT c_std_lib0hash_delete(ImmT *___ref___hash, ImmT ___nl__key) {
 	return NULL;
 }
 
-ImmT c_std_lib0hash_size(ImmT ___nl__hash) {
+int c_std_lib0hash_size(ImmT ___nl__hash) {
 	return c_rt_lib0hash_size(___nl__hash);
 }
 
@@ -239,19 +239,19 @@ INT c_std_lib0string_compare(ImmT ___nl__a, ImmT ___nl__b) {
 	return ret;
 }
 
-ImmT c_std_lib0is_array(ImmT ___nl__imm) {
+bool c_std_lib0is_array(ImmT ___nl__imm) {
 	return c_rt_lib0is_array(___nl__imm);
 }
 
-ImmT c_std_lib0is_hash(ImmT ___nl__imm) {
+bool c_std_lib0is_hash(ImmT ___nl__imm) {
 	return c_rt_lib0is_hash(___nl__imm);
 }
 
-ImmT c_std_lib0is_sim(ImmT ___nl__imm) {
+bool c_std_lib0is_sim(ImmT ___nl__imm) {
 	return c_rt_lib0is_sim(___nl__imm);
 }
 
-ImmT c_std_lib0is_variant(ImmT ___nl__imm) {
+bool c_std_lib0is_variant(ImmT ___nl__imm) {
 	return c_rt_lib0is_variant(___nl__imm);
 }
 
