@@ -413,7 +413,7 @@ def print_try_ensure(try_ensure : @nast::try_ensure_t, is_try : @nast::bool_t, r
 	} case :lval(var lval) {
 	} case :expr(var expr) {
 	}
-	var ov_is_register = new_register(ref state, :im); #TODO set type
+	var ov_is_register = new_register(ref state, :bool);
 	var arg : @nlasm::reg_t;
 	match (try_ensure) case :decl(var decl) {
 		match (decl->value) case :value(var value) {
@@ -496,9 +496,9 @@ def print_cmd(cmd : @nast::cmd_t, ref state : @translator::state_t) {
 }
 
 def print_loop_break(ref state : @translator::state_t, info : @translator::loop) {
-	fora var reg (state->logic->registers) {
-		undef_reg(ptd::ensure(@nlasm::reg_t, reg), ref state);
-	}
+	#fora var reg (state->logic->registers) {
+	#	undef_reg(ptd::ensure(@nlasm::reg_t, reg), ref state);
+	#}
 	print(ref state, :goto(info->label));
 }
 
@@ -667,12 +667,13 @@ def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	var condition_label = get_sim_label(ref state);
 	var hash = calc_val(as_forh->hash, ref state);
 	var key_register = print_var_decl(as_forh->key, ref state, :value);
+	var condition_register = new_register(ref state, :bool);
 	var value_register = print_var_decl(as_forh->val, ref state, :value);
 	var keys_arr = new_register(ref state, :im); #TODO set type
 	print_call_base(keys_arr, 'init_iter', [:val(hash)], ref state);
 	print_sim_label(condition_label, ref state);
-	print_call_base(key_register, 'is_end_hash', [:val(keys_arr)], ref state);
-	print_if_goto(after_forh_label, key_register, ref state);
+	print_call_base(condition_register, 'is_end_hash', [:val(keys_arr)], ref state);
+	print_if_goto(after_forh_label, condition_register, ref state);
 	print_call_base(key_register, 'get_key_iter', [:val(keys_arr)], ref state);
 	print_call_base(value_register, 'hash_get_value', [:val(hash), :val(key_register)], ref state);
 	var loop_label = save_loop_break(ref state, after_forh_label, next_iterator_label);
@@ -729,7 +730,8 @@ def print_for(as_for : @nast::for_t, ref state : @translator::state_t) {
 def print_match(as_match : @nast::match_t, ref state : @translator::state_t) {
 	var case_labels : ptd::arr(ptd::sim()) = [];
 	var arg : @nlasm::reg_t = calc_val(as_match->val, ref state);
-	var ov_is_register = new_register(ref state, :im); #TODO set type
+	var ov_is_register = new_register(ref state, :bool);
+	var nomatch_register = new_register(ref state, :im);
 	var end_label = get_sim_label(ref state);
 	fora var case_el (as_match->branch_list) {
 		start_new_instruction(case_el->debug, ref state);
@@ -738,9 +740,9 @@ def print_match(as_match : @nast::match_t, ref state : @translator::state_t) {
 		print_if_goto(label, ov_is_register, ref state);
 		array::push(ref case_labels, label);
 	}
-	load_const('NOMATCHALERT', ov_is_register, ref state);
-	print(ref state, :arr_decl({dest => ov_is_register, src => [ov_is_register, arg]}));
-	print(ref state, :die(ov_is_register));
+	load_const('NOMATCHALERT', nomatch_register, ref state);
+	print(ref state, :arr_decl({dest => nomatch_register, src => [nomatch_register, arg]}));
+	print(ref state, :die(nomatch_register));
 	var i = 0;
 	fora var case_el (as_match->branch_list) {
 		start_new_instruction(case_el->cmd->debug, ref state);
@@ -786,8 +788,14 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 	var real_dest = destination;
 	var real_dest_different = false;
 	var expected_type = :int;
+	var expected_dest_type = :int;
 	if (operator eq '.' || operator eq '.=' || operator eq 'eq' || operator eq 'ne') {
 		expected_type = :string;
+		if(operator eq '.' || operator eq '.=') {
+			expected_dest_type = :string;
+		} else {
+			expected_dest_type = :bool;
+		}
 	}
 	if (!nlasm::eq_reg_type(arg_1->type, expected_type)) {
 		real_arg_1 = new_register(ref state, expected_type);
@@ -797,8 +805,8 @@ def print_bin_op_operator_command(destination : @nlasm::reg_t, arg_1 : @nlasm::r
 		real_arg_2 = new_register(ref state, expected_type);
 		move(real_arg_2, arg_2, ref state);
 	}
-	if (!nlasm::eq_reg_type(destination->type, expected_type)) {
-		real_dest = new_register(ref state, expected_type);
+	if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
+		real_dest = new_register(ref state, expected_dest_type);
 		real_dest_different = true;
 	}
 	if (operator eq '+' || operator eq '+=') {

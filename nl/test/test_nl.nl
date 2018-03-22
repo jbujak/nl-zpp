@@ -31,31 +31,31 @@ def test_nl::test_only_compile() {
 	#TODO remove when all test run correctly
 	p('test_hash_oper');
 	test_hash_oper::test();
-	p('forh');
-	test_forh::test();
+	p('ensure');
+	test_ensure::test();
+	p('function');
+	test_fun::test();
+	p('type');
+	test_type::test();
+	p('mod');
+	test_mod::test();
+}
+
+def test_nl::test_compile_and_run() {
 	p('op');
 	test_op::test();
 	p('pub');
 	test_pub::test();
 	p('ref');
 	test_ref::test();
-	p('type');
-	test_type::test();
-	p('ensure');
-	test_ensure::test();
-	p('function');
-	test_fun::test();
-	p('mod');
-	test_mod::test();
-	p('num');
-	test_num::test();
-}
-
-def test_nl::test_compile_and_run() {
 	p('test_own_rec');
 	test_own_rec::test();
 	p('test_own_arr');
 	test_own_rec::test();
 	p('str');
 	test_str::test();
+	p('forh');
+	test_forh::test();
+	p('num');
+	test_num::test();
 }

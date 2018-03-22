@@ -863,7 +863,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :use_index(var use_index) {
 		print_use_index(ref state, use_index);
 	} case :release_index(var release_index) {
-		print(ref state, get_reg(ref state, release_index->current_owner) . ' = NULL');
+		#print(ref state, get_reg(ref state, release_index->current_owner) . ' = NULL');
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }

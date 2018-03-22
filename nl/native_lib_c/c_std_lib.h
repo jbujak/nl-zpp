@@ -16,10 +16,10 @@ ImmT c_std_lib0array_push(ImmT *arr, ImmT el);
 INT c_std_lib0array_len(ImmT arr);
 ImmT c_std_lib0array_pop(ImmT *arr);
 ImmT c_std_lib0hash_get_value(ImmT hash, ImmT key);
-ImmT c_std_lib0hash_has_key(ImmT hash, ImmT key);
+bool c_std_lib0hash_has_key(ImmT hash, ImmT key);
 ImmT c_std_lib0hash_set_value(ImmT *hash, ImmT key, ImmT value);
 ImmT c_std_lib0hash_delete(ImmT *hash, ImmT key);
-ImmT c_std_lib0hash_size(ImmT hash);
+int c_std_lib0hash_size(ImmT hash);
 ImmT c_std_lib0string_chr(ImmT cc);
 ImmT c_std_lib0string_ord(ImmT c);
 ImmT c_std_lib0string_length(ImmT s);
@@ -33,10 +33,10 @@ ImmT c_std_lib0string_uc(ImmT str);
 INT c_std_lib0string_compare(ImmT a, ImmT b);
 
 
-ImmT c_std_lib0is_array(ImmT imm);
-ImmT c_std_lib0is_hash(ImmT imm);
-ImmT c_std_lib0is_sim(ImmT imm);
-ImmT c_std_lib0is_variant(ImmT imm);
+bool c_std_lib0is_array(ImmT imm);
+bool c_std_lib0is_hash(ImmT imm);
+bool c_std_lib0is_sim(ImmT imm);
+bool c_std_lib0is_variant(ImmT imm);
 ImmT c_std_lib0escape_characters(ImmT str);
 ImmT c_std_lib0exec(ImmT func, ImmT *arr);
 
