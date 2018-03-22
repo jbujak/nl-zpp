@@ -80,7 +80,7 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 		cop->g = '';
 		die;
 	}
-	die unless test_is(ret);
+	die unless test_is(:h);
 	return ret;
 }
 

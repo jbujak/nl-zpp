@@ -29,16 +29,8 @@ def test_nl::test() {
 
 def test_nl::test_only_compile() {
 	#TODO remove when all test run correctly
-	p('test_hash_oper');
-	test_hash_oper::test();
-	p('ensure');
-	test_ensure::test();
 	p('function');
 	test_fun::test();
-	p('type');
-	test_type::test();
-	p('mod');
-	test_mod::test();
 }
 
 def test_nl::test_compile_and_run() {
@@ -58,4 +50,12 @@ def test_nl::test_compile_and_run() {
 	test_forh::test();
 	p('num');
 	test_num::test();
+	p('test_hash_oper');
+	test_hash_oper::test();
+	p('ensure');
+	test_ensure::test();
+	p('type');
+	test_type::test();
+	p('mod');
+	test_mod::test();
 }
