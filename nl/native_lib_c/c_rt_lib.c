@@ -613,7 +613,7 @@ bool c_rt_lib0hash_has_key(ImmT ___nl__hashI, ImmT ___nl__keyI) {
 	if(IS_ARRHASH(___nl__hashI))	ret = get_from_arr_hash((NlArrHash*) ___nl__hashI, ___nl__keyI);
 	else if(IS_HASH(___nl__hashI))	ret = get_from_hash((NlHash*) ___nl__hashI, ___nl__keyI);
 	else	nl_die_internal("Hash expected %s;", NAME(___nl__hashI));
-	return ret == NULL;
+	return ret != NULL;
 }
 ImmT c_rt_lib0hash_get_value(ImmT ___nl__hashI, ImmT ___nl__keyI) {
 	ImmT ret = NULL;
