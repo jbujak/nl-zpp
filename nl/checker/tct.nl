@@ -6,6 +6,7 @@
 use hash;
 use ptd;
 use boolean_t;
+use string;
 
 def tct::arr(arr_type : @tct::meta_type) : @tct::meta_type {
 	return :tct_arr(arr_type);
@@ -177,6 +178,10 @@ def tct::own_type_to_ptd(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 	}
 }
 
+def get_fun_name(fun : ptd::sim()) : ptd::sim() {
+	return (string::split('::', fun))[1];
+}
+
 def tct::is_own_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
 	match (type) case :tct_rec (var p) {
 		return false;
@@ -195,8 +200,12 @@ def tct::is_own_type(type : @tct::meta_type, defined_types : ptd::hash(@tct::met
 	} case :tct_own_var (var p) {
 		return true;
 	} case :tct_ref (var p) {
-		return false unless hash::has_key(defined_types, p); #assume somebody else handles the problem
-		return tct::is_own_type(defined_types{p}, defined_types);
+		if (hash::has_key(defined_types, p)) {
+			return tct::is_own_type(defined_types{p}, defined_types);
+		} elsif (hash::has_key(defined_types, get_fun_name(p))) {
+			return tct::is_own_type(defined_types{get_fun_name(p)}, defined_types);
+		}
+		return false; #assume somebody else handles the problem
 	} case :tct_sim {
 		return false;
 	} case :tct_int {
