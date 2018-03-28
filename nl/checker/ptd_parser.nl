@@ -36,7 +36,7 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 	if (mod_name eq 'ptd') {
 		if (fun_name eq 'sim') {
 			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
-			return :ok(tct::sim());
+			return :ok(tct::string());
 		} elsif (fun_name eq 'ptd_im') {
 			return :err('im can''t have arguments: ' . args_size) unless args_size == 0;
 			return :ok(tct::tct_im());

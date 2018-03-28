@@ -27,10 +27,6 @@ def tct::ref(name : ptd::sim()) : @tct::meta_type {
 	return :tct_ref(name);
 }
 
-def tct::sim() : @tct::meta_type {
-	return :tct_sim;
-}
-
 def tct::int() : @tct::meta_type {
 	return :tct_int;
 }
@@ -68,7 +64,7 @@ def tct::bool() : @tct::meta_type {
 }
 
 def tct::func() : @tct::meta_type {
-	return tct::rec({module => tct::sim(), name => tct::sim()});
+	return tct::rec({module => tct::string(), name => tct::string()});
 }
 
 def tct::var(h) : @tct::meta_type {

@@ -201,7 +201,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			add_error(ref errors, 'cannot assign non int to int');
 		}
 	} case :tct_string {
-		die; #TODO
+		if (b is :tct_string) {
+			return :tct_string;
+		} else {
+			add_error(ref errors, 'cannot assign non string to string');
+		}
 	} case :tct_bool {
 		if (b is :tct_bool) {
 			return :tct_bool;
@@ -463,7 +467,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok if from is :tct_int;
 		return mk_err(to, from);
 	} case :tct_string {
-		die; #TODO
+		return :ok if from is :tct_string;
+		return mk_err(to, from);
 	} case :tct_bool {
 		return :ok if from is :tct_bool;
 		return mk_err(to, from);

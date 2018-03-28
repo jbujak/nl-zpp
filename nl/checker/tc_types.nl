@@ -27,21 +27,21 @@ def get_binary_ops() : ptd::hash(@tc_types::bin_op_type) {
 	op_def(ref ret, '%', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '+', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '-', tct::int(), tct::int(), tct::int());
-	op_def(ref ret, '.', tct::sim(), tct::sim(), tct::sim());
+	op_def(ref ret, '.', tct::string(), tct::string(), tct::string());
 	op_def(ref ret, '>=', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '<=', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '<', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '>', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '==', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '!=', tct::int(), tct::int(), tct::bool());
-	op_def(ref ret, 'eq', tct::sim(), tct::sim(), tct::bool());
-	op_def(ref ret, 'ne', tct::sim(), tct::sim(), tct::bool());
+	op_def(ref ret, 'eq', tct::string(), tct::string(), tct::bool());
+	op_def(ref ret, 'ne', tct::string(), tct::string(), tct::bool());
 	op_def(ref ret, '&&', tct::bool(), tct::bool(), tct::bool());
 	op_def(ref ret, '||', tct::bool(), tct::bool(), tct::bool());
 	op_def(ref ret, '+=', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '/=', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '*=', tct::int(), tct::int(), tct::int());
-	op_def(ref ret, '.=', tct::sim(), tct::sim(), tct::sim());
+	op_def(ref ret, '.=', tct::string(), tct::string(), tct::string());
 	op_def(ref ret, '-=', tct::int(), tct::int(), tct::int());
 	return singleton::sigleton_do_not_use_without_approval(ret);
 }
