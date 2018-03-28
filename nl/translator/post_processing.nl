@@ -236,6 +236,8 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 			array::push(ref set_c, set_at_idx->src);
 		} case :array_push(var push) {
 			die; #TODO
+		} case :array_len(var len) {
+			die; #TODO
 		} case :get_val(var get_val) {
 			check_sub(ref const, regs[get_val->src->reg_no], ref info);
 			regs[get_val->dest->reg_no] = const unless nlasm::is_empty(get_val->dest);

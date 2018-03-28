@@ -506,7 +506,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	} case :tct_own_var(var vars) {
 		die; #TODO
 	} case :tct_empty {
-		die;
+		return :ok;
 	}
 }
 
