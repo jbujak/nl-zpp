@@ -16,6 +16,7 @@ use test_fun;
 use test_ensure;
 use test_own_rec;
 use test_own_arr;
+use test_own_to_im;
 use nl;
 use string;
 
@@ -56,6 +57,8 @@ def test_nl::test_compile_and_run() {
 	test_own_rec::test();
 	p('test_own_arr');
 	test_own_rec::test();
+	p('test_own_to_im');
+	test_own_to_im::test();
 	p('str');
 	test_str::test();
 }
