@@ -65,15 +65,16 @@ def ptd_system::is_equal(a : @tct::meta_type, b : @tct::meta_type) : @boolean_t:
 }
 
 def ptd_system::is_try_ensure_type(type : @tc_types::type, ref modules : @tc_types::modules_t, ref errors : 
-	@tc_types::errors_t) : @boolean_t::type {
-	return ptd_system::is_accepted(type, tct::var({ok => tct::tct_im(), err => tct::tct_im()}), ref modules, ref errors);
+	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
+	return ptd_system::is_accepted(type, tct::var({ok => tct::tct_im(), err => tct::tct_im()}), ref modules, ref errors, known_types);
 }
 
 def ptd_system::try_get_ensure_sub_types(type : @tc_types::type, ref modules : @tc_types::modules_t, ref errors : 
-	@tc_types::errors_t) : ptd::rec({ok => @tct::meta_type, err => @tct::meta_type}) {
+	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : 
+	ptd::rec({ok => @tct::meta_type, err => @tct::meta_type}) {
 	var ret_types = {ok => tct::tct_im(), err => tct::tct_im()};
 	type = ptd_system::can_delete(type, ref modules, ref errors);
-	if (ptd_system::is_try_ensure_type(type, ref modules, ref errors)) {
+	if (ptd_system::is_try_ensure_type(type, ref modules, ref errors, known_types)) {
 		return ret_types if type->type is :tct_im;
 		ret_types = {ok => tct::empty(), err => tct::empty()};
 		return ret_types unless type->type is :tct_var;
@@ -99,18 +100,18 @@ def ptd_system::try_get_ensure_sub_types(type : @tc_types::type, ref modules : @
 }
 
 def ptd_system::is_condition_type(from : @tc_types::type, ref modules : @tc_types::modules_t, ref errors : 
-	@tc_types::errors_t) : @boolean_t::type {
-	return ptd_system::is_accepted(from, tct::bool(), ref modules, ref errors);
+	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
+	return ptd_system::is_accepted(from, tct::bool(), ref modules, ref errors, known_types);
 }
 
 def ptd_system::is_accepted(from : @tc_types::type, as_type : @tct::meta_type, ref modules : @tc_types::modules_t, ref 
-	errors : @tc_types::errors_t) : @boolean_t::type {
-	var ret = ptd_system::is_accepted_info(from, as_type, ref modules, ref errors);
+	errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
+	var ret = ptd_system::is_accepted_info(from, as_type, ref modules, ref errors, known_types);
 	return ret is :ok;
 }
 
 def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_type, ref modules : @tc_types::modules_t, 
-	ref errors : @tc_types::errors_t) : @tc_types::check_info {
+	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::check_info {
 	from = ptd_system::can_delete(from, ref modules, ref errors);
 	return :ok if from->type is :tct_im;
 	if (as_type is :tct_rec) {
@@ -121,7 +122,7 @@ def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_ty
 		return :ok if hash::size(as_type as :tct_var) == 0 && from->type is :tct_var;
 	}
 	var ref_inf = {level => 1, from => {}, to => {}, check => false, cast => false};
-	return check_assignment_info(as_type, from->type, ref_inf, from->src, ref modules, ref errors);
+	return check_assignment_info(as_type, from->type, ref_inf, from->src, ref modules, ref errors, known_types);
 }
 
 def add_ref_name(ref from : @tct::meta_type, ref hash : ptd::hash(ptd::arr(ptd::sim())), ref arr : ptd::arr(ptd::sim()),
@@ -135,11 +136,11 @@ def add_ref_name(ref from : @tct::meta_type, ref hash : ptd::hash(ptd::arr(ptd::
 }
 
 def is_cycle_ref(ref a : @tct::meta_type, ref b : @tct::meta_type, ref ref_inf : @tc_types::ref_t, is_cross : 
-	@boolean_t::type, deleted : @boolean_t::type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) 
-	: @boolean_t::type {
+	@boolean_t::type, deleted : @boolean_t::type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t, 
+	known_types : ptd::hash(@tct::meta_type)) : @boolean_t::type {
 	if (a is :tct_ref && b is :tct_ref) {
 		return true if a as :tct_ref eq b as :tct_ref;
-		return true if is_cross && check_assignment_info(a, b, ref_inf, :speculation, ref modules, ref errors) is :ok;
+		return true if is_cross && check_assignment_info(a, b, ref_inf, :speculation, ref modules, ref errors, known_types) is :ok;
 	}
 	var arr_to = [];
 	var arr_from = [];
@@ -177,7 +178,7 @@ def ptd_system::cross_type(a : @tct::meta_type, b : @tct::meta_type, ref modules
 def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::ref_t, ref modules : @tc_types::modules_t, 
 	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	return :tct_im if (b is :tct_im || a is :tct_im);
-	if (is_cycle_ref(ref a, ref b, ref ref_inf, true, false, ref modules, ref errors)) {
+	if (is_cycle_ref(ref a, ref b, ref ref_inf, true, false, ref modules, ref errors, known_types)) {
 		return a;
 	}
 	if (ref_inf->level == 200) {
@@ -332,15 +333,15 @@ def ptd_system::rec_to_hash(a : @tct::meta_type, ref_inf : @tc_types::ref_t, ref
 }
 
 def ptd_system::cast_type(to : @tct::meta_type, from : @tc_types::type, ref modules : @tc_types::modules_t, ref errors : 
-	@tc_types::errors_t) : @tc_types::check_info {
+	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::check_info {
 	var ref_inf = {level => 1, from => {}, to => {}, check => true, cast => true};
-	return check_assignment_info(to, from->type, ref_inf, from->src, ref modules, ref errors);
+	return check_assignment_info(to, from->type, ref_inf, from->src, ref modules, ref errors, known_types);
 }
 
 def ptd_system::check_assignment(to : @tct::meta_type, from : @tc_types::type, ref modules : @tc_types::modules_t, ref 
-	errors : @tc_types::errors_t) : @tc_types::check_info {
+	errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::check_info {
 	var ref_inf = {level => 1, from => {}, to => {}, check => true, cast => false};
-	return check_assignment_info(to, from->type, ref_inf, from->src, ref modules, ref errors);
+	return check_assignment_info(to, from->type, ref_inf, from->src, ref modules, ref errors, known_types);
 }
 
 def mk_err(to : @tct::meta_type, from : @tct::meta_type) : @tc_types::check_info {
@@ -348,15 +349,18 @@ def mk_err(to : @tct::meta_type, from : @tct::meta_type) : @tc_types::check_info
 }
 
 def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf : @tc_types::ref_t, type_src : 
-	@tc_types::value_src, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : @tc_types::check_info {
+	@tc_types::value_src, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t, known_types : 
+	ptd::hash(@tct::meta_type)) : @tc_types::check_info {
 	return :ok if from is :tct_empty;
 	return mk_err(to, from) if from is :tct_void;
 	if (to is :tct_im) {
+		return mk_err(to, from) if tct::is_own_type(from, known_types);
 		walk_on_type(from, :delete, ref_inf->from, ref modules, ref errors)
 			if ref_inf->check && ptd_system::is_known(type_src);
 		return :ok;
 	}
-	if (is_cycle_ref(ref to, ref from, ref ref_inf, false, ptd_system::is_known(type_src), ref modules, ref errors)) {
+	if (is_cycle_ref(ref to, ref from, ref ref_inf, false, ptd_system::is_known(type_src), ref modules, ref errors, 
+		known_types)) {
 		return :ok;
 	}
 	if (ref_inf->level == 200) {
@@ -367,7 +371,9 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok;
 	} case :tct_arr(var arr_type) {
 		return mk_err(to, from) unless from is :tct_arr;
-		match (check_assignment_info(arr_type, from as :tct_arr, ref_inf, type_src, ref modules, ref errors)) case :ok {
+		var ass_info = check_assignment_info(arr_type, from as :tct_arr, ref_inf, type_src, ref modules, ref errors, 
+			known_types); 
+		match (ass_info) case :ok {
 			return :ok;
 		} case :err(var info) {
 			array::push(ref info->stack, :ptd_arr);
@@ -381,7 +387,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		} elsif (from is :tct_own_arr) {
 			from_inner = from as :tct_own_arr;
 		}
-		match (check_assignment_info(arr_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
+		match (check_assignment_info(arr_type, from_inner, ref_inf, type_src, ref modules, ref errors, known_types)) case :ok {
 			return :ok;
 		} case :err(var info) {
 			array::push(ref info->stack, :own_arr);
@@ -390,7 +396,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	} case :tct_hash(var hash_type) {
 		if (from is :tct_rec && !type_src is :known) {
 			forh var name, var record (from as :tct_rec) {
-				match (check_assignment_info(hash_type, record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+				var ass_info = check_assignment_info(hash_type, record, ref_inf, type_src, ref modules, ref errors, known_types);
+				match (ass_info) case :ok {
 				} case :err(var info) {
 					array::push(ref info->stack, :ptd_rec(name));
 					return :err(info);
@@ -399,7 +406,9 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :ok;
 		}
 		return mk_err(to, from) unless from is :tct_hash;
-		match (check_assignment_info(hash_type, from as :tct_hash, ref_inf, type_src, ref modules, ref errors)) case :ok {
+		var ass_info = check_assignment_info(hash_type, from as :tct_hash, ref_inf, type_src, ref modules, ref errors,
+			known_types); 
+		match (ass_info) case :ok {
 			return :ok;
 		} case :err(var info) {
 			array::push(ref info->stack, :ptd_hash);
@@ -411,7 +420,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		if (ref_inf->cast && from is :tct_hash) {
 			var left = from as :tct_hash;
 			forh var name, var record (records) {
-				match (check_assignment_info(record, left, ref_inf, type_src, ref modules, ref errors)) case :ok {
+				match (check_assignment_info(record, left, ref_inf, type_src, ref modules, ref errors, known_types)) case :ok {
 				} case :err(var info) {
 					array::push(ref info->stack, :ptd_rec(name));
 					return :err(info);
@@ -425,7 +434,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		forh var name, var record (records) {
 			return mk_err(to, from) unless hash::has_key(cand_records, name);
 			var cand_record : @tct::meta_type = hash::get_value(cand_records, name);
-			match (check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			var ass_info = check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors, known_types);
+			match (ass_info) case :ok {
 			} case :err(var info) {
 				array::push(ref info->stack, :ptd_rec(name));
 				return :err(info);
@@ -445,7 +455,8 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		forh var name, var record (records) {
 			return mk_err(to, from) unless hash::has_key(cand_records, name);
 			var cand_record : @tct::meta_type = hash::get_value(cand_records, name);
-			match (check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			var ass_info = check_assignment_info(record, cand_record, ref_inf, type_src, ref modules, ref errors, known_types);
+			match (ass_info) case :ok {
 			} case :err(var info) {
 				array::push(ref info->stack, :own_rec(name));
 				return :err(info);
@@ -483,7 +494,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 				match (to_type) case :no_param {
 					return mk_err(to, from);
 				} case :with_param(var t_t) {
-					match (check_assignment_info(t_t, f_t, ref_inf, type_src, ref modules, ref errors)) case :ok {
+					match (check_assignment_info(t_t, f_t, ref_inf, type_src, ref modules, ref errors, known_types)) case :ok {
 					} case :err(var info) {
 						array::push(ref info->stack, :ptd_var(name));
 						return :err(info);
