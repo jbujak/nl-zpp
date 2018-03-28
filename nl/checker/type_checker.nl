@@ -1048,11 +1048,68 @@ def get_special_functions() : @tc_types::special_functions {
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 			]
 		});
+	hash::set_value(ref f, 'c_std_lib::is_sim', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_array', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_hash', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_variant', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
 	hash::set_value(ref f, 'c_std_lib::string_compare', {
 			r => tct::int(),
 			a => [
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::hash_has_key', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::hash_size', {
+			r => tct::int(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::ov_is', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::priv_is', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::is_end_hash', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'c_singleton::sigleton_do_not_use_without_approval', {
@@ -1908,6 +1965,10 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 	} case :bin_op(var bin_op) {
 		fill_binary_op_type(ref value, vars, modules, ref errors, known_types);
 	} case :var_op(var var_op) {
+		fill_var_op_type(ref value, vars, modules, ref errors, known_types);
+		if (var_op->op is :ov_is) {
+			value->type = :tct_bool;
+		}	
 	} case :unary_op(var unary_op) {
 		fill_unary_op_type(ref value, vars, modules, ref errors, known_types);
 	} case :fun_label(var fun_label) {
@@ -1925,6 +1986,14 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 		value->value = :post_dec(dec);
 		value->type = :tct_int;
 	}
+}
+
+def fill_var_op_type(ref var_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
+	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+	var var_op = var_op_val->value as :var_op;
+
+	fill_value_types(ref var_op->left, vars, modules, ref errors, known_types);
+	var_op_val->value = :var_op(var_op);
 }
 
 def fill_unary_op_type(ref unary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,

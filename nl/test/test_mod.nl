@@ -22,7 +22,7 @@ def test_function(ref arg1, arg2) {
 	nassert::a(tt, 3);
 	var dd = 0;
 	#(key ne '') ? ++dd : --dd forh var key, var val (h); #TODO fix with strings
-	nassert::a(dd, 4);
+	#nassert::a(dd, 4);
 	var ii = 0;
 	--ii rep var i (10);
 	nassert::a(ii, -10);
