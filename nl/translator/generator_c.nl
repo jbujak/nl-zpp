@@ -780,6 +780,19 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		} else {
 			die;
 		}
+	} case :array_len(var len) {
+		if (len->src->type is :arr) {
+			var type_name = get_type_name(len->src->type as :arr);
+			print(ref state, get_reg(ref state, len->dest) . ' = ' .
+				get_array_len_fun_name(type_name, state->mod_name) . '(' .
+				get_reg_ref(ref state, len->src) . ')');
+		} elsif (len->src->type is :im) {
+			print(ref state, get_reg(ref state, len->dest) . ' = ' .
+				get_fun_lib('array_len', [get_reg(ref state, len->src)])
+			);
+		} else {
+			die;
+		}
 	} case :get_val(var get) {
 		var r;
 		match (get->src->access_type) case :value {
@@ -1039,15 +1052,23 @@ def print_use_field(ref state : @generator_c::state_t, use_field : @nlasm::use_f
 }
 
 def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_index_t) : ptd::void() {
-	var ret =  get_reg(ref state, use_index->new_owner) . ' = ' .
-		get_array_get_fun_name(get_type_name(use_index->old_owner->type as :arr), state->mod_name) . '(';
-	match (use_index->old_owner->access_type) case :value {
-		ret .= '&';
-	} case :reference {
+	if (use_index->old_owner->type is :arr) {
+		var ret =  get_reg(ref state, use_index->new_owner) . ' = ' .
+			get_array_get_fun_name(get_type_name(use_index->old_owner->type as :arr), state->mod_name) . '(';
+		match (use_index->old_owner->access_type) case :value {
+			ret .= '&';
+		} case :reference {
+		}
+		ret .= get_reg(ref state, use_index->old_owner) . ', ';
+		ret .=  get_reg_value(ref state, use_index->index) . ')';
+		print(ref state, ret);
+	} elsif (use_index->old_owner->type is :im) {
+		print(ref state, get_fun_lib('move', [get_reg_ref(ref state, use_index->new_owner), 
+			get_fun_lib('get_ref_arr', [get_reg(ref state, use_index->old_owner), get_reg_value(ref state, use_index->index)])
+		]));
+	} else {
+		die;
 	}
-	ret .= get_reg(ref state, use_index->old_owner) . ', ';
-	ret .=  get_reg_value(ref state, use_index->index) . ')';
-	print(ref state, ret);
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
@@ -1302,6 +1323,7 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	} case :tct_own_arr(var arr_type) {
 		ret .= get_array_push_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
 		ret .= get_array_get_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
+		ret .= get_array_len_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
@@ -1327,6 +1349,7 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 	} case :tct_own_arr(var arr_type) {
 		ret .= get_array_push_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 		ret .= get_array_get_fun_def(type_name, arr_type, state->mod_name) . string::lf();
+		ret .= get_array_len_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
@@ -1359,14 +1382,16 @@ def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::m
 def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
 	var ret = '';
 	var default_size = 16;
+	var sizeof = 'sizeof(' . get_type_name(array_type) . ')';
 	ret .= get_array_push_fun_header(array_type_name, array_type, mod_name) . ' {
 		'if (arr->value == NULL) {
-		'arr->value = alloc_mem(' . default_size . '*sizeof(' . array_type_name . '));
+		'arr->value = alloc_mem(' . default_size . '*' . sizeof .');
 		'arr->capacity = ' . default_size . ';
 		'arr->size = 0;
 		'}
 		'if (arr->size+1 == arr->capacity) {
-		'realloc_mem(arr->value, arr->capacity, arr->capacity*2);
+		'arr->value = realloc_mem(arr->value, arr->capacity*' . sizeof . ', arr->capacity*2*' . sizeof .');
+		'arr->capacity *= 2;
 		'}
 		'arr->value[arr->size++] = arg;
 		'}';
@@ -1392,6 +1417,25 @@ def get_array_get_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_
 		'nl_die();
 		'}
 		'return &(arr->value[index]);
+		'}';
+	return ret;
+}
+
+def get_array_len_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . array_type_name . '0len';
+}
+
+def get_array_len_fun_header(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= int_t() . get_array_len_fun_name(array_type_name, mod_name) . '(';
+	ret .= array_type_name . ' *arr)';
+	return ret;
+}
+
+def get_array_len_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= get_array_len_fun_header(array_type_name, mod_name) . ' {
+		'return arr->size;
 		'}';
 	return ret;
 }

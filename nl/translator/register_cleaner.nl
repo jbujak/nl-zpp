@@ -153,6 +153,11 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 				dest => map{push->dest->reg_no},
 				val => map{push->val->reg_no},
 			});
+		} case :array_len(var len) {
+			new_cmd = :array_len({
+				dest => map{len->dest->reg_no},
+				src => map{len->src->reg_no},
+			});
 		} case :get_val(var val) {
 			new_cmd = :get_val({
 				key => val->key,
@@ -302,6 +307,9 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 		} case :array_push(var push) {
 			regs{push->dest->reg_no} = true;
 			regs{push->val->reg_no} = true;
+		} case :array_len(var len) {
+			regs{len->dest->reg_no} = true;
+			regs{len->src->reg_no} = true;
 		} case :get_val(var val) {
 			regs{val->dest->reg_no} = true;
 			regs{val->src->reg_no} = true;
