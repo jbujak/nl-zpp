@@ -86,8 +86,8 @@ def nlasm::order_t() {
 			call => @nlasm::call_t,
 			una_op => @nlasm::una_op_t,
 			bin_op => @nlasm::bin_op,
-			ov_is => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim()}),
-			ov_as => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim()}),
+			ov_is => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim(), label_no => ptd::sim()}),
+			ov_as => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, type => ptd::sim(), label_no => ptd::sim()}),
 			return => @nlasm::return,
 			die => @nlasm::reg_t,
 			move => ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t}),
@@ -108,6 +108,8 @@ def nlasm::order_t() {
 			release_field => @nlasm::release_field_t,
 			use_index => @nlasm::use_index_t,
 			release_index => @nlasm::release_index_t,
+			use_variant => @nlasm::use_variant_t,
+			release_variant => @nlasm::release_variant_t,
 		});
 }
 
@@ -148,6 +150,21 @@ def nlasm::release_index_t() {
 	});
 }
 
+def nlasm::use_variant_t() {
+	return ptd::rec({
+		new_owner => @nlasm::reg_t,
+		old_owner => @nlasm::reg_t,
+		label => ptd::sim(),
+		label_no => ptd::sim(),
+	});
+}
+
+def nlasm::release_variant_t() {
+	return ptd::rec({
+		current_owner => @nlasm::reg_t,
+	});
+}
+
 def nlasm::hash_decl_t() {
 	return ptd::rec({
 		dest => @nlasm::reg_t,
@@ -175,7 +192,9 @@ def nlasm::ov_mk_t() {
 	return ptd::rec({
 			dest => @nlasm::reg_t,
 			src => ptd::var({arg => @nlasm::reg_t, emp => ptd::none()}),
-			name => ptd::sim()
+			label => ptd::sim(),
+			label_no => ptd::sim(),
+			inner_type => @tct::meta_type,
 		});
 }
 
@@ -196,6 +215,7 @@ def nlasm::reg_type() {
 		bool => ptd::none(),
 		rec => @tct::meta_type,
 		arr => @tct::meta_type,
+		variant => @tct::meta_type,
 	});
 }
 
@@ -227,6 +247,8 @@ def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @bool
 		return reg2 is :rec;
 	} case :arr(var type) {
 		return reg2 is :arr;
+	} case :variant(var type) {
+		return reg2 is :variant;
 	}
 }
 

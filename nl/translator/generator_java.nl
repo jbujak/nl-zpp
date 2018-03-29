@@ -217,6 +217,10 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 		die;
 	} case :release_index(var release_index) {
 		die;
+	} case :use_variant(var use_variant) {
+		die;
+	} case :release_variant(var release_variant) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }
@@ -361,16 +365,16 @@ def print_set_hash_value(set_val) {
 
 def print_ov_mk(ov_mk) : ptd::sim() {
 	var result = '';
-	if (ov_mk->src is :emp && (ov_mk->name eq 'TRUE')) {
+	if (ov_mk->src is :emp && (ov_mk->label eq 'TRUE')) {
 		result = 'c_rt_lib_NL.get_true_nl()';
-	} elsif (ov_mk->src is :emp && (ov_mk->name eq 'FALSE')) {
+	} elsif (ov_mk->src is :emp && (ov_mk->label eq 'FALSE')) {
 		result = 'c_rt_lib_NL.get_false_nl()';
 	} else {
 		match (ov_mk->src) case :arg(var arg) {
-			result = 'c_rt_lib_NL.ov_mk_arg_nl(new ImmString("' . escape_string(ov_mk->name) . '"), ' . 
+			result = 'c_rt_lib_NL.ov_mk_arg_nl(new ImmString("' . escape_string(ov_mk->label) . '"), ' . 
 				print_register(arg) . ')';
 		} case :emp {
-			result = 'c_rt_lib_NL.ov_mk_none_nl(new ImmString("' . escape_string(ov_mk->name) . '"))';
+			result = 'c_rt_lib_NL.ov_mk_none_nl(new ImmString("' . escape_string(ov_mk->label) . '"))';
 		}
 	}
 	return print_register_setter(ov_mk->dest, result) . ';';

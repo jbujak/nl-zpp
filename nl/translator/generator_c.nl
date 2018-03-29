@@ -261,6 +261,10 @@ def get_include(import : ptd::sim()) : ptd::sim() {
 	return '#include "' . import . '.h"';
 }
 
+def get_system_include(import : ptd::sim()) : ptd::sim() {
+	return '#include <' . import . '.h>';
+}
+
 def get_cr() : ptd::sim() {
 	return '
 		'/* (c) Atinea Sp z o. o.
@@ -372,10 +376,11 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t) {
 	print_to_header(ref state, get_cr());
 	print_to_header(ref state, '#pragma once' . string::lf());
 	print_to_header(ref state, get_include('c_rt_lib') . string::lf());
-	print_to_header(ref state, get_include('stdbool') . string::lf());
+	print_to_header(ref state, get_system_include('stdbool') . string::lf());
 	print(ref state, get_cr());
 	println(ref state, get_include('c_rt_lib'));
 	println(ref state, get_include('c_global_const'));
+	println(ref state, get_system_include('/usr/include/string'));
 	println(ref state, get_include(state->mod_name));
 	fora var import (asm->imports) {
 		println(ref state, get_include(import));
@@ -718,11 +723,31 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 	} case :bin_op(var bin_op) {
 		print_bin_op(ref state, bin_op);
 	} case :ov_is(var ov_is) {
-		var r = get_fun_lib('priv_is', [get_reg(ref state, ov_is->src), get_const_sim(ref state, ov_is->type)]);
-		print(ref state, get_assign(ref state, ov_is->dest, r));
+		if (ov_is->src->type is :im) {
+			var r = get_fun_lib('priv_is', [get_reg(ref state, ov_is->src), get_const_sim(ref state, ov_is->type)]);
+			print(ref state, get_assign(ref state, ov_is->dest, r));
+		} elsif (ov_is->src->type is :variant) {
+			print(ref state, get_reg_value(ref state, ov_is->dest) . ' = (' .
+				get_reg_value(ref state, ov_is->src) . '.label' . ' == ' . ov_is->label_no . ')');
+		} else {
+			die;
+		}
 	} case :ov_as(var ov_as) {
-		var r = get_fun_lib('priv_as', [get_reg(ref state, ov_as->src), get_const_sim(ref state, ov_as->type)]);
-		print(ref state, get_assign(ref state, ov_as->dest, r));
+		if (ov_as->src->type is :im) {
+			var r = get_fun_lib('priv_as', [get_reg_value(ref state, ov_as->src), get_const_sim(ref state, ov_as->type)]);
+			print(ref state, get_assign(ref state, ov_as->dest, r));
+		} elsif (ov_as->src->type is :variant) {
+			var right = '*('.  get_reg_value(ref state, ov_as->src) . '.value.' . get_case_name(ov_as->type) . ')';
+			if (ov_as->dest->type is :im) {
+				var left = get_reg_ref(ref state, ov_as->dest);
+				print(ref state, get_fun_lib('copy', [left, right]));
+			} else {
+				var left = get_reg_value(ref state, ov_as->dest);
+				print(ref state,  left . ' = ' . right);
+			}
+		} else {
+			die;
+		}
 	} case :return(var rr) {
 		move_register_to_ref_args(ref state);
 		match (rr) case :val(var v) {
@@ -755,6 +780,8 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		} case :rec(var type) {
 			die;
 		} case :arr(var type) {
+			die;
+		} case :variant(var type) {
 			die;
 		}
 	} case :get_frm_idx(var get) {
@@ -816,19 +843,34 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 					get_reg(ref state, set->val)
 				]));
 	} case :ov_mk(var mk) {
-		var r;
-		if (mk->src is :emp && (mk->name eq 'TRUE')) {
-			r = 'true';
-		} elsif (mk->src is :emp && (mk->name eq 'FALSE')) {
-			r = 'false';
+		if (mk->src is :emp && (mk->label eq 'TRUE')) {
+			print(ref state, get_assign(ref state, mk->dest, 'true'));
+		} elsif (mk->src is :emp && (mk->label eq 'FALSE')) {
+			print(ref state, get_assign(ref state, mk->dest, 'false'));
 		} else {
-			match (mk->src) case :arg(var a) {
-				r = get_fun_lib('ov_mk_arg', [get_const_sim(ref state, mk->name), get_reg(ref state, a)]);
-			} case :emp {
-				r = get_fun_lib('ov_mk_none', [get_const_sim(ref state, mk->name)]);
+			if (mk->dest->type is :im) {
+				var r;
+				match (mk->src) case :arg(var a) {
+					r = get_fun_lib('ov_mk_arg', [get_const_sim(ref state, mk->label), get_reg(ref state, a)]);
+				} case :emp {
+					r = get_fun_lib('ov_mk_none', [get_const_sim(ref state, mk->label)]);
+				}
+				print(ref state, get_assign(ref state, mk->dest, r));
+			} elsif (mk->dest->type is :variant) {
+				var type_name = get_type_name(mk->dest->type as :variant);
+				var val;
+				var size;
+				match (mk->src) case :arg(var a) {
+					val = get_reg_ref(ref state, a);
+					size = 'sizeof(' . get_type_name(mk->inner_type) . ')';
+				} case :emp {
+					val = 'NULL';
+					size = 0;
+				}
+				print(ref state, get_variant_make_fun_name(type_name, state->mod_name) . '(' .
+					get_reg_ref(ref state, mk->dest) . ', ' . mk->label_no . ', ' . val . ', ' . size . ')');
 			}
 		}
-		print(ref state, get_assign(ref state, mk->dest, r));
 	} case :prt_lbl(var l) {
 		print(ref state, 'label_' . l . ':' . string::lf());
 		return;
@@ -852,8 +894,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			print(ref state, '//clear ' . get_reg(ref state, reg));
 			#TODO
 		} case :arr(var type) {
+			#TODO
 			var type_name = get_type_name(type);
 			print(ref state, 'free_mem(' . get_reg(ref state, reg) . '.value, ' . get_reg(ref state, reg) . '.capacity*sizeof(' . type_name . '))');
+		} case :variant(var type) {
+			#TODO
+			print(ref state, '//clear ' . get_reg(ref state, reg));
 		}
 	} case :var_decl(var decl) {
 	} case :use_field(var use_field) {
@@ -864,6 +910,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print_use_index(ref state, use_index);
 	} case :release_index(var release_index) {
 		print(ref state, get_reg(ref state, release_index->current_owner) . ' = NULL');
+	} case :use_variant(var use_variant) {
+		print_use_variant(ref state, use_variant);
+	} case :release_variant(var release_variant) {
+		if (release_variant->current_owner->type is :im || release_variant->current_owner->access_type is :reference) {
+			print(ref state, get_reg(ref state, release_variant->current_owner) . ' = NULL');
+		}
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }
@@ -893,6 +945,9 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 			'.size = 0,
 			'.value = NULL
 			'}';
+	} case :variant(var type) {
+		target_type_name = get_type_name(type);
+		default_value = '{}';
 	}
 	match (reg->access_type) case :value {
 	} case :reference {
@@ -934,6 +989,8 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 		} else {
 			die;
 		}
+	} case :variant(var type) {
+		die; #TODO
 	}
 }
 
@@ -955,6 +1012,8 @@ def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, des
 		die;
 	} case :arr(var type) {
 		die;
+	} case :variant(var type) {
+		die;
 	}
 }
 
@@ -972,6 +1031,8 @@ def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : pt
 		die;
 	} case :arr(var type) {
 		die;
+	} case :variant(var type) {
+		die;
 	}
 }
 
@@ -987,6 +1048,8 @@ def get_value_from_im(type : @nlasm::reg_type, im : ptd::sim()) : ptd::sim() {
 	} case :rec(var rec_type) {
 		die;
 	} case :arr(var arr_type) {
+		die;
+	} case :variant(var var_type) {
 		die;
 	}
 }
@@ -1071,6 +1134,19 @@ def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_i
 	}
 }
 
+def print_use_variant(ref state : @generator_c::state_t, use_variant : @nlasm::use_variant_t) : ptd::void() {
+	var access_op;
+	match (use_variant->old_owner->access_type) case :value {
+		access_op = '.';
+	} case :reference {
+		access_op = '->';
+	}
+	var ret = 'if (' . get_reg(ref state, use_variant->old_owner) . access_op . 'label != ' . use_variant->label_no . ') nl_die();' . string::lf();
+	ret .= get_reg(ref state, use_variant->new_owner) . ' = ' . get_reg(ref state, use_variant->old_owner) . access_op;
+	ret .= 'value.' . get_case_name(use_variant->label);
+	print(ref state, ret);
+}
+
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
@@ -1087,6 +1163,8 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		} case :rec(var type) {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :arr(var type) {
+			return get_reg_value(ref state, reg) . ' = ' . right;
+		} case :variant(var type) {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		}
 	}
@@ -1184,8 +1262,21 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 		return bool_t();
 	} case :tct_var(var vars) {
 		return im_t();
-	} case :tct_own_var(var vars) {
-		return im_t();
+	} case :tct_own_var(var var_values) {
+		var ret = 'struct ' . name . ' {
+			'' . int_t() . ' label;
+			'union {' . string::lf();
+		forh var var_name, var var_value (var_values) {
+			match (var_value) case :with_param(var inner_type) {
+				ret .= get_type_name(inner_type) . ' *' . get_case_name(var_name) . ';' . string::lf();
+			} case :no_param {
+			}
+		}
+		ret .=  'void *internal;
+			'} value;
+			'' . int_t() . ' size;
+			'}';
+		return ret;
 	} case :tct_empty {
 		return im_t();
 	}
@@ -1195,8 +1286,12 @@ def get_field_name(field : ptd::sim()) : ptd::sim() {
 	return field . '0field';
 }
 
+def get_case_name(field : ptd::sim()) : ptd::sim() {
+	return field . '0case';
+}
+
 def get_type_name(type : @tct::meta_type) : ptd::sim() {
-	if (type is :tct_own_rec || type is :tct_own_arr) {
+	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var) {
 		return anon_naming::get_anon_name(type);
 	} else {
 		return get_type_to_c(type, '');
@@ -1271,6 +1366,8 @@ def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
 		ret = 'rec';
 	} case :arr(var type) {
 		ret = 'arr';
+	} case :variant(var type) {
+		ret = 'var';
 	}
 	match (reg->access_type) case :value {
 	} case :reference {
@@ -1336,6 +1433,7 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	} case :tct_bool {
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var vars) {
+		ret .= get_variant_make_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_empty {
 	}
 	return ret;
@@ -1361,7 +1459,8 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 	} case :tct_string {
 	} case :tct_bool {
 	} case :tct_var(var vars) {
-	} case :tct_own_var(var vars) {
+	} case :tct_own_var(var var_type) {
+		ret .= get_variant_make_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_empty {
 	}
 	return ret;
@@ -1439,6 +1538,36 @@ def get_array_len_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
 		'}';
 	return ret;
 }
+
+def get_variant_make_fun_name(variant_type_name : ptd::sim(), mod_name : ptd::sim()) : ptd::sim() {
+	return mod_name . '0' . variant_type_name . '0ov_mk';
+}
+
+def get_variant_make_fun_header(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= 'void ' . get_variant_make_fun_name(variant_type_name, mod_name) . '(';
+	ret .= variant_type_name . ' *var, ';
+	ret .= 'int label, ';
+	ret .= 'void *value, ';
+	ret .= int_t() . ' size)';
+	return ret;
+}
+
+def get_variant_make_fun_def(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = get_variant_make_fun_header(variant_type_name, mod_name) . ' {
+		'var->label = label;
+		'if (var->value.internal != NULL) {
+		'//TODO clean
+		'}
+		'if (value != NULL) {
+		'var->value.internal = alloc_mem(size);
+		'memcpy(var->value.internal, value, size);
+		'}
+		'var->size = size;
+		'}';
+	return ret;
+}
+
 
 def takes_own_arg(function : @nlasm::function_t) : @boolean_t::type {
 	fora var arg (function->args_type) {

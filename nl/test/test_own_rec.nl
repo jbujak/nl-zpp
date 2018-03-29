@@ -8,6 +8,7 @@ use own;
 def test_own_rec::typ_zewnetrzny() {
 	return own::rec({
 		rekord_wewnetrzny => @test_own_rec::typ_wewnetrzny,
+		tablica_wewnetrzna => own::arr(ptd::int()),
 	});
 }
 
@@ -37,13 +38,16 @@ def test_own_rec::test() {
 	var rekord : @test_own_rec::typ_zewnetrzny = {
 		rekord_wewnetrzny => {
 			liczba => 1,
-		}
+		},
+		tablica_wewnetrzna => [1, 2],
 	};
 	var i = 1;
 	for (; rekord->rekord_wewnetrzny->liczba < 100; rekord->rekord_wewnetrzny->liczba++) {
 		die if rekord->rekord_wewnetrzny->liczba != i;
 		i++;
 	}
+	rekord->tablica_wewnetrzna []= 3;
+	die if rekord->tablica_wewnetrzna[2] != 3;
 
 	var zagniezdzenie : @test_own_rec::rekord_zagniezdzony = {
 		rekord_wewnetrzny => {
@@ -64,4 +68,5 @@ def test_own_rec::test() {
 	mieszanie->rekord_wewnetrzny->liczba = 2;
 	mieszanie->rekord_wewnetrzny->liczba++;
 	die if mieszanie->rekord_wewnetrzny->liczba != 3;
+	var wnetrze = mieszanie->rekord_wewnetrzny;
 }

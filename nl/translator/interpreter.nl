@@ -522,9 +522,9 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 	} case :ov_mk(var ov_mk) {
 		var val;
 		match (ov_mk->src) case :arg(var arg) {
-			val = ov::mk_val(ov_mk->name, state->top->vars[arg->reg_no]);
+			val = ov::mk_val(ov_mk->label, state->top->vars[arg->reg_no]);
 		} case :emp {
-			val = ov::mk(ov_mk->name);
+			val = ov::mk(ov_mk->label);
 		}
 		state->top->vars[ov_mk->dest->reg_no] = val unless nlasm::is_empty(ov_mk->dest);
 	} case :prt_lbl(var prt_lbl) {
@@ -551,6 +551,10 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 	} case :use_index(var use_index) {
 		die;
 	} case :release_index(var release_index) {
+		die;
+	} case :use_variant(var use_variant) {
+		die;
+	} case :release_variant(var release_variant) {
 		die;
 	}
 	handle_new_declarations(ref state);
@@ -614,7 +618,7 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 		return false unless nl::is_hash(hash);
 		return false unless nl::is_sim(set_val->key);
 	} case :ov_mk(var ov_mk) {
-		return false unless nl::is_sim(ov_mk->name);
+		return false unless nl::is_sim(ov_mk->label);
 	} case :prt_lbl(var prt_lbl) {
 	} case :if_goto(var if_goto) {
 		var arg = state->top->vars[if_goto->src->reg_no];
@@ -631,6 +635,10 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :use_index(var use_index) {
 		die;
 	} case :release_index(var release_index) {
+		die;
+	} case :use_variant(var use_variant) {
+		die;
+	} case :release_variant(var release_variant) {
 		die;
 	}
 	return true;

@@ -101,6 +101,12 @@ def get_required_types_list(type : @tct::meta_type, ref node : @generator_c_stru
 	} case :tct_bool {
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var vars) {
+		forh var v_name, var v_type (vars) {
+			match (v_type) case :with_param(var param_type) {
+				get_required_types_list(param_type, ref node, module, true);
+			} case :no_param {
+			}
+		}
 	} case :tct_empty {
 	}
 }
@@ -123,6 +129,7 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 	} case :tct_bool {
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var vars) {
+		return true;
 	} case :tct_empty {
 	}
 	return false;
@@ -329,7 +336,7 @@ def type_to_anon_function(type : @tct::meta_type) : @generator_c_struct_dependen
 }
 
 def anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_struct_dependence_sort::function_t)) {
-	if (type is :tct_own_rec || type is :tct_own_arr) {
+	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var) {
 		var anon_name = anon_naming::get_anon_name(type);
 		if (hash::has_key(anons, anon_name)) {
 			return;
@@ -347,6 +354,14 @@ def deep_anon_add(type : @tct::meta_type, ref anons : ptd::hash(@generator_c_str
 	} elsif (type is :tct_own_arr) {
 		deep_anon_add(type as :tct_own_arr, ref anons);
 		anon_add(type, ref anons);
+	} elsif (type is :tct_own_var) {
+		forh var v_name, var v_type (type as :tct_own_var) {
+			match (v_type) case :with_param(var param_type) {
+				deep_anon_add(param_type, ref anons);
+			} case :no_param {
+			}
+		}
+		anon_add(type, ref anons);
 	}
 }
 
@@ -363,8 +378,10 @@ def get_anons(funs : ptd::arr(@nlasm::function_t)) : ptd::arr(@generator_c_struc
 		fora var r (f->registers) {
 			if (r->type is :rec) {
 				deep_anon_add(r->type as :rec, ref anons);
-			} elsif (r->type is :arr){
+			} elsif (r->type is :arr) {
 				deep_anon_add(r->type as :arr, ref anons);
+			} elsif (r->type is :variant) {
+				deep_anon_add(r->type as :variant, ref anons);
 			}
 		}
 		match (f->defines_type) case :no {

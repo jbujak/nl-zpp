@@ -119,6 +119,8 @@ def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_ty
 		return :ok if hash::size(as_type as :tct_own_rec) == 0 && from->type is :tct_own_rec;
 	} elsif (as_type is :tct_var) {
 		return :ok if hash::size(as_type as :tct_var) == 0 && from->type is :tct_var;
+	} elsif (as_type is :tct_own_var) {
+		return :ok if hash::size(as_type as :tct_own_var) == 0 && from->type is :tct_own_var;
 	}
 	var ref_inf = {level => 1, from => {}, to => {}, check => false, cast => false};
 	return check_assignment_info(as_type, from->type, ref_inf, from->src, ref modules, ref errors);
@@ -473,6 +475,37 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok if from is :tct_bool;
 		return mk_err(to, from);
 	} case :tct_var(var vars) {
+		var from_var;
+		if (from is :tct_var) {
+			from_var = from as :tct_var;
+		} elsif (from is :tct_own_var) {
+			from_var = from as :tct_own_var;
+		} else {
+			return mk_err(to, from);
+		}
+		forh var name, var from_type (from_var) {
+			return mk_err(to, from) unless hash::has_key(vars, name);
+			var to_type = hash::get_value(vars, name);
+			match (from_type) case :no_param {
+				match (to_type) case :no_param {
+					continue;
+				} case :with_param(var t_t) {
+					return mk_err(to, from);
+				}
+			} case :with_param(var f_t) {
+				match (to_type) case :no_param {
+					return mk_err(to, from);
+				} case :with_param(var t_t) {
+					match (check_assignment_info(t_t, f_t, ref_inf, type_src, ref modules, ref errors)) case :ok {
+					} case :err(var info) {
+						array::push(ref info->stack, :ptd_var(name));
+						return :err(info);
+					}
+				}
+			}
+		}
+		return :ok;
+	} case :tct_own_var(var vars) {
 		return mk_err(to, from) unless from is :tct_var;
 		var from_var = from as :tct_var;
 		forh var name, var from_type (from_var) {
@@ -497,8 +530,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			}
 		}
 		return :ok;
-	} case :tct_own_var(var vars) {
-		die; #TODO
+
 	} case :tct_empty {
 		return :ok;
 	}

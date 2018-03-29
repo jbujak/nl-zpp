@@ -268,6 +268,10 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		die;
 	} case :release_index(var release_index) {
 		die;
+	} case :use_variant(var use_variant) {
+		die;
+	} case :release_variant(var release_variant) {
+		die;
 	}
 	print(ref state, string::lf());
 }
@@ -362,17 +366,17 @@ def print_set_val(set_val : ptd::rec({src => @nlasm::reg_t, key => ptd::sim(), v
 
 def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref state : @generator_pm::state_t) : ptd::void() {
 	print_register_to_assign(ov_mk->dest, ref state);
-	if (ov_mk->src is :emp && (ov_mk->name eq 'TRUE')) {
+	if (ov_mk->src is :emp && (ov_mk->label eq 'TRUE')) {
 		print(ref state, 'c_rt_lib::to_nl(1);');
-	} elsif (ov_mk->src is :emp && (ov_mk->name eq 'FALSE')) {
+	} elsif (ov_mk->src is :emp && (ov_mk->label eq 'FALSE')) {
 		print(ref state, 'c_rt_lib::to_nl(0);');
 	} else {
 		match (ov_mk->src) case :arg(var arg) {
-			print(ref state, 'c_rt_lib::ov_mk_arg(''' . ov_mk->name . ''', ');
+			print(ref state, 'c_rt_lib::ov_mk_arg(''' . ov_mk->label . ''', ');
 			print_register(arg, ref state);
 			print(ref state, ');');
 		} case :emp {
-			print(ref state, 'c_rt_lib::ov_mk_none(''' . ov_mk->name . ''');');
+			print(ref state, 'c_rt_lib::ov_mk_none(''' . ov_mk->label . ''');');
 		}
 	}
 }

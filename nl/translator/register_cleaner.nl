@@ -111,12 +111,14 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 				dest => map{op->dest->reg_no},
 				src => map{op->src->reg_no},
 				type => op->type,
+				label_no => op->label_no,
 			});
 		} case :ov_as(var op) {
 			new_cmd = :ov_as({
 				dest => map{op->dest->reg_no},
 				src => map{op->src->reg_no},
 				type => op->type,
+				label_no => op->label_no,
 			});
 		} case :return(var ret) {
 			match (ret) case :val(var val) {
@@ -180,7 +182,9 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			new_cmd = :ov_mk({
 				dest => map{ov->dest->reg_no},
 				src => new_arg,
-				name => ov->name,
+				label => ov->label,
+				label_no => ov->label_no,
+				inner_type => ov->inner_type,
 			});
 		} case :prt_lbl(var lbl) {
 			new_cmd = :prt_lbl(lbl);
@@ -216,6 +220,17 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			new_cmd = :release_index({
 				current_owner => map{release_index->current_owner->reg_no},
 				index => map{release_index->index->reg_no},
+			});
+		} case :use_variant(var use_variant) {
+			new_cmd = :use_variant({
+				new_owner => map{use_variant->new_owner->reg_no},
+				old_owner => map{use_variant->old_owner->reg_no},
+				label => use_variant->label,
+				label_no => use_variant->label_no,
+			});
+		} case :release_variant(var release_variant) {
+			new_cmd = :release_variant({
+				current_owner => map{release_variant->current_owner->reg_no},
 			});
 		}
 		new_cmds []= {
@@ -339,6 +354,10 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{use_index->val->reg_no} = true;
 			regs{use_index->index->reg_no} = true;
 		} case :release_index(var release_index) {
+		} case :use_variant(var use_variant) {
+			regs{use_variant->src->reg_no} = true;
+			regs{use_variant->val->reg_no} = true;
+		} case :release_variant(var release_variant) {
 		}
 	}
 	return regs;

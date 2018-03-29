@@ -16,6 +16,7 @@ use test_fun;
 use test_ensure;
 use test_own_rec;
 use test_own_arr;
+use test_own_var;
 use nl;
 use string;
 
@@ -44,6 +45,8 @@ def test_nl::test_compile_and_run() {
 	test_own_rec::test();
 	p('test_own_arr');
 	test_own_rec::test();
+	p('test_own_var');
+	test_own_var::test();
 	p('str');
 	test_str::test();
 	p('forh');

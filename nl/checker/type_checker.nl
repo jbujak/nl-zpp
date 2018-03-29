@@ -690,7 +690,8 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		} case :ov_as {
 			ret_type = {type => tct::tct_im(), src => left_type2->src};
 		}
-		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors)) {
+		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors) ||
+				ptd_system::is_accepted(left_type2, tct::own_var({}), ref modules, ref errors)) {
 			return ret_type unless left_type2->type is :tct_var;
 			var variants = left_type2->type as :tct_var;
 			if (!hash::has_key(variants, var_op->case)) {
@@ -1251,6 +1252,16 @@ def rec_get_var_from_lval(lval : @nast::value_t, ref errors : @tc_types::errors_
 		} else {
 			add_error(ref errors, 'invalid operator ' . (bin_op->op) . ' used in lvalue');
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		a = rec_get_var_from_lval(var_op->left, ref errors);
+		a []= :variant(var_op->case);
+		match (var_op->op) case :ov_as {
+		} case :ov_is {
+			add_error(ref errors, 'invalid operator is used in lvalue');
+		}
+	} elsif (lval->value is :parenthesis) {
+		a = rec_get_var_from_lval(lval->value as :parenthesis, ref errors);
 	} else {
 		add_error(ref errors, 'invalid type for lvalue');
 	}
@@ -1301,6 +1312,21 @@ def mk_new_type_lval(var_tab : @tc_types::lval_path, rtype : @tc_types::type, lt
 				hash::set_value(ref tt, name, rtype->type);
 			}
 			return tct::rec(tt);
+		} case :variant(var label) {
+			return tct::tct_im() unless ltype->type is :tct_var;
+			var variant = ltype->type as :tct_var;
+			if (hash::has_key(variant, label)) {
+				ltype->type = (ltype->type as :tct_var){label} as :with_param;
+				hash::set_value(ref variant, label, mk_new_type_lval(var_tab, rtype, ltype, empty_type, ref modules, ref 
+						errors, known_types));
+			} else {
+				if (array::len(var_tab) != 1) {
+					return tct::tct_im();
+				}
+				ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors);
+				variant{label} = rtype->type;
+			}
+			return tct::var(variant);
 		}
 	}
 }
@@ -1935,10 +1961,18 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 		value->value = :parenthesis(parenthesis);
 		value->type = parenthesis->type;
 	} case :variant(var variant) {
-		#TODO
-		if (variant->name eq 'TRUE' || variant->name eq 'FALSE') { #TODO remove when bool is rewritten completely
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
+		if (variant->name eq 'TRUE' || variant->name eq 'FALSE') {
 			value->type = :tct_bool;
 		}
+		if (value_type is :tct_own_var) {
+			match ((value_type as :tct_own_var){variant->name}) case :with_param(var param_type) {
+				variant->var->type = param_type;
+			} case :no_param {
+			}
+		}
+		fill_value_types(ref variant->var, vars, modules, ref errors, known_types);
+		value->value = :variant(variant);
 	} case :const(var as_const) {
 		value->type = :tct_int;
 	} case :arr_decl(var arr_decl) {
@@ -1966,9 +2000,21 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 		fill_binary_op_type(ref value, vars, modules, ref errors, known_types);
 	} case :var_op(var var_op) {
 		fill_var_op_type(ref value, vars, modules, ref errors, known_types);
-		if (var_op->op is :ov_is) {
+		var_op = value->value as :var_op;
+		match (var_op->op) case :ov_is {
 			value->type = :tct_bool;
-		}	
+		} case :ov_as {
+			var left_type = unwrap_ref(var_op->left->type, ref modules, ref errors);
+			if (left_type is :tct_own_var) {
+				match ((left_type as :tct_own_var){var_op->case}) case :with_param(var inner_type) {
+					value->type = inner_type;
+				} case :no_param {
+					add_error(ref errors, 'Cannot use as with variant without value');
+				}
+			} else {
+				value->type = :tct_im;
+			}
+		}
 	} case :unary_op(var unary_op) {
 		fill_unary_op_type(ref value, vars, modules, ref errors, known_types);
 	} case :fun_label(var fun_label) {

@@ -491,6 +491,15 @@ def check_lvalue(ref state : @nparser::state_t, lval : @nast::value_t) : ptd::vo
 			check_lvalue(ref state, bin_op->left);
 			return;
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		if (var_op->op is :ov_as) {
+			check_lvalue(ref state, var_op->left);
+			return;
+		}
+	} elsif (lval->value is :parenthesis) {
+		check_lvalue(ref state, lval->value as :parenthesis);
+		return;
 	}
 	add_error(ref state, 'invalid expr for lvalue');
 }

@@ -41,7 +41,16 @@ def get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_var(var vars) {
 		return '0im';
 	} case :tct_own_var(var vars) {
-		return '0im';
+		var ret = '0VB';
+		forh var v_name, var v_type (vars) {
+			match (v_type) case :with_param(var param_type) {
+				ret .= anon_naming::get_anon_name(param_type) . '0' . v_name . '0';
+			} case :no_param {
+				ret .= 'none0' . v_name . '0';
+			}
+		}
+		ret .= 'VE';
+		return ret;
 	} case :tct_empty {
 		return '0im';
 	}

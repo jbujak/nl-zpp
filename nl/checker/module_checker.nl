@@ -542,6 +542,15 @@ def check_lvalue(lval : @nast::value_t, ref state : @module_checker::state_t) : 
 			check_val(bin_op->right, ref state);
 			return;
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		if (var_op->op is :ov_as) {
+			check_lvalue(var_op->left, ref state);
+			return;
+		}
+	} elsif (lval->value is :parenthesis) {
+		check_lvalue(lval->value as :parenthesis, ref state);
+		return;
 	}
 	add_error(ref state->errors, 'invalid expression for lvalue');
 }
