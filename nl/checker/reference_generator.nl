@@ -235,7 +235,7 @@ def process_match(ref ret : @reference_generator::refs, module : @reference_gene
 	process_value(ref ret, module, match_cmd->val);
 	fora var branch (match_cmd->branch_list) {
 		match (branch->variant->value) case :value(var var_decl) {
-			process_var_decl(ref ret, module, var_decl);
+			process_var_decl(ref ret, module, var_decl->declaration);
 		} case :none {
 		}
 		process_cmd(ref ret, module, branch->cmd);

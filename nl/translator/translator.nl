@@ -788,8 +788,13 @@ def print_match(as_match : @nast::match_t, ref state : @translator::state_t) {
 		start_new_instruction(case_el->cmd->debug, ref state);
 		print_sim_label(case_labels[i], ref state);
 		match (case_el->variant->value) case :value(var variant_value) {
-			var var_reg = print_var_decl(variant_value, ref state, :value);
-			print(ref state, :ov_as({dest => var_reg, src => arg, type => case_el->variant->name, label_no => -1}));
+			match (variant_value->mod) case :none {
+				var var_reg = print_var_decl(variant_value->declaration, ref state, :value);
+				print(ref state, :ov_as({dest => var_reg, src => arg, type => case_el->variant->name, label_no => -1}));
+			} case :ref {
+				var var_reg = print_var_decl(variant_value->declaration, ref state, :reference);
+				use_variant(var_reg, arg, case_el->variant->name, ref state);
+			}
 		} case :none {
 		}
 		print_cmd(case_el->cmd, ref state);
@@ -885,10 +890,22 @@ def print_if_goto(destination : ptd::sim(), reg : @nlasm::reg_t, ref state : @tr
 	print(ref state, :if_goto({dest => destination, src => reg}));
 }
 
-def print_get_from_index(destination : @nlasm::reg_t, label : @nlasm::reg_t, index : @nlasm::reg_t, ref state : 
+def print_get_from_index(destination : @nlasm::reg_t, src : @nlasm::reg_t, index : @nlasm::reg_t, ref state : 
 	@translator::state_t) {
 	var real_index = get_cast(index, :int, ref state);
-	print(ref state, :get_frm_idx({dest => destination, src => label, idx => real_index}));
+	var type_from_src;
+	if (src->type is :im) {
+		type_from_src = :im;
+	} elsif (src->type is :arr) {
+		type_from_src = var_type_to_reg_type((src->type as :arr) as :tct_own_arr, state->logic->defined_types);
+	} else {
+		die;
+	}
+	var dest_cast_needed = !nlasm::eq_reg_type(type_from_src, destination->type);
+	var tmp_destination = destination;
+	tmp_destination = new_register(ref state, type_from_src) if dest_cast_needed;
+	print(ref state, :get_frm_idx({dest => tmp_destination, src => src, idx => real_index}));
+	move(destination, tmp_destination, ref state) if dest_cast_needed;
 }
 
 def print_set_at_index(label : @nlasm::reg_t, index : @nlasm::reg_t, value : @nlasm::reg_t, ref state : 
@@ -907,7 +924,6 @@ def print_array_push(dest : @nlasm::reg_t, value : @nlasm::reg_t, ref state : @t
 
 def print_get_value(destination : @nlasm::reg_t, label : @nlasm::reg_t, key : ptd::sim(), ref state : 
 	@translator::state_t) {
-	#TODO use
 	print(ref state, :get_val({dest => destination, src => label, key => key}));
 }
 

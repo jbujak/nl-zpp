@@ -737,7 +737,8 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			var r = get_fun_lib('priv_as', [get_reg_value(ref state, ov_as->src), get_const_sim(ref state, ov_as->type)]);
 			print(ref state, get_assign(ref state, ov_as->dest, r));
 		} elsif (ov_as->src->type is :variant) {
-			var right = '*('.  get_reg_value(ref state, ov_as->src) . '.value.' . get_case_name(ov_as->type) . ')';
+			var access_op = get_access_op(ov_as->src);
+			var right = '*('.  get_reg(ref state, ov_as->src) . access_op . 'value.' . get_case_name(ov_as->type) . ')';
 			if (ov_as->dest->type is :im) {
 				var left = get_reg_ref(ref state, ov_as->dest);
 				print(ref state, get_fun_lib('copy', [left, right]));
@@ -785,7 +786,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			die;
 		}
 	} case :get_frm_idx(var get) {
-		var r = get_fun_lib('array_get', [get_reg(ref state, get->src), get_reg(ref state, get->idx)]);
+		var r = get_fun_lib('array_get', [get_reg_value(ref state, get->src), get_reg(ref state, get->idx)]);
 		print(ref state, get_assign(ref state, get->dest, r));
 	} case :set_at_idx(var set) {
 		print(ref state, get_fun_lib('array_set', [
@@ -1135,12 +1136,7 @@ def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_i
 }
 
 def print_use_variant(ref state : @generator_c::state_t, use_variant : @nlasm::use_variant_t) : ptd::void() {
-	var access_op;
-	match (use_variant->old_owner->access_type) case :value {
-		access_op = '.';
-	} case :reference {
-		access_op = '->';
-	}
+	var access_op = get_access_op(use_variant->old_owner);
 	var ret = 'if (' . get_reg(ref state, use_variant->old_owner) . access_op . 'label != ' . use_variant->label_no . ') nl_die();' . string::lf();
 	ret .= get_reg(ref state, use_variant->new_owner) . ' = ' . get_reg(ref state, use_variant->old_owner) . access_op;
 	ret .= 'value.' . get_case_name(use_variant->label);
@@ -1574,4 +1570,12 @@ def takes_own_arg(function : @nlasm::function_t) : @boolean_t::type {
 		return true unless arg->register->type is :im;
 	}
 	return false;
+}
+
+def get_access_op(reg : @nlasm::reg_t) : ptd::sim() {
+	match (reg->access_type) case :value {
+		return '.';
+	} case :reference {
+		return '->';
+	}
 }

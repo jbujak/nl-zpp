@@ -526,6 +526,9 @@ def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
 	profile::begin('module checking');
 	check_modules(ref asts, ref errors, opt_cli->deref, opt_cli->check_public_fun);
 	profile::end('module_checking');
+	if (hash::has_key(asts, 'main')) {
+		c_fe_lib::string_to_file('asts.df', dfile::ssave(asts->main));
+	}
 	if (show_and_count_errors(errors, opt_cli, nianio_files) > 0) {
 		return 1;
 	}
@@ -540,9 +543,6 @@ def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
 		var modules = translate(asts, ref const_state);
 		profile::end('translate to nlasm');
 
-		if (hash::has_key(asts, 'main')) {
-			c_fe_lib::string_to_file('asts.df', dfile::ssave(asts->main));
-		}
 		if (hash::has_key(modules, 'main')) {
 			c_fe_lib::string_to_file('nlasm.df', dfile::ssave(modules->main));
 		}

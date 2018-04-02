@@ -527,11 +527,16 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 	var type_is_match : @boolean_t::type = false;
 	var branch_var_types : ptd::hash(@tct::meta_type) = {};
 	var variants : ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})) = {};
-	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors) &&
+			!ptd_system::is_accepted(val_type, tct::own_var({}), ref modules, ref errors)) {
 		add_error(ref errors, 'wrong type used as match argument: ' . get_print_tct_type_name(val_type->type));
 	}
-	if (val_type->type is :tct_var) {
-		variants = val_type->type as :tct_var;
+	if (val_type->type is :tct_var || val_type->type is :tct_own_var) {
+		if (val_type->type is :tct_var) {
+			variants = val_type->type as :tct_var;
+		} else {
+			variants = val_type->type as :tct_own_var;
+		}
 		var used_variants : ptd::hash(@boolean_t::type) = {};
 		fora var branch (branches) {
 			var variant_name : ptd::sim() = branch->variant->name;
@@ -564,7 +569,7 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 			if (hash::has_key(hash_b, variant_name));
 		hash::set_value(ref hash_b, variant_name, 1);
 		match (branch->variant->value) case :value(var var_decl) {
-			check_var_decl(var_decl, ref modules, ref vars_case, ref errors, known_types);
+			check_var_decl(var_decl->declaration, ref modules, ref vars_case, ref errors, known_types);
 			var branch_var_type : @tct::meta_type;
 			if (type_is_match) {
 				continue if (!hash::has_key(variants, variant_name));
@@ -576,8 +581,17 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 			} else {
 				branch_var_type = tct::tct_im();
 			}
-			add_var_decl_to_vars(tct::tct_im(), var_decl->name, ref vars_case);
-			set_type_to_variable(ref vars_case, var_decl->name, branch_var_type);
+			match (var_decl->mod) case :none {
+				if (tct::is_own_type(val_type->type, known_types)) {
+					add_error(ref errors, 'case param of own variant has to be ref');
+				}
+			} case :ref {
+				if (!tct::is_own_type(val_type->type, known_types)) {
+					add_error(ref errors, 'case param of non-own variant cannot be ref');
+				}
+			}
+			add_var_decl_to_vars(tct::tct_im(), var_decl->declaration->name, ref vars_case);
+			set_type_to_variable(ref vars_case, var_decl->declaration->name, branch_var_type);
 		} case :none {
 			if (hash::has_key(branch_var_types, variant_name)) {
 				add_error(ref errors, 'variant `:' . variant_name . ' should has param');
@@ -585,9 +599,9 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 		}
 		check_cmd(ref as_match->branch_list[i]->cmd, ref modules, ref vars_case, ref errors, known_types);
 		match (branch->variant->value) case :value(var var_decl) {
-			var_decl->tct_type = :type(vars_case{var_decl->name}->type);
+			var_decl->declaration->tct_type = :type(vars_case{var_decl->declaration->name}->type);
 			as_match->branch_list[i]->variant->value = :value(var_decl);
-			hash::delete(ref vars_case, var_decl->name) unless hash::has_key(vars_op, var_decl->name);
+			hash::delete(ref vars_case, var_decl->declaration->name) unless hash::has_key(vars_op, var_decl->declaration->name);
 		} case :none {
 		}
 		if (first) {
@@ -1935,11 +1949,17 @@ def fill_value_types_in_unless_mod(ref unless_mod : @nast::unless_mod_t, vars : 
 def fill_value_types_in_match(ref as_match : @nast::match_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
 	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
 	fill_value_types(ref as_match->val, vars, modules, ref errors, known_types);
+	var variant_type = unwrap_ref(as_match->val->type, ref modules, ref errors);
 	rep var i (array::len(as_match->branch_list)) {
 		match (as_match->branch_list[i]->variant->value) case :none {
 		} case :value(var value) {
-			match (value->tct_type) case :type(var type) {
-				add_var_to_vars({overwrited => :no, type => type}, value->name, ref vars);
+			if (variant_type is :tct_own_var) {
+				var label = as_match->branch_list[i]->variant->name;
+				value->declaration->tct_type = :type((variant_type as :tct_own_var){label} as :with_param);
+				as_match->branch_list[i]->variant->value = :value(value);
+			}
+			match (value->declaration->tct_type) case :type(var type) {
+				add_var_to_vars({overwrited => :no, type => type}, value->declaration->name, ref vars);
 			} case :none {
 				die;
 			}

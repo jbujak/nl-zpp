@@ -187,7 +187,7 @@ def print_variant(variant : @nast::variant_t) : @wprinter::pretty_t {
 def print_variant_case_decl(variant : @nast::variant_decl_t) : @wprinter::pretty_t {
 	var ret : @wprinter::pretty_arr_t = [wprinter::build_sim(':' . variant->name)];
 	match (variant->value) case :value(var value) {
-		array::append(ref ret, [wprinter::build_sim('('), print_var_decl(value), wprinter::build_sim(')')]);
+		array::append(ref ret, [wprinter::build_sim('('), print_var_decl(value->declaration), wprinter::build_sim(')')]);
 	} case :none {
 	}
 	return wprinter::build_pretty_op_l(ret);

@@ -186,9 +186,6 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		add_error(ref errors, 'cannnot assign these two types to one variable - types merge failed.');
 		return :tct_im;
 	}
-	if (tct::is_own_type(a, known_types) || tct::is_own_type(b, known_types)) {
-		add_error(ref errors, 'own type cannot take part in assignment');
-	}
 	return a if (b is :tct_empty);
 	match (a) case :tct_empty {
 		return b;
@@ -223,7 +220,9 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::arr(cross_type(arr, b as :tct_arr, ref_inf, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_arr(var arr) {
-		die; #TODO
+		if (b is :tct_own_arr) {
+			return tct::own_arr(cross_type(arr, b as :tct_own_arr, ref_inf, ref modules, ref errors, known_types));
+		}
 	} case :tct_var(var variants) {
 		var fin = variants;
 		if (b is :tct_var) {
