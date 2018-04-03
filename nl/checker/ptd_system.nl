@@ -262,7 +262,41 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::var(fin);
 		}
 	} case :tct_own_var(var variants) {
-		die; #TODO
+		var fin = variants;
+		if (b is :tct_own_var) {
+			var ret = b as :tct_own_var;
+			forh var field, var type (variants) {
+				if (hash::has_key(ret, field)) {
+					var t2 = hash::get_value(ret, field);
+					match (t2) case :with_param(var typ) {
+						match (type) case :with_param(var typ2) {
+							hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors, known_types));
+						} case :no_param {
+							add_error(ref errors, 'incompatible own types');
+						}
+					} case :no_param {
+						match (type) case :with_param(var typ) {
+							add_error(ref errors, 'incompatible own types');
+						} case :no_param {
+							hash::set_value(ref fin, field, tct::none());
+						}
+					}
+				} else {
+					add_error(ref errors, 'incompatible own types');
+				}
+			}
+			forh var field, var type (ret) {
+				continue if (hash::has_key(fin, field));
+				match (type) case :with_param(var typ) {
+					hash::set_value(ref fin, field, typ);
+				} case :no_param {
+					hash::set_value(ref fin, field, tct::none());
+				}
+			}
+			return tct::var(fin);
+		} else {
+			add_error(ref errors, 'incompatible own types');
+		}
 	} case :tct_rec(var reca) {
 		if (b is :tct_rec) {
 			var recb = b as :tct_rec;
@@ -505,8 +539,14 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		}
 		return :ok;
 	} case :tct_own_var(var vars) {
-		return mk_err(to, from) unless from is :tct_var;
-		var from_var = from as :tct_var;
+		var from_var;
+		if (from is :tct_var) {
+			from_var = from as :tct_var;
+		} elsif (from is :tct_own_var) {
+			from_var = from as :tct_own_var;
+		} else {
+			return mk_err(to, from);
+		}
 		forh var name, var from_type (from_var) {
 			return mk_err(to, from) unless hash::has_key(vars, name);
 			var to_type = hash::get_value(vars, name);

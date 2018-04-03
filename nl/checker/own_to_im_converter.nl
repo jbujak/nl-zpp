@@ -73,9 +73,9 @@ def own_to_im_converter::get_required_arg_type(type : @tct::meta_type, known_typ
 	} case :tct_bool {
 		return '';
 	} case :tct_empty {
-		die;#TODO no i co teras?
+		die;
 	} case :tct_void {
-		die;#TODO no i co teras?
+		die;
 	} case :tct_im {
 		return '';
 	}
@@ -142,11 +142,11 @@ def get_type_constructor(type : @tct::meta_type, remove_owns : @boolean_t::type,
 	} case :tct_bool {
 		res = 'ptd::bool()';
 	} case :tct_empty {
-		#TODO no i co teras?
+		die;
 	} case :tct_void {
-		#TODO no i co teras?
+		die;
 	} case :tct_im {
-		res = 'ptd::im()';
+		res = 'ptd::ptd_im()';
 	}
 	return res;
 }
@@ -199,8 +199,8 @@ def own_to_im_converter::get_function(type : @tct::meta_type, known_types : ptd:
 			match (p_type) case :with_param (var v) {
 				conv_fun_name = own_to_im_converter::get_function_name(v, known_types);
 				hash::set_value(ref required_functions, conv_fun_name, v);
-				body .= 'case :' . name . '(var v_p){return :'. name . '(' . own_to_im_converter::get_function_name(v, known_types)
-					. '(' . own_to_im_converter::get_required_arg_type(v, known_types) . 'v_p));} ';
+				body .= 'case :' . name . '(ref v_p){return :'. name . '(' . own_to_im_converter::get_function_name(v, known_types)
+					. '(' . own_to_im_converter::get_required_arg_type(v, known_types) . ' v_p));} ';
 			} case :no_param {
 				body .= 'case :' . name . '{return :' . name . ';} ';
 			}
@@ -216,9 +216,9 @@ def own_to_im_converter::get_function(type : @tct::meta_type, known_types : ptd:
 	} case :tct_bool {
 		die;
 	} case :tct_empty {
-		#TODO no i co teras?
+		die;
 	} case :tct_void {
-		#TODO no i co teras?
+		die;
 	} case :tct_im {
 		die;
 	}
