@@ -15,6 +15,8 @@ use nast;
 use ptd_parser;
 use ptd_system;
 use singleton;
+use own_to_im_converter;
+use nparser;
 
 def type_to_ptd(type : @nast::variable_type_t, ref errors : @tc_types::errors_t) : @tct::meta_type {
 	match (type) case :type(var tt) {
@@ -138,7 +140,7 @@ def prepare_def_fun(modules : ptd::hash(@nast::module_t), ref errors : @tc_types
 }
 
 def type_checker::check(modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) :
-	@tc_types::return_t {
+		@tc_types::return_t {
 	return type_checker::check_modules(ref modules, lib_modules);
 }
 
@@ -156,21 +158,110 @@ def gather_types(modules : ptd::hash(@nast::module_t)) : ptd::hash(@tct::meta_ty
 }
 
 def type_checker::check_modules(ref modules : ptd::hash(@nast::module_t), lib_modules : ptd::hash(@nast::module_t)) :
-	@tc_types::return_t {
+		@tc_types::return_t {
 	var errors : @tc_types::errors_t = {errors => [], warnings => [], current_line => -1, module => ''};
+	var known_types : ptd::hash(@tct::meta_type) = gather_types(modules);
+	
+	forh var module_name, var ast (modules) {
+		var own_conv : ptd::hash(@tct::meta_type) = {};
+		fora var func (ast->fun_def) {
+			match (func->defines_type) case :yes(var type) {
+				if (tct::is_own_type(type, {})) {
+					var ref_type : @tct::meta_type = :tct_ref(module_name . '::' . func->name);
+					hash::set_value(ref own_conv, own_to_im_converter::get_function_name(ref_type, known_types), ref_type);
+				}
+			} case :no {
+			}
+		}
+		var new_module : @nast::module_t = create_own_convertions_module(own_conv, known_types, module_name);
+		var m : ptd::arr(@nast::fun_def_t) = ast->fun_def;
+		array::append(ref m, new_module->fun_def);
+		modules{module_name}->fun_def = m;
+		lib_modules{module_name}->fun_def = m;
+	}
+	
 	var def_fun : @tc_types::defs_funs_t = prepare_def_fun(lib_modules, ref errors);
 	var deref : @tc_types::deref_types = {delete => [], create => []};
-	var known_types : ptd::hash(@tct::meta_type) = gather_types(modules);
+
 	forh var module_name, var ast (modules) {
 		errors->current_line = -1;
 		errors->module = module_name;
 		check_module(ref modules{module_name}, ref def_fun, ref errors, ref deref, known_types);
 	}
+	
 	return {errors => errors->errors, deref => deref, warnings => errors->warnings};
 }
 
+def get_own_conv_defs(ref defs : ptd::hash(ptd::sim()), types : ptd::hash(@tct::meta_type),
+		known_types : ptd::hash(@tct::meta_type)) {
+	var r : @own_to_im_converter::res_t;
+	forh var name, var type (types) {
+		if (hash::has_key(defs, name)) {
+			continue;
+		}
+		r = own_to_im_converter::get_function(type, known_types);
+		hash::set_value(ref defs, name, r->body);
+		get_own_conv_defs(ref defs, r->required_functions, known_types);
+	}
+}
+
+def create_own_convertions_module(own_conv : ptd::hash(@tct::meta_type), known_types : ptd::hash(@tct::meta_type),
+		moudule_name : ptd::sim()) : @nast::module_t {
+	var own_conv_defs : ptd::hash(ptd::sim()) = {};
+	get_own_conv_defs(ref own_conv_defs, own_conv, known_types);
+
+	var new_code : ptd::sim() = ''; 
+	forh var name, var body (own_conv_defs) {
+		new_code .= body . string::lf();
+	}
+	match (nparser::sparse(new_code, moudule_name)) case :error(var e) {
+		die;
+	} case :ok(var new_module) {
+		return new_module;
+	}
+}
+
+def check_func(i : ptd::sim(), ref modules : @tc_types::modules_t, ref own_conv : ptd::hash(@tct::meta_type), ref module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t, ref errors : @tc_types::errors_t, ref deref : @tc_types::deref_types, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+	var fun_vars : @tc_types::vars_t = {};
+	var fun_def : @nast::fun_def_t = module->fun_def[i];
+	rep var j (array::len(fun_def->args)) {
+		var fun_arg = fun_def->args[j];
+		var arg_type = type_to_ptd(fun_arg->type, ref errors);
+		if (tct::is_own_type(arg_type, known_types)) {
+			match (fun_arg->mod) case :ref {
+			} case :none {
+				add_error(ref errors, 'Function ' . fun_def->name . ' takes non-ref own argument '
+					. fun_arg->name);
+			}
+		}
+		check_types_imported(arg_type, ref modules, ref errors);
+		add_var_decl_to_vars(arg_type, fun_arg->name, ref fun_vars);
+		module->fun_def[i]->args[j]->tct_type = :type(arg_type);
+	}
+	modules->env->ret_type = return_type_to_tct(fun_def->ret_type->type, ref errors);
+	if (tct::is_own_type(modules->env->ret_type, known_types)) {
+			add_error(ref errors, 'Function ' . fun_def->name . ' returns own type.');
+	}
+	check_types_imported(modules->env->ret_type, ref modules, ref errors);
+	check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors, known_types);
+	var fun_name = get_function_name(module->name, fun_def->name);
+	if (hash::has_key(get_special_functions(), fun_name)) {
+		var special_fun_def = get_special_functions(){fun_name};
+		module->fun_def[i]->ret_type->tct_type = special_fun_def->r;
+		rep var j (array::len(module->fun_def[i]->args)) {
+			module->fun_def[i]->args[j]->tct_type = :type(special_fun_def->a[j]->type);
+			fun_vars{module->fun_def[i]->args[j]->name} = {overwrited => :no, type => special_fun_def->a[j]->type, referenced_by => :none};
+		}
+	} else {
+		module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
+	}
+	if (array::is_empty(errors->errors)) {
+		fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors, known_types, ref own_conv, module->name);
+	}
+}
+
 def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_funs_t, ref errors : @tc_types::errors_t, ref
-	deref : @tc_types::deref_types, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		deref : @tc_types::deref_types, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var modules : @tc_types::modules_t = {
 			env => {
 				deref => deref,
@@ -185,50 +276,52 @@ def check_module(ref module : @nast::module_t, ref def_fun : @tc_types::defs_fun
 		hash::set_value(ref modules->imports, import->name, true);
 	}
 	hash::set_value(ref modules->imports, module->name, true);
+	var own_conv : ptd::hash(@tct::meta_type) = {};
+	
 	rep var i (array::len(module->fun_def)) {
-		var fun_def = module->fun_def[i];
-		var fun_vars : @tc_types::vars_t = {};
-		rep var j (array::len(fun_def->args)) {
-			var fun_arg = fun_def->args[j];
-			var arg_type = type_to_ptd(fun_arg->type, ref errors);
-			if (tct::is_own_type(arg_type, known_types)) {
-				match (fun_arg->mod) case :ref {
-				} case :none {
-					add_error(ref errors, 'Function ' . fun_def->name . ' takes non-ref own argument '
-						. fun_arg->name);
-				}
-			}
-			check_types_imported(arg_type, ref modules, ref errors);
-			add_var_decl_to_vars(arg_type, fun_arg->name, ref fun_vars);
-			module->fun_def[i]->args[j]->tct_type = :type(arg_type);
-		}
-		modules->env->ret_type = return_type_to_tct(fun_def->ret_type->type, ref errors);
-		if (tct::is_own_type(modules->env->ret_type, known_types)) {
- 			add_error(ref errors, 'Function ' . fun_def->name . ' returns own type.');
-		}
-		check_types_imported(modules->env->ret_type, ref modules, ref errors);
-		check_cmd(ref module->fun_def[i]->cmd, ref modules, ref fun_vars, ref errors, known_types);
-		var fun_name = get_function_name(module->name, fun_def->name);
-		if (hash::has_key(get_special_functions(), fun_name)) {
-			var special_fun_def = get_special_functions(){fun_name};
-			module->fun_def[i]->ret_type->tct_type = special_fun_def->r;
-			rep var j (array::len(module->fun_def[i]->args)) {
-				module->fun_def[i]->args[j]->tct_type = :type(special_fun_def->a[j]->type);
-				fun_vars{module->fun_def[i]->args[j]->name} = {overwrited => :no, type => special_fun_def->a[j]->type};
-			}
-		} else {
-			module->fun_def[i]->ret_type->tct_type = modules->env->ret_type;
-		}
-		if (array::is_empty(errors->errors)) {
-			fill_value_types_in_cmd(ref module->fun_def[i]->cmd, fun_vars, modules, ref errors, known_types);
+		check_func(i, ref modules, ref own_conv, ref module, ref def_fun, ref errors, ref deref, known_types);
+	}
+
+	var i_offset : ptd::sim() = array::len(module->fun_def);
+
+	var new_module : @nast::module_t = create_own_convertions_module(own_conv, known_types, module->name);
+	var to_delete : ptd::arr(ptd::sim()) = [];
+
+	var exist_name_hash : ptd::hash(ptd::sim()) = {};
+	fora var f (module->fun_def) {
+		exist_name_hash{f->name} = f->name;
+	}
+	
+	rep var f (array::len(new_module->fun_def)) {
+		if(hash::has_key(exist_name_hash, new_module->fun_def[f]->name)) {
+			to_delete []= f;
 		}
 	}
-	def_fun = modules->funs;
-	deref = modules->env->deref;
+
+	var n_offset = 0;
+	fora var n (to_delete) {
+		array::remove(ref new_module->fun_def, n - n_offset);
+		n_offset += 1;
+	}
+
+	var h_new_module : ptd::hash(@nast::module_t) = {};
+	hash::set_value(ref h_new_module, module->name, new_module);
+	forh var a, var b (prepare_def_fun(h_new_module, ref errors)) {
+		forh var c, var d (b) {
+			def_fun{a}{c} = d;
+		}
+	}
+	var m : ptd::arr(@nast::fun_def_t) = module->fun_def;
+	array::append(ref m, new_module->fun_def);
+	module->fun_def = m;	
+	
+	rep var i (array::len(new_module->fun_def)) {
+		check_func(i + i_offset, ref modules, ref own_conv, ref module, ref def_fun, ref errors, ref deref, known_types);
+	}
 }
 
 def join_vars(ref vars : @tc_types::vars_t, vars_op : @tc_types::vars_t, ref modules : @tc_types::modules_t, ref errors
-	: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	return if hash::has_key(vars_op, '__END');
 	if (hash::has_key(vars, '__END')) {
 		vars = vars_op;
@@ -249,7 +342,7 @@ def set_end_function(ref vars : @tc_types::vars_t) : ptd::void() {
 }
 
 def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_vars : @tc_types::vars_t, ref errors :
-	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::hash(@tc_types::var_t) {
+		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::hash(@tc_types::var_t) {
 	errors->current_line = cmd->debug->begin->line;
 	var ret : ptd::hash(@tc_types::var_t) = {};
 	var vars : @tc_types::vars_t = b_vars;
@@ -410,13 +503,13 @@ def check_cmd(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref b_
 		hash::set_value(ref b_vars, var_name, hash::get_value(vars, var_name));
 	}
 	if (hash::has_key(vars, '__END')) {
-		hash::set_value(ref b_vars, '__END', {overwrited => :yes, type => tct::empty()});
+		hash::set_value(ref b_vars, '__END', {overwrited => :yes, type => tct::empty(), referenced_by => :none});
 	}
 	return ret;
 }
 
 def break_continue_block(ref cmd : @nast::cmd_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref
-	errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var old = modules->env->breaks;
 	modules->env->breaks = {is => true, vars => vars};
 	check_cmd(ref cmd, ref modules, ref vars, ref errors, known_types);
@@ -458,7 +551,7 @@ def check_try_ensure(try_ensure : @nast::try_ensure_t, ref modules : @tc_types::
 }
 
 def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
-	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var hash_type : @tc_types::type = ptd_system::can_delete(check_val(as_forh->hash, ref modules, ref vars, ref errors, known_types),
 			ref modules, ref errors);
 	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors)) {
@@ -470,14 +563,14 @@ def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, 
 	}
 	hash_type->type = hash_type->type is :tct_hash ? hash_type->type as :tct_hash : tct::tct_im();
 	var vars_op : @tc_types::vars_t = vars;
-	add_var_decl_with_type_and_check(ref as_forh->key, {type => tct::sim(), src => :speculation}, ref vars_op, ref errors);
+	add_var_decl_with_type_and_check(ref as_forh->key, {type => tct::string(), src => :speculation}, ref vars_op, ref errors);
 	add_var_decl_with_type_and_check(ref as_forh->val, hash_type, ref vars_op, ref errors);
 	break_continue_block(ref as_forh->cmd, ref modules, ref vars_op, ref errors, known_types);
 	join_vars(ref vars, vars_op, ref modules, ref errors, known_types);
 }
 
 def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
-	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var fora_arr_type : @tc_types::type = ptd_system::can_delete(check_val(as_fora->array, ref modules, ref vars, ref 
 				errors, known_types), ref modules, ref errors);
 	if (!ptd_system::is_accepted(fora_arr_type, tct::arr(tct::tct_im()), ref modules, ref errors) &&
@@ -498,7 +591,7 @@ def check_fora(ref as_fora : @nast::fora_t, ref modules : @tc_types::modules_t, 
 }
 
 def check_while(ref as_while : @nast::while_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors
-	: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var cond_type : @tc_types::type = check_val(as_while->cond, ref modules, ref vars, ref errors, known_types);
 	add_error(ref errors, 'while argument should be sim or boolean type insteand of ' . 
 			get_print_tct_type_name(cond_type->type))
@@ -509,7 +602,7 @@ def check_while(ref as_while : @nast::while_t, ref modules : @tc_types::modules_
 }
 
 def check_rep(ref as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
-	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var count_type : @tc_types::type = check_val(as_rep->count, ref modules, ref vars, ref errors, known_types);
 	add_error(ref errors, 'rep argument should be a number instead of ' . get_print_tct_type_name(count_type->type))
 		unless ptd_system::is_accepted(count_type, tct::int(), ref modules, ref errors);
@@ -520,18 +613,23 @@ def check_rep(ref as_rep : @nast::rep_t, ref modules : @tc_types::modules_t, ref
 }
 
 def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors
-	: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		: @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var val_type : @tc_types::type = ptd_system::can_delete(check_val(as_match->val, ref modules, ref vars, ref errors, known_types), 
 			ref modules, ref errors);
 	var branches : ptd::arr(@nast::match_branch_t) = as_match->branch_list;
 	var type_is_match : @boolean_t::type = false;
 	var branch_var_types : ptd::hash(@tct::meta_type) = {};
 	var variants : ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})) = {};
-	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors)) {
+	if (!ptd_system::is_accepted(val_type, tct::var({}), ref modules, ref errors) &&
+			!ptd_system::is_accepted(val_type, tct::own_var({}), ref modules, ref errors)) {
 		add_error(ref errors, 'wrong type used as match argument: ' . get_print_tct_type_name(val_type->type));
 	}
-	if (val_type->type is :tct_var) {
-		variants = val_type->type as :tct_var;
+	if (val_type->type is :tct_var || val_type->type is :tct_own_var) {
+		if (val_type->type is :tct_var) {
+			variants = val_type->type as :tct_var;
+		} else {
+			variants = val_type->type as :tct_own_var;
+		}
 		var used_variants : ptd::hash(@boolean_t::type) = {};
 		fora var branch (branches) {
 			var variant_name : ptd::sim() = branch->variant->name;
@@ -564,7 +662,7 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 			if (hash::has_key(hash_b, variant_name));
 		hash::set_value(ref hash_b, variant_name, 1);
 		match (branch->variant->value) case :value(var var_decl) {
-			check_var_decl(var_decl, ref modules, ref vars_case, ref errors, known_types);
+			check_var_decl(var_decl->declaration, ref modules, ref vars_case, ref errors, known_types);
 			var branch_var_type : @tct::meta_type;
 			if (type_is_match) {
 				continue if (!hash::has_key(variants, variant_name));
@@ -576,8 +674,18 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 			} else {
 				branch_var_type = tct::tct_im();
 			}
-			add_var_decl_to_vars(tct::tct_im(), var_decl->name, ref vars_case);
-			set_type_to_variable(ref vars_case, var_decl->name, branch_var_type);
+			add_var_decl_to_vars(tct::tct_im(), var_decl->declaration->name, ref vars_case);
+			set_type_to_variable(ref vars_case, var_decl->declaration->name, branch_var_type);
+			match (var_decl->mod) case :none {
+				if (tct::is_own_type(val_type->type, known_types)) {
+					add_error(ref errors, 'case param of own variant has to be ref');
+				}
+			} case :ref {
+				if (!tct::is_own_type(val_type->type, known_types)) {
+					add_error(ref errors, 'case param of non-own variant cannot be ref');
+				}
+				vars_case{as_match->val->value as :var}->referenced_by = :variable(var_decl->declaration->name);
+			}
 		} case :none {
 			if (hash::has_key(branch_var_types, variant_name)) {
 				add_error(ref errors, 'variant `:' . variant_name . ' should has param');
@@ -585,10 +693,13 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 		}
 		check_cmd(ref as_match->branch_list[i]->cmd, ref modules, ref vars_case, ref errors, known_types);
 		match (branch->variant->value) case :value(var var_decl) {
-			var_decl->tct_type = :type(vars_case{var_decl->name}->type);
+			var_decl->declaration->tct_type = :type(vars_case{var_decl->declaration->name}->type);
 			as_match->branch_list[i]->variant->value = :value(var_decl);
-			hash::delete(ref vars_case, var_decl->name) unless hash::has_key(vars_op, var_decl->name);
+			hash::delete(ref vars_case, var_decl->declaration->name) unless hash::has_key(vars_op, var_decl->declaration->name);
 		} case :none {
+		}
+		if (as_match->val->value is :var) {
+			vars_case{as_match->val->value as :var}->referenced_by = :none;
 		}
 		if (first) {
 			vars_op = vars_case;
@@ -601,7 +712,7 @@ def check_match(ref as_match : @nast::match_t, ref modules : @tc_types::modules_
 }
 
 def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors :
-	@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
+		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	var ret = tc_types::get_default_type();
 	match (val->value) case :ternary_op(var ternary_op) {
 		var cond_type = check_val(ternary_op->fst, ref modules, ref vars, ref errors, known_types);
@@ -620,7 +731,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 			}
 		}
 	} case :hash_key(var hash_key) {
-		ret->type = tct::sim();
+		ret->type = tct::string();
 	} case :nop {
 		ret->type = tct::empty();
 	} case :parenthesis(var parenthesis) {
@@ -670,10 +781,15 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		ret->type = tct::rec(retur);
 	} case :var(var variable_name) {
 		if (!hash::has_key(vars, variable_name)) {
-			add_error(ref errors, 'variable `' . variable_name . ''' does not exist');
+			add_error(ref errors, 'variable ''' . variable_name . ''' does not exist');
 			return ret;
 		}
 		var var_ = hash::get_value(vars, variable_name);
+		match (var_->referenced_by) case :variable(var name){
+			add_error(ref errors, 'variable ''' . variable_name . ''' cannot be accessed, because it is referenced by ''' . name . '''');
+			return ret;
+		} case :none {
+		}
 		match (var_->overwrited) case :yes {
 			return {type => var_->type, src => :speculation};
 		} case :no {
@@ -690,7 +806,8 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 		} case :ov_as {
 			ret_type = {type => tct::tct_im(), src => left_type2->src};
 		}
-		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors)) {
+		if (ptd_system::is_accepted(left_type2, tct::var({}), ref modules, ref errors) ||
+				ptd_system::is_accepted(left_type2, tct::own_var({}), ref modules, ref errors)) {
 			return ret_type unless left_type2->type is :tct_var;
 			var variants = left_type2->type as :tct_var;
 			if (!hash::has_key(variants, var_op->case)) {
@@ -749,7 +866,7 @@ def check_val(val : @nast::value_t, ref modules : @tc_types::modules_t, ref vars
 	} case :fun_val(var fun_val) {
 		ret = check_fun_val(fun_val, ref modules, ref vars, ref errors, known_types);
 	} case :string(var str) {
-		ret->type = tct::sim();
+		ret->type = tct::string();
 	} case :post_inc(var inc) {
 		return unary_op_dec_inc(inc, 'wrong type in post increment : ', ref modules, ref vars, ref errors, known_types);
 	} case :post_dec(var dec) {
@@ -890,10 +1007,10 @@ def get_special_functions() : @tc_types::special_functions {
 			]
 		});
 	hash::set_value(ref f, 'array::join', {
-			r => tct::sim(),
+			r => tct::string(),
 			a => [
-				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::arr(tct::sim()), name => ''}
+				{mod => :none, type => tct::string(), name => ''},
+				{mod => :none, type => tct::arr(tct::string()), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'array::append', {
@@ -941,7 +1058,7 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::void(),
 			a => [
 				{mod => :ref, type => tct::hash(tct::tct_im()), name => ''},
-				{mod => :none, type => tct::sim(), name => ''},
+				{mod => :none, type => tct::string(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''}
 			]
 		});
@@ -949,21 +1066,21 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::tct_im(),
 			a => [
 				{mod => :none, type => tct::hash(tct::tct_im()), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::string(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'hash::has_key', {
 			r => tct::bool(),
 			a => [
 				{mod => :none, type => tct::hash(tct::tct_im()), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::string(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'hash::delete', {
 			r => tct::void(),
 			a => [
 				{mod => :ref, type => tct::hash(tct::tct_im()), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::string(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'hash::size', {
@@ -975,7 +1092,7 @@ def get_special_functions() : @tc_types::special_functions {
 			a => [{mod => :none, type => tct::hash(tct::tct_im()), name => ''}]
 		});
 	hash::set_value(ref f, 'hash::keys', {
-			r => tct::arr(tct::sim()),
+			r => tct::arr(tct::string()),
 			a => [{mod => :none, type => tct::hash(tct::tct_im()), name => ''}]
 		});
 	hash::set_value(ref f, 'hash::add_all', {
@@ -987,41 +1104,41 @@ def get_special_functions() : @tc_types::special_functions {
 		});
 	hash::set_value(ref f, 'ov::is', {
 			r => tct::bool(),
-			a => [{mod => :none, type => tct::var({}), name => ''}, {mod => :none, type => tct::sim(), name => ''}]
+			a => [{mod => :none, type => tct::var({}), name => ''}, {mod => :none, type => tct::string(), name => ''}]
 		});
 	hash::set_value(ref f, 'ov::as', {
 			r => tct::tct_im(),
-			a => [{mod => :none, type => tct::var({}), name => ''}, {mod => :none, type => tct::sim(), name => ''}]
+			a => [{mod => :none, type => tct::var({}), name => ''}, {mod => :none, type => tct::string(), name => ''}]
 		});
-	hash::set_value(ref f, 'dfile::ssave', {r => tct::sim(), a => [{mod => :none, type => tct::tct_im(), name => ''}]});
-	hash::set_value(ref f, 'string::lf', {r => tct::sim(), a => []});
-	hash::set_value(ref f, 'string::length', {r => tct::int(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'dfile::ssave', {r => tct::string(), a => [{mod => :none, type => tct::tct_im(), name => ''}]});
+	hash::set_value(ref f, 'string::lf', {r => tct::string(), a => []});
+	hash::set_value(ref f, 'string::length', {r => tct::int(), a => [{mod => :none, type => tct::string(), name => ''}]});
 	hash::set_value(ref f, 'string::substr', {
-			r => tct::sim(),
+			r => tct::string(),
 			a => [
-				{mod => :none, type => tct::sim(), name => ''},
+				{mod => :none, type => tct::string(), name => ''},
 				{mod => :none, type => tct::int(), name => ''},
 				{mod => :none, type => tct::int(), name => ''}
 			]
 		});
 	hash::set_value(ref f, 'string::replace', {
-			r => tct::sim(),
+			r => tct::string(),
 			a => [
-				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::sim(), name => ''},
-				{mod => :none, type => tct::sim(), name => ''}
+				{mod => :none, type => tct::string(), name => ''},
+				{mod => :none, type => tct::string(), name => ''},
+				{mod => :none, type => tct::string(), name => ''}
 			]
 		});
-	hash::set_value(ref f, 'string::chr', {r => tct::sim(), a => [{mod => :none, type => tct::int(), name => ''}]});
-	hash::set_value(ref f, 'string::ord', {r => tct::int(), a => [{mod => :none, type => tct::sim(), name => ''}]});
-	hash::set_value(ref f, 'string::is_letter', {r => tct::bool(), a => [{mod => :none, type => tct::sim(), name => ''}]});
-	hash::set_value(ref f, 'string::is_digit', {r => tct::bool(), a => [{mod => :none, type => tct::sim(), name => ''}]});
+	hash::set_value(ref f, 'string::chr', {r => tct::string(), a => [{mod => :none, type => tct::int(), name => ''}]});
+	hash::set_value(ref f, 'string::ord', {r => tct::int(), a => [{mod => :none, type => tct::string(), name => ''}]});
+	hash::set_value(ref f, 'string::is_letter', {r => tct::bool(), a => [{mod => :none, type => tct::string(), name => ''}]});
+	hash::set_value(ref f, 'string::is_digit', {r => tct::bool(), a => [{mod => :none, type => tct::string(), name => ''}]});
 	hash::set_value(ref f, 'string::split', {
-			r => tct::arr(tct::sim()),
-			a => [{mod => :none, type => tct::sim(), name => ''}, {mod => :none, type => tct::sim(), name => ''}]
+			r => tct::arr(tct::string()),
+			a => [{mod => :none, type => tct::string(), name => ''}, {mod => :none, type => tct::string(), name => ''}]
 		});
 	hash::set_value(ref f, 'c_std_lib::fast_substr', {
-			r => tct::sim(),
+			r => tct::string(),
 			a => [
 				{mod => :none, type => tct::tct_im(), name => ''},
 				{mod => :none, type => tct::tct_im(), name => ''},
@@ -1029,7 +1146,7 @@ def get_special_functions() : @tc_types::special_functions {
 			]
 		});
 	hash::set_value(ref f, 'c_std_lib::int_to_string', {
-			r => tct::sim(),
+			r => tct::string(),
 			a => [
 				{mod => :none, type => tct::int(), name => ''},
 			]
@@ -1048,11 +1165,68 @@ def get_special_functions() : @tc_types::special_functions {
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 			]
 		});
+	hash::set_value(ref f, 'c_std_lib::is_sim', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_array', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_hash', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::is_variant', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
 	hash::set_value(ref f, 'c_std_lib::string_compare', {
 			r => tct::int(),
 			a => [
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
 				{mod => :none, type => tct::arr(tct::tct_im()), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::hash_has_key', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_std_lib::hash_size', {
+			r => tct::int(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::ov_is', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::priv_is', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::is_end_hash', {
+			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
 			]
 		});
 	hash::set_value(ref f, 'c_singleton::sigleton_do_not_use_without_approval', {
@@ -1101,6 +1275,14 @@ def check_special_function(ret_type : @tc_types::type, fun_val : @nast::fun_val_
 			ret_type->type = ok;
 			check_types_imported(ok, ref modules, ref errors);
 		}
+	}
+	if (name eq 'own::to_im') {
+		var type : @tc_types::type = fun_val_type[0];
+		if (!tct::is_own_type(type->type, known_types)) {
+			add_error(ref errors, 'own::to_im takes only own arguments');
+		}
+		ret_type->src = type->src;
+		ret_type->type = tct::own_type_to_ptd(type->type, known_types);
 	}
 	if (name eq 'ptd::try_cast') {
 		match (ptd_parser::try_value_to_ptd(fun_val->args[0]->val)) case :err(var err) {
@@ -1194,6 +1376,16 @@ def rec_get_var_from_lval(lval : @nast::value_t, ref errors : @tc_types::errors_
 		} else {
 			add_error(ref errors, 'invalid operator ' . (bin_op->op) . ' used in lvalue');
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		a = rec_get_var_from_lval(var_op->left, ref errors);
+		a []= :variant(var_op->case);
+		match (var_op->op) case :ov_as {
+		} case :ov_is {
+			add_error(ref errors, 'invalid operator is used in lvalue');
+		}
+	} elsif (lval->value is :parenthesis) {
+		a = rec_get_var_from_lval(lval->value as :parenthesis, ref errors);
 	} else {
 		add_error(ref errors, 'invalid type for lvalue');
 	}
@@ -1201,7 +1393,7 @@ def rec_get_var_from_lval(lval : @nast::value_t, ref errors : @tc_types::errors_
 }
 
 def mk_new_type_lval(var_tab : @tc_types::lval_path, rtype : @tc_types::type, ltype : @tc_types::type, empty_type : 
-	@tct::meta_type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t,
+		@tct::meta_type, ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t,
 	known_types : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	var_tab = array::subarray(var_tab, 1, array::len(var_tab) - 1);
 	if (array::len(var_tab) == 0) {
@@ -1244,19 +1436,34 @@ def mk_new_type_lval(var_tab : @tc_types::lval_path, rtype : @tc_types::type, lt
 				hash::set_value(ref tt, name, rtype->type);
 			}
 			return tct::rec(tt);
+		} case :variant(var label) {
+			return tct::tct_im() unless ltype->type is :tct_var;
+			var variant = ltype->type as :tct_var;
+			if (hash::has_key(variant, label)) {
+				ltype->type = (ltype->type as :tct_var){label} as :with_param;
+				hash::set_value(ref variant, label, mk_new_type_lval(var_tab, rtype, ltype, empty_type, ref modules, ref 
+						errors, known_types));
+			} else {
+				if (array::len(var_tab) != 1) {
+					return tct::tct_im();
+				}
+				ptd_system::check_assignment(tct::tct_im(), rtype, ref modules, ref errors);
+				variant{label} = rtype->type;
+			}
+			return tct::var(variant);
 		}
 	}
 }
 
 def set_type_to_lval(lval : @nast::value_t, ltype : @tc_types::type, rtype : @tc_types::type, ref modules : 
-	@tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t,
+		@tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t,
 	known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	var empty_type = ptd_system::can_delete(ltype, ref modules, ref errors);
 	return set_type_to_lval_spec(lval, ltype, rtype, empty_type->type, ref modules, ref vars, ref errors, known_types);
 }
 
 def set_type_to_lval_spec(lval : @nast::value_t, ltype : @tc_types::type, rtype : @tc_types::type, empty_type : 
-	@tct::meta_type, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t,
+		@tct::meta_type, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t,
 	known_types : ptd::hash(@tct::meta_type)) 
 	: @tc_types::type {
 	var err_len = array::len(errors->errors);
@@ -1280,7 +1487,7 @@ def set_type_to_lval_spec(lval : @nast::value_t, ltype : @tc_types::type, rtype 
 }
 
 def get_type_left_side_equation(left : @nast::value_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, 
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	if (left->value is :bin_op && (left->value as :bin_op)->op eq '->') {
 		return get_type_record_key(left->value as :bin_op, ref modules, ref vars, ref errors, known_types);
 	} else {
@@ -1289,7 +1496,7 @@ def get_type_left_side_equation(left : @nast::value_t, ref modules : @tc_types::
 }
 
 def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modules_t, ref vars : @tc_types::vars_t, ref 
-	errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
+		errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	var left_type = check_val(bin_op->left, ref modules, ref vars, ref errors, known_types);
 	left_type = ptd_system::can_delete(left_type, ref modules, ref errors);
 	if (left_type->type is :tct_rec) {
@@ -1328,7 +1535,7 @@ def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modul
 }
 
 def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_types::modules_t, ref vars : 
-	@tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
+		@tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::type {
 	var op : ptd::sim() = bin_op->op;
 	var right_type : @tc_types::type = check_val(bin_op->right, ref modules, ref vars, ref errors, known_types);
 	if (op eq '=') {
@@ -1367,7 +1574,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 			add_error(ref errors, 'hash operator ''{}'' can be applied only to hash');
 			return ret_type;
 		}
-		if (!ptd_system::is_accepted(right_type, tct::sim(), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(right_type, tct::string(), ref modules, ref errors)) {
 			add_error(ref errors, 'hash index should be string');
 		}
 		left_type2->type = left_type2->type as :tct_hash if left_type2->type is :tct_hash;
@@ -1553,6 +1760,26 @@ def get_print_check_info(check_info : @tc_types::check_info) : ptd::sim() {
 						''')';
 				}
 			}
+		} elsif (info->from is :tct_own_var && info->to is :tct_own_var) {
+			forh var name, var from_type (info->from as :tct_own_var) {
+				var to_types = info->to as :tct_own_var;
+				if (hash::has_key(to_types, name)) {
+					match (from_type) case :no_param {
+						if (hash::get_value(to_types, name) is :with_param) {
+							return ret . '(own::var case: ''' . name . ''' no_param instead of own::var case: ''' . name 
+								. ''' with_param)';
+						}
+					} case :with_param(var f_t) {
+						if (hash::get_value(to_types, name) is :no_param) {
+							return ret . '(own::var case: ''' . name . ''' with_param instead of own::var case: ''' . 
+								name . ''' no_param)';
+						}
+					}
+				} else {
+					return ret . '(own::var with case: ''' . name . ''' instead of own::var without case: ''' . name . 
+						''')';
+				}
+			}
 		} else {
 			ret .= '(' . get_print_tct_label(info->from) . ' instead of ' . get_print_tct_label(info->to) . ')';
 		}
@@ -1561,16 +1788,16 @@ def get_print_check_info(check_info : @tc_types::check_info) : ptd::sim() {
 }
 
 def check_var_decl(var_decl : @nast::variable_declaration_t, ref modules : @tc_types::modules_t, ref vars : 
-	@tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::var_t {
+		@tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : @tc_types::var_t {
 	return check_var_decl_try(var_decl, false, ref modules, ref vars, ref errors, known_types)->ok;
 }
 
 def check_var_decl_try(var_decl : @nast::variable_declaration_t, is_try : @boolean_t::type, ref modules : 
-	@tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type))
+		@tc_types::modules_t, ref vars : @tc_types::vars_t, ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type))
 	: ptd::rec({ok => @tc_types::var_t, err => @tc_types::type}) {
 	add_error(ref errors, 'variable ''' . var_decl->name . ''' already exists') if hash::has_key(vars, var_decl->name);
 	var ret_types : ptd::rec({ok => @tc_types::var_t, err => @tc_types::type}) = {
-			ok => {overwrited => :yes, type => tct::empty()},
+			ok => {overwrited => :yes, type => tct::empty(), referenced_by => :none},
 			err => {type => tct::empty(), src => :speculation}
 		};
 	match (var_decl->type) case :type(var tt) {
@@ -1620,25 +1847,25 @@ def add_var_to_vars(var_ : @tc_types::var_t, name : ptd::sim(), ref vars : @tc_t
 }
 
 def set_type_to_variable(ref vars : @tc_types::vars_t, var_name : ptd::sim(), type : @tct::meta_type) : ptd::void() {
-	add_var_to_vars({overwrited => :yes, type => type}, var_name, ref vars);
+	add_var_to_vars({overwrited => :yes, type => type, referenced_by => :none}, var_name, ref vars);
 }
 
 def add_var_decl_to_vars(var_type : @tct::meta_type, name : ptd::sim(), ref vars : @tc_types::vars_t) : ptd::void() {
 	if (var_type is :tct_im || var_type is :tct_empty) {
-		add_var_to_vars({overwrited => :yes, type => var_type}, name, ref vars);
+		add_var_to_vars({overwrited => :yes, type => var_type, referenced_by => :none}, name, ref vars);
 	} else {
-		add_var_to_vars({overwrited => :no, type => var_type}, name, ref vars);
+		add_var_to_vars({overwrited => :no, type => var_type, referenced_by => :none}, name, ref vars);
 	}
 }
 
 def add_var_decl_with_type_and_check(ref var_decl : @nast::variable_declaration_t, type : @tc_types::type, ref vars : 
-	@tc_types::vars_t, ref errors : @tc_types::errors_t) : ptd::void() {
+		@tc_types::vars_t, ref errors : @tc_types::errors_t) : ptd::void() {
 	add_error(ref errors, 'variable `' . var_decl->name . ''' already exists') if hash::has_key(vars, var_decl->name);
 	if (is_known(type)) {
-		add_var_to_vars({overwrited => :no, type => type->type}, var_decl->name, ref vars);
+		add_var_to_vars({overwrited => :no, type => type->type, referenced_by => :none}, var_decl->name, ref vars);
 		var_decl->tct_type = :type(type->type);
 	} else {
-		add_var_to_vars({overwrited => :yes, type => type->type}, var_decl->name, ref vars);
+		add_var_to_vars({overwrited => :yes, type => type->type, referenced_by => :none}, var_decl->name, ref vars);
 		var_decl->tct_type = :type(type->type);
 	}
 }
@@ -1656,13 +1883,13 @@ def get_fun_module(fun_module : ptd::sim(), module : ptd::sim()) : ptd::sim() {
 }
 
 def get_function_def(fun_module : ptd::sim(), fun_name : ptd::sim(), modules : @tc_types::modules_t) : 
-	@tc_types::def_fun_t {
+		@tc_types::def_fun_t {
 	return hash::get_value(hash::get_value(modules->funs, get_fun_module(fun_module, modules->env->current_module)), 
 				get_fun_key(fun_name, fun_module));
 }
 
 def check_function_exists(fun_module : ptd::sim(), fun_name : ptd::sim(), ref modules : @tc_types::modules_t, ref errors 
-	: @tc_types::errors_t) : @boolean_t::type {
+		: @tc_types::errors_t) : @boolean_t::type {
 	var module : ptd::sim() = get_fun_module(fun_module, modules->env->current_module);
 	if (!hash::has_key(modules->imports, module) || !hash::get_value(modules->imports, module)) {
 		add_error(ref errors, 'module ''' . module . ''' not imported') if !hash::has_key(modules->imports, module);
@@ -1693,50 +1920,51 @@ def add_warning(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void(
 }
 
 def fill_value_types_in_cmd(ref cmd : @nast::cmd_t, b_vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::hash(@tc_types::var_t) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) : ptd::hash(@tc_types::var_t) {
 	var vars : @tc_types::vars_t = b_vars;
 	var ret : ptd::hash(@tc_types::var_t) = {};
 	match (cmd->cmd) case :if(var as_if) {
-		fill_value_types_in_if(ref as_if, vars, modules, ref errors, known_types);
+		fill_value_types_in_if(ref as_if, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :if(as_if);
 	} case :for(var as_for) {
-		fill_value_types_in_for(ref as_for, vars, modules, ref errors, known_types);
+		fill_value_types_in_for(ref as_for, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :for(as_for);
 	} case :fora(var as_fora) {
-		fill_value_types_in_fora(ref as_fora, vars, modules, ref errors, known_types);
+		fill_value_types_in_fora(ref as_fora, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :fora(as_fora);
 	} case :forh(var as_forh) {
-		fill_value_types_in_forh(ref as_forh, vars, modules, ref errors, known_types);
+		fill_value_types_in_forh(ref as_forh, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :forh(as_forh);
 	} case :loop(var as_loop) {
-		fill_value_types_in_cmd(ref as_loop, vars, modules, ref errors, known_types);
+		fill_value_types_in_cmd(ref as_loop, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :loop(as_loop);
 	} case :rep(var as_rep) {
-		fill_value_types_in_rep(ref as_rep, vars, modules, ref errors, known_types);
+		fill_value_types_in_rep(ref as_rep, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :rep(as_rep);
 	} case :while(var as_while) {
-		fill_value_types_in_while(ref as_while, vars, modules, ref errors, known_types);
+		fill_value_types_in_while(ref as_while, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :while(as_while);
 	} case :if_mod(var if_mod) {
-		fill_value_types_in_if_mod(ref if_mod, vars, modules, ref errors, known_types);
+		fill_value_types_in_if_mod(ref if_mod, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :if_mod(if_mod);
 	} case :unless_mod(var unless_mod) {
-		fill_value_types_in_unless_mod(ref unless_mod, vars, modules, ref errors, known_types);
+		fill_value_types_in_unless_mod(ref unless_mod, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :unless_mod(unless_mod);
 	} case :break {
 	} case :continue {
 	} case :match(var as_match) {
-		fill_value_types_in_match(ref as_match, vars, modules, ref errors, known_types);
+		fill_value_types_in_match(ref as_match, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :match(as_match);
 	} case :value(var val) {
-		fill_value_types(ref val, vars, modules, ref errors, known_types);
+		fill_value_types(ref val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :value(val);
 	} case :return(var as_return) {
-		fill_value_types(ref as_return, vars, modules, ref errors, known_types);
+		fill_value_types(ref as_return, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :return(as_return);
 	} case :block(var block) {
 		rep var i (array::len(block)) {
-			forh var var_name, var var_ (fill_value_types_in_cmd(ref block[i], vars, modules, ref errors, known_types)) {
+			forh var var_name, var var_ (fill_value_types_in_cmd(ref block[i], vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name)) {
 				add_var_to_vars(var_, var_name, ref vars);
 			}
 		}
@@ -1749,19 +1977,19 @@ def fill_value_types_in_cmd(ref cmd : @nast::cmd_t, b_vars : @tc_types::vars_t, 
 			} case :type(var type) {
 				value->type = type;
 			}
-			fill_value_types(ref value, vars, modules, ref errors, known_types);
+			fill_value_types(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 			var_decl->value = :value(value);
 			cmd->cmd = :var_decl(var_decl);
 		}
 		match (var_decl->tct_type) case :type(var type) {
-			hash::set_value(ref ret, var_decl->name, {overwrited => :no, type => type});
+			hash::set_value(ref ret, var_decl->name, {overwrited => :no, type => type, referenced_by => :none});
 		} case :none {
 		}
 	} case :try(var as_try) {
-		ret = fill_try_ensure_type(ref as_try, vars, modules, ref errors, known_types);
+		ret = fill_try_ensure_type(ref as_try, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :try(as_try);
 	} case :ensure(var as_ensure) {
-		ret = fill_try_ensure_type(ref as_ensure, vars, modules, ref errors, known_types);
+		ret = fill_try_ensure_type(ref as_ensure, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		cmd->cmd = :ensure(as_ensure);
 	} case :nop {
 	}
@@ -1769,119 +1997,142 @@ def fill_value_types_in_cmd(ref cmd : @nast::cmd_t, b_vars : @tc_types::vars_t, 
 }
 
 def fill_value_types_in_if(ref as_if : @nast::if_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_if->cond, vars, modules, ref errors, known_types);
-	fill_value_types_in_cmd(ref as_if->if, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_if->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types_in_cmd(ref as_if->if, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	rep var i (array::len(as_if->elsif)) {
-		fill_value_types(ref as_if->elsif[i]->cond, vars, modules, ref errors, known_types);
-		fill_value_types_in_cmd(ref as_if->elsif[i]->cmd, vars, modules, ref errors, known_types);
+		fill_value_types(ref as_if->elsif[i]->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		fill_value_types_in_cmd(ref as_if->elsif[i]->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	}
-	fill_value_types_in_cmd(ref as_if->else, vars, modules, ref errors, known_types);
+	fill_value_types_in_cmd(ref as_if->else, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_for(ref as_for : @nast::for_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
 	match (as_for->start) case :var_decl(var var_decl) {
 		match (var_decl->tct_type) case :type(var type) {
-			add_var_to_vars({overwrited => :no, type => type}, var_decl->name, ref vars);
+			add_var_to_vars({overwrited => :no, type => type, referenced_by => :none}, var_decl->name, ref vars);
 		} case :none {
 			die;
 		}
 	} case :value(var value) {
-		fill_value_types(ref value, vars, modules, ref errors, known_types);
+		fill_value_types(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		as_for->start = :value(value);
 	}
-	fill_value_types(ref as_for->iter, vars, modules, ref errors, known_types);
-	fill_value_types(ref as_for->cond, vars, modules, ref errors, known_types);
-	fill_value_types_in_cmd(ref as_for->cmd, vars, modules, ref errors, known_types);
+	fill_value_types(ref as_for->iter, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types(ref as_for->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types_in_cmd(ref as_for->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_fora(ref as_fora : @nast::fora_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_fora->array, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_fora->array, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 
-	#TODO set array element type
-	add_var_to_vars({overwrited => :no, type => :tct_im}, as_fora->iter->name , ref vars);
-	fill_value_types_in_cmd(ref as_fora->cmd, vars, modules, ref errors, known_types);
+	add_var_to_vars({overwrited => :no, type => :tct_im, referenced_by => :none}, as_fora->iter->name , ref vars);
+	fill_value_types_in_cmd(ref as_fora->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_forh(ref as_forh : @nast::forh_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_forh->hash, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_forh->hash, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 
 	match (as_forh->key->tct_type) case :type(var type) {
-		add_var_to_vars({overwrited => :no, type => type}, as_forh->key->name , ref vars);
+		add_var_to_vars({overwrited => :no, type => type, referenced_by => :none}, as_forh->key->name , ref vars);
 	} case :none {
 		die;
 	}
 	#TODO set hash element type
-	add_var_to_vars({overwrited => :no, type => :tct_im}, as_forh->val->name , ref vars);
-	fill_value_types_in_cmd(ref as_forh->cmd, vars, modules, ref errors, known_types);
+	add_var_to_vars({overwrited => :no, type => :tct_im, referenced_by => :none}, as_forh->val->name , ref vars);
+	fill_value_types_in_cmd(ref as_forh->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_rep(ref as_rep : @nast::rep_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_rep->count, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_rep->count, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 
 	match (as_rep->iter->tct_type) case :type(var type) {
-		add_var_to_vars({overwrited => :no, type => type}, as_rep->iter->name , ref vars);
+		add_var_to_vars({overwrited => :no, type => type, referenced_by => :none}, as_rep->iter->name , ref vars);
 	} case :none {
 		die;
 	}
-	fill_value_types_in_cmd(ref as_rep->cmd, vars, modules, ref errors, known_types);
+	fill_value_types_in_cmd(ref as_rep->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_while(ref as_while : @nast::while_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_while->cond, vars, modules, ref errors, known_types);
-	fill_value_types_in_cmd(ref as_while->cmd, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_while->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types_in_cmd(ref as_while->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_if_mod(ref if_mod : @nast::if_mod_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref if_mod->cond, vars, modules, ref errors, known_types);
-	fill_value_types_in_cmd(ref if_mod->cmd, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref if_mod->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types_in_cmd(ref if_mod->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_unless_mod(ref unless_mod : @nast::unless_mod_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref unless_mod->cond, vars, modules, ref errors, known_types);
-	fill_value_types_in_cmd(ref unless_mod->cmd, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref unless_mod->cond, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types_in_cmd(ref unless_mod->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 
 def fill_value_types_in_match(ref as_match : @nast::match_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
-	fill_value_types(ref as_match->val, vars, modules, ref errors, known_types);
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
+	fill_value_types(ref as_match->val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	var variant_type = unwrap_ref(as_match->val->type, ref modules, ref errors);
 	rep var i (array::len(as_match->branch_list)) {
 		match (as_match->branch_list[i]->variant->value) case :none {
 		} case :value(var value) {
-			match (value->tct_type) case :type(var type) {
-				add_var_to_vars({overwrited => :no, type => type}, value->name, ref vars);
+			if (variant_type is :tct_own_var) {
+				var label = as_match->branch_list[i]->variant->name;
+				value->declaration->tct_type = :type((variant_type as :tct_own_var){label} as :with_param);
+				as_match->branch_list[i]->variant->value = :value(value);
+			}
+			match (value->declaration->tct_type) case :type(var type) {
+				add_var_to_vars({overwrited => :no, type => type, referenced_by => :none}, value->declaration->name, ref vars);
 			} case :none {
 				die;
 			}
 		}
-		fill_value_types_in_cmd(ref as_match->branch_list[i]->cmd, vars, modules, ref errors, known_types);
+		fill_value_types_in_cmd(ref as_match->branch_list[i]->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	}
 }
 
 def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
 	match (value->value) case :ternary_op(var ternary_op) {
-		fill_ternary_op_type(ref value, vars, modules, ref errors, known_types);
+		fill_ternary_op_type(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	} case :hash_key(var hash_key) {
 		value->type = :tct_string;
 	} case :nop {
 		value->type = :tct_void;
 	} case :parenthesis(var parenthesis) {
-		fill_value_types(ref parenthesis, vars, modules, ref errors, known_types);
+		fill_value_types(ref parenthesis, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		value->value = :parenthesis(parenthesis);
 		value->type = parenthesis->type;
 	} case :variant(var variant) {
-		#TODO
-		if (variant->name eq 'TRUE' || variant->name eq 'FALSE') { #TODO remove when bool is rewritten completely
+		var value_type = unwrap_ref(value->type, ref modules, ref errors);
+		if (variant->name eq 'TRUE' || variant->name eq 'FALSE') {
 			value->type = :tct_bool;
 		}
+		if (value_type is :tct_own_var) {
+			match ((value_type as :tct_own_var){variant->name}) case :with_param(var param_type) {
+				variant->var->type = param_type;
+			} case :no_param {
+			}
+		}
+		fill_value_types(ref variant->var, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		value->value = :variant(variant);
 	} case :const(var as_const) {
 		value->type = :tct_int;
 	} case :arr_decl(var arr_decl) {
@@ -1890,7 +2141,7 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 			if (value_type is :tct_own_arr) {
 				arr_decl[i]->type = value_type as :tct_own_arr;
 			}
-			fill_value_types(ref arr_decl[i], vars, modules, ref errors, known_types);
+			fill_value_types(ref arr_decl[i], vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		}
 		value->value = :arr_decl(arr_decl);
 	} case :hash_decl(var hash_decl) {
@@ -1900,38 +2151,63 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 			if (value_type is :tct_own_rec) {
 				hash_decl[i]->val->type = (value_type as :tct_own_rec){hash_decl[i]->key->value as :hash_key};
 			}
-			fill_value_types(ref hash_decl[i]->val, vars, modules, ref errors, known_types);
+			fill_value_types(ref hash_decl[i]->val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		}
 		value->value = :hash_decl(hash_decl);
 	} case :var(var variable_name) {
 		value->type = vars{variable_name}->type;
 	} case :bin_op(var bin_op) {
-		fill_binary_op_type(ref value, vars, modules, ref errors, known_types);
+		fill_binary_op_type(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	} case :var_op(var var_op) {
+		fill_var_op_type(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		var_op = value->value as :var_op;
+		match (var_op->op) case :ov_is {
+			value->type = :tct_bool;
+		} case :ov_as {
+			var left_type = unwrap_ref(var_op->left->type, ref modules, ref errors);
+			if (left_type is :tct_own_var) {
+				match ((left_type as :tct_own_var){var_op->case}) case :with_param(var inner_type) {
+					value->type = inner_type;
+				} case :no_param {
+					add_error(ref errors, 'Cannot use as with variant without value');
+				}
+			} else {
+				value->type = :tct_im;
+			}
+		}
 	} case :unary_op(var unary_op) {
-		fill_unary_op_type(ref value, vars, modules, ref errors, known_types);
+		fill_unary_op_type(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	} case :fun_label(var fun_label) {
 		value->type = :tct_im;
 	} case :fun_val(var fun_val) {
-		fill_fun_val_type(ref value, vars, modules, ref errors, known_types);
+		fill_fun_val_type(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	} case :string(var str) {
 		value->type = :tct_string;
 	} case :post_inc(var inc) {
-		fill_value_types(ref inc, vars, modules, ref errors, known_types);
+		fill_value_types(ref inc, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		value->value = :post_inc(inc);
 		value->type = :tct_int;
 	} case :post_dec(var dec) {
-		fill_value_types(ref dec, vars, modules, ref errors, known_types);
+		fill_value_types(ref dec, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		value->value = :post_dec(dec);
 		value->type = :tct_int;
 	}
 }
 
+def fill_var_op_type(ref var_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+		curr_module_name : ptd::sim()) {
+	var var_op = var_op_val->value as :var_op;
+	fill_value_types(ref var_op->left, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	var_op_val->value = :var_op(var_op);
+}
+
 def fill_unary_op_type(ref unary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+		curr_module_name : ptd::sim()) {
 	var unary_op = unary_op_val->value as :unary_op;
 
-	fill_value_types(ref unary_op->val, vars, modules, ref errors, known_types);
+	fill_value_types(ref unary_op->val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	unary_op_val->value = :unary_op(unary_op);
 
 	if (unary_op->op eq '!') {
@@ -1946,10 +2222,12 @@ def fill_unary_op_type(ref unary_op_val : @nast::value_t, vars : @tc_types::vars
 }
 
 def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
 	var binary_op = binary_op_val->value as :bin_op;
 
-	fill_value_types(ref binary_op->left, vars, modules, ref errors, known_types);
+	fill_value_types(ref binary_op->left, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	binary_op_val->value = :bin_op(binary_op);
 
 	if (binary_op->op eq '=') {
 		binary_op_val->type = binary_op->left->type;
@@ -1969,24 +2247,29 @@ def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::va
 		var op_def = tc_types::get_bin_op_def(binary_op->op);
 		binary_op_val->type = op_def->ret;
 	}
-	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types);
+	fill_value_types(ref binary_op->right, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	binary_op_val->value = :bin_op(binary_op);
 }
 
 def fill_ternary_op_type(ref ternary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
 	var ternary_op = ternary_op_val->value as :ternary_op;
-	fill_value_types(ref ternary_op->fst, vars, modules, ref errors, known_types);
-	fill_value_types(ref ternary_op->snd, vars, modules, ref errors, known_types);
-	fill_value_types(ref ternary_op->thrd, vars, modules, ref errors, known_types);
+	fill_value_types(ref ternary_op->fst, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types(ref ternary_op->snd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	fill_value_types(ref ternary_op->thrd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 	ternary_op_val->value = :ternary_op(ternary_op);
 	ternary_op_val->type = ptd_system::cross_type(ternary_op->snd->type, ternary_op->thrd->type, ref modules, ref errors, known_types);
 }
 
 def fill_fun_val_type(ref fun_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim()) {
 	var as_fun = fun_val->value as :fun_val;
 	var fun_name = get_function_name(as_fun->module, as_fun->name);
+	rep var i (array::len(as_fun->args)) {
+		fill_value_types(ref as_fun->args[i]->val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+	}
 	if (hash::has_key(get_special_functions(), fun_name)) {
 		var fun_def = get_special_functions(){fun_name};
 		fun_val->type = fun_def->r;
@@ -1996,6 +2279,31 @@ def fill_fun_val_type(ref fun_val : @nast::value_t, vars : @tc_types::vars_t, mo
 	} elsif (as_fun->module eq 'c_std_lib' || as_fun->module eq 'c_rt_lib') {
 		#TODO dodać brakujące definicje funkcji
 		fun_val->type = :tct_im;
+	} elsif (as_fun->module eq 'own' && as_fun->name eq 'to_im') {
+		fun_val->type = :tct_im;
+		var type : @tct::meta_type = as_fun->args[0]->val->type;
+		if (type is :tct_ref) {
+			as_fun->module = curr_module_name;
+		} else {
+			as_fun->module = '';
+		}
+		var arg_type : ptd::sim() = own_to_im_converter::get_required_arg_type(type, known_types);
+		var arg_type_var : ptd::var({none => ptd::none(), ref => ptd::none()});
+		if (arg_type eq '') {
+			arg_type_var = :none;
+		}
+		arg_type_var = :ref;
+		as_fun->args[0]->mod = arg_type_var;
+		var name : ptd::sim() = own_to_im_converter::get_function_name(type, known_types);
+		if (type is :tct_ref) {
+			var ix = string::index2(name, '::');
+			as_fun->name = string::substr(name, ix + 2, string::length(name) - ix - 2);
+		} else {
+			as_fun->name = name;
+		}
+		if (!hash::has_key(anon_own_conv, name) && !(type is :tct_ref)) {
+			hash::set_value(ref anon_own_conv, name, type);
+		}
 	} else {
 		var fun_def = get_function_def(as_fun->module, as_fun->name, modules);
 		fun_val->type = fun_def->ret_type;
@@ -2004,29 +2312,27 @@ def fill_fun_val_type(ref fun_val : @nast::value_t, vars : @tc_types::vars_t, mo
 		}
 	}
 
-	rep var i (array::len(as_fun->args)) {
-		fill_value_types(ref as_fun->args[i]->val, vars, modules, ref errors, known_types);
-	}
-
 	fun_val->value = :fun_val(as_fun);
 }
 
 def fill_try_ensure_type(ref try_ensure : @nast::try_ensure_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
-	ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::hash(@tc_types::var_t) {
+		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
+	curr_module_name : ptd::sim())
+		: ptd::hash(@tc_types::var_t) {
 	var ret : ptd::hash(@tc_types::var_t) = {};
 	match (try_ensure) case :decl(var decl) {
 		match (decl->value) case :value(var value) {
 			match (decl->tct_type) case :none {
 			} case :type(var type) {
-				vars{decl->name} = {overwrited => :no, type => type};
+				vars{decl->name} = {overwrited => :no, type => type, referenced_by => :none};
 			}
-			fill_value_types(ref value, vars, modules, ref errors, known_types);
+			fill_value_types(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		} case :none {
 		}
 		match (decl->tct_type) case :type(var type) {
-			ret{decl->name} = {overwrited => :no, type => type};
+			ret{decl->name} = {overwrited => :no, type => type, referenced_by => :none};
 		} case :none {
-			ret{decl->name} = {overwrited => :no, type => :tct_im};
+			ret{decl->name} = {overwrited => :no, type => :tct_im, referenced_by => :none};
 		}
 	} case :lval(var lval) {
 		#TODO

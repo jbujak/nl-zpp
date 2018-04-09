@@ -491,6 +491,15 @@ def check_lvalue(ref state : @nparser::state_t, lval : @nast::value_t) : ptd::vo
 			check_lvalue(ref state, bin_op->left);
 			return;
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		if (var_op->op is :ov_as) {
+			check_lvalue(ref state, var_op->left);
+			return;
+		}
+	} elsif (lval->value is :parenthesis) {
+		check_lvalue(ref state, lval->value as :parenthesis);
+		return;
 	}
 	add_error(ref state, 'invalid expr for lvalue');
 }
@@ -499,7 +508,11 @@ def parse_variant_decl(ref state : @nparser::state_t) : @nast::variant_decl_t {
 	eat(ref state, ':');
 	var ret : @nast::variant_decl_t = {name => parse_variant_label(ref state), value => :none};
 	if (try_eat(ref state, '(')) {
-		ret->value = :value(parse_var_decl_sim(ref state));
+		if (ntokenizer::next_is(ref state->state, 'var')) {
+			ret->value = :value({declaration => parse_var_decl_sim(ref state), mod => :none});
+		} else {
+			ret->value = :value({declaration => parse_ref_var_decl_sim(ref state), mod => :ref});
+		}
 		eat(ref state, ')');
 	}
 	return ret;
@@ -528,6 +541,17 @@ def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::varia
 
 def parse_var_decl_sim(ref state : @nparser::state_t) : @nast::variable_declaration_t {
 	eat(ref state, 'var');
+	var ret = {name => '', type => :none, tct_type => :none, value => :none};
+	if (ntokenizer::is_type(ref state->state, :word)) {
+		ret->name = ntokenizer::eat_type(ref state->state, :word);
+	} else {
+		add_error(ref state, 'variable name expected');
+	}
+	return ret;
+}
+
+def parse_ref_var_decl_sim(ref state : @nparser::state_t) : @nast::variable_declaration_t {
+	eat(ref state, 'ref');
 	var ret = {name => '', type => :none, tct_type => :none, value => :none};
 	if (ntokenizer::is_type(ref state->state, :word)) {
 		ret->name = ntokenizer::eat_type(ref state->state, :word);

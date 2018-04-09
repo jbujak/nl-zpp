@@ -470,7 +470,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 			inits->prev = save_block(ref state);
 			match (branch->variant->value) case :none {
 			} case :value(var value) {
-				add_var_dec(value, false, true, true, ref state);
+				add_var_dec(value->declaration, false, true, true, ref state);
 			}
 			check_cmd(branch->cmd, ref state);
 			was = false unless state->return->was;
@@ -542,6 +542,15 @@ def check_lvalue(lval : @nast::value_t, ref state : @module_checker::state_t) : 
 			check_val(bin_op->right, ref state);
 			return;
 		}
+	} elsif (lval->value is :var_op) {
+		var var_op = lval->value as :var_op;
+		if (var_op->op is :ov_as) {
+			check_lvalue(var_op->left, ref state);
+			return;
+		}
+	} elsif (lval->value is :parenthesis) {
+		check_lvalue(lval->value as :parenthesis, ref state);
+		return;
 	}
 	add_error(ref state->errors, 'invalid expression for lvalue');
 }

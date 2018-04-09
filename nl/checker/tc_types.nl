@@ -27,21 +27,21 @@ def get_binary_ops() : ptd::hash(@tc_types::bin_op_type) {
 	op_def(ref ret, '%', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '+', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '-', tct::int(), tct::int(), tct::int());
-	op_def(ref ret, '.', tct::sim(), tct::sim(), tct::sim());
+	op_def(ref ret, '.', tct::string(), tct::string(), tct::string());
 	op_def(ref ret, '>=', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '<=', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '<', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '>', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '==', tct::int(), tct::int(), tct::bool());
 	op_def(ref ret, '!=', tct::int(), tct::int(), tct::bool());
-	op_def(ref ret, 'eq', tct::sim(), tct::sim(), tct::bool());
-	op_def(ref ret, 'ne', tct::sim(), tct::sim(), tct::bool());
+	op_def(ref ret, 'eq', tct::string(), tct::string(), tct::bool());
+	op_def(ref ret, 'ne', tct::string(), tct::string(), tct::bool());
 	op_def(ref ret, '&&', tct::bool(), tct::bool(), tct::bool());
 	op_def(ref ret, '||', tct::bool(), tct::bool(), tct::bool());
 	op_def(ref ret, '+=', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '/=', tct::int(), tct::int(), tct::int());
 	op_def(ref ret, '*=', tct::int(), tct::int(), tct::int());
-	op_def(ref ret, '.=', tct::sim(), tct::sim(), tct::sim());
+	op_def(ref ret, '.=', tct::string(), tct::string(), tct::string());
 	op_def(ref ret, '-=', tct::int(), tct::int(), tct::int());
 	return singleton::sigleton_do_not_use_without_approval(ret);
 }
@@ -95,7 +95,9 @@ def tc_types::env() {
 def tc_types::var_t() {
 	return ptd::rec({
 		overwrited => ptd::var({yes => ptd::none(), no => ptd::none()}), 
-		type => @tct::meta_type});
+		type => @tct::meta_type,
+		referenced_by => ptd::var({none => ptd::none(), variable => ptd::sim()}),
+	});
 }
 
 def tc_types::fun_arg_t() {
@@ -132,7 +134,7 @@ def tc_types::value_src() {
 }
 
 def tc_types::lval_path() {
-	return ptd::arr(ptd::var({var => ptd::sim(), arr => ptd::none(), rec => ptd::sim(), hashkey => ptd::none()}));
+	return ptd::arr(ptd::var({var => ptd::sim(), arr => ptd::none(), rec => ptd::sim(), hashkey => ptd::none(), variant => ptd::sim()}));
 }
 
 def tc_types::walk_arg() {

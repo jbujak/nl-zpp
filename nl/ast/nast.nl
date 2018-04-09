@@ -211,8 +211,15 @@ def nast::match_t() {
 def nast::variant_decl_t() {
 	return ptd::rec({
 			name => ptd::sim(),
-			value => ptd::var({value => @nast::variable_declaration_t, none => ptd::none()})
+			value => ptd::var({value => @nast::variant_variable_declaration_t, none => ptd::none()}),
 		});
+}
+
+def nast::variant_variable_declaration_t() {
+	return ptd::rec({
+		declaration => @nast::variable_declaration_t,
+		mod => ptd::var({none => ptd::none(), ref => ptd::none()}),
+	});
 }
 
 def nast::match_branch_t() {

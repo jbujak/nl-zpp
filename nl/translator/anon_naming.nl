@@ -6,7 +6,7 @@ use ptd;
 use tct;
 use string;
 
-def get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
+def anon_naming::get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
 	match (type) case :tct_im {
 		return '0im';
 	} case :tct_arr(var arr_type) {
@@ -41,14 +41,23 @@ def get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_var(var vars) {
 		return '0im';
 	} case :tct_own_var(var vars) {
-		return '0im';
+		var ret = '0VB';
+		forh var v_name, var v_type (vars) {
+			match (v_type) case :with_param(var param_type) {
+				ret .= anon_naming::get_anon_name(param_type) . '0' . v_name . '0';
+			} case :no_param {
+				ret .= 'none0' . v_name . '0';
+			}
+		}
+		ret .= 'VE';
+		return ret;
 	} case :tct_empty {
 		return '0im';
 	}
 }
 
 def anon_naming::get_anon_name(type : @tct::meta_type) : ptd::sim() {
-	return 'anon_type' . get_anon_name_loop(type);
+	return 'anon_type0' . anon_naming::get_anon_name_loop(type);
 }
 
 def anon_naming::func_ref_to_struct_name(f : ptd::sim()) : ptd::sim() {

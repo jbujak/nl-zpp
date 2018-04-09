@@ -119,6 +119,8 @@ def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_ty
 		return :ok if hash::size(as_type as :tct_own_rec) == 0 && from->type is :tct_own_rec;
 	} elsif (as_type is :tct_var) {
 		return :ok if hash::size(as_type as :tct_var) == 0 && from->type is :tct_var;
+	} elsif (as_type is :tct_own_var) {
+		return :ok if hash::size(as_type as :tct_own_var) == 0 && from->type is :tct_own_var;
 	}
 	var ref_inf = {level => 1, from => {}, to => {}, check => false, cast => false};
 	return check_assignment_info(as_type, from->type, ref_inf, from->src, ref modules, ref errors);
@@ -184,9 +186,6 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		add_error(ref errors, 'cannnot assign these two types to one variable - types merge failed.');
 		return :tct_im;
 	}
-	if (tct::is_own_type(a, known_types) || tct::is_own_type(b, known_types)) {
-		add_error(ref errors, 'own type cannot take part in assignment');
-	}
 	return a if (b is :tct_empty);
 	match (a) case :tct_empty {
 		return b;
@@ -201,7 +200,11 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			add_error(ref errors, 'cannot assign non int to int');
 		}
 	} case :tct_string {
-		die; #TODO
+		if (b is :tct_string) {
+			return :tct_string;
+		} else {
+			add_error(ref errors, 'cannot assign non string to string');
+		}
 	} case :tct_bool {
 		if (b is :tct_bool) {
 			return :tct_bool;
@@ -217,7 +220,9 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::arr(cross_type(arr, b as :tct_arr, ref_inf, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_arr(var arr) {
-		die; #TODO
+		if (b is :tct_own_arr) {
+			return tct::own_arr(cross_type(arr, b as :tct_own_arr, ref_inf, ref modules, ref errors, known_types));
+		}
 	} case :tct_var(var variants) {
 		var fin = variants;
 		if (b is :tct_var) {
@@ -257,7 +262,41 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::var(fin);
 		}
 	} case :tct_own_var(var variants) {
-		die; #TODO
+		var fin = variants;
+		if (b is :tct_own_var) {
+			var ret = b as :tct_own_var;
+			forh var field, var type (variants) {
+				if (hash::has_key(ret, field)) {
+					var t2 = hash::get_value(ret, field);
+					match (t2) case :with_param(var typ) {
+						match (type) case :with_param(var typ2) {
+							hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors, known_types));
+						} case :no_param {
+							add_error(ref errors, 'incompatible own types');
+						}
+					} case :no_param {
+						match (type) case :with_param(var typ) {
+							add_error(ref errors, 'incompatible own types');
+						} case :no_param {
+							hash::set_value(ref fin, field, tct::none());
+						}
+					}
+				} else {
+					add_error(ref errors, 'incompatible own types');
+				}
+			}
+			forh var field, var type (ret) {
+				continue if (hash::has_key(fin, field));
+				match (type) case :with_param(var typ) {
+					hash::set_value(ref fin, field, typ);
+				} case :no_param {
+					hash::set_value(ref fin, field, tct::none());
+				}
+			}
+			return tct::var(fin);
+		} else {
+			add_error(ref errors, 'incompatible own types');
+		}
 	} case :tct_rec(var reca) {
 		if (b is :tct_rec) {
 			var recb = b as :tct_rec;
@@ -463,13 +502,20 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		return :ok if from is :tct_int;
 		return mk_err(to, from);
 	} case :tct_string {
-		die; #TODO
+		return :ok if from is :tct_string;
+		return mk_err(to, from);
 	} case :tct_bool {
 		return :ok if from is :tct_bool;
 		return mk_err(to, from);
 	} case :tct_var(var vars) {
-		return mk_err(to, from) unless from is :tct_var;
-		var from_var = from as :tct_var;
+		var from_var;
+		if (from is :tct_var) {
+			from_var = from as :tct_var;
+		} elsif (from is :tct_own_var) {
+			from_var = from as :tct_own_var;
+		} else {
+			return mk_err(to, from);
+		}
 		forh var name, var from_type (from_var) {
 			return mk_err(to, from) unless hash::has_key(vars, name);
 			var to_type = hash::get_value(vars, name);
@@ -493,7 +539,37 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 		}
 		return :ok;
 	} case :tct_own_var(var vars) {
-		die; #TODO
+		var from_var;
+		if (from is :tct_var) {
+			from_var = from as :tct_var;
+		} elsif (from is :tct_own_var) {
+			from_var = from as :tct_own_var;
+		} else {
+			return mk_err(to, from);
+		}
+		forh var name, var from_type (from_var) {
+			return mk_err(to, from) unless hash::has_key(vars, name);
+			var to_type = hash::get_value(vars, name);
+			match (from_type) case :no_param {
+				match (to_type) case :no_param {
+					continue;
+				} case :with_param(var t_t) {
+					return mk_err(to, from);
+				}
+			} case :with_param(var f_t) {
+				match (to_type) case :no_param {
+					return mk_err(to, from);
+				} case :with_param(var t_t) {
+					match (check_assignment_info(t_t, f_t, ref_inf, type_src, ref modules, ref errors)) case :ok {
+					} case :err(var info) {
+						array::push(ref info->stack, :ptd_var(name));
+						return :err(info);
+					}
+				}
+			}
+		}
+		return :ok;
+
 	} case :tct_empty {
 		return :ok;
 	}

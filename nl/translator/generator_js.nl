@@ -257,6 +257,10 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 		die;
 	} case :release_index(var release_index) {
 		die;
+	} case :use_variant(var use_variant) {
+		die;
+	} case :release_variant(var release_variant) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }
@@ -410,9 +414,9 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref consts, ref call_counter : ptd::sim
 	var result = print_register_to_assign(ov_mk->dest);
 	match (ov_mk->src) case :arg(var arg) {
 		return result . print_internal_call('c_rt_lib', 'ov_mk_arg',
-			[:str(print_const_value_aggr(ov_mk->name, ref consts)), :reg(arg)], ref call_counter) . ';';
+			[:str(print_const_value_aggr(ov_mk->label, ref consts)), :reg(arg)], ref call_counter) . ';';
 	} case :emp {
-		return result . print_const_value_aggr(ov::mk(ov_mk->name), ref consts);
+		return result . print_const_value_aggr(ov::mk(ov_mk->label), ref consts);
 	}
 }
 
