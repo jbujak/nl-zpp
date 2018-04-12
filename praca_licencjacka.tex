@@ -16,6 +16,7 @@
 % dodaj opcję [en] dla wersji angielskiej (mogą być obie: [licencjacka,en])
 \documentclass[licencjacka]{pracamgr}
 
+\usepackage{hyperref}
 
 % Dane magistrantów:
 \autori{Michał Borkowski}{370727}
@@ -112,8 +113,23 @@
 
 \chapter{Wstęp}
 \section{Czym jest NianioLang?}
+NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy Nianio\cite{wzorzec_nianio}. Celem twórców języka jest jego stosunkowa niskopoziomowość, pozwalająca na tworzenie szybkich aplikacji, również takich, które można uruchomić na urządzeniach o mniejszej mocy obliczeniowej czy też dostępnej pamięci. Jednocześnie konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, jakie znajdują się w niskopoziomowych programach. Takie zabiegi zmniejszają nieco wydajność, ale twórcy języka doszli do wniosku, że zysk z uproszczenia wysokopoziomowego podejścia do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
+
+Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB). Kod źródłowy kompilatora jest dostępny na platformie GitHub na licencji MIT.
+
 \section{Typy w NianioLangu}
+W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane, co pomaga w zarządzaniu abstrakcją w programie. Dostępne są cztery wbudowane typy: 
+\begin{itemize}
+  \item \texttt{ptd::sim} - który jest reprezentacją liczb całkowitych oraz ciągów znaków,
+  \item \texttt{ptd::rec} - który reprezentuje słowniki/rekordy, gdzie do danego klucza mamy przypisaną pewną wartość,
+  \item \texttt{ptd::var} - który określa typ wariantowy, czyli obiekt, który może być w dokładnie jednym z określonych stanów, i może dodatkowo zawierać dane, szczególne dla danego stanu,
+  \item \texttt{ptd::array} - tablicę danych tego samego typu.
+\end{itemize}
+
+W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje, przy pomocy odpowiednich abstrakcji. W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
+
 \section{Cele projektu}
+Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby generowany kod w C zawierał mniejszą ilość wywołań funkcji oraz skomplikowanych struktur dla prostych typów istniejących już w języku C. Dodatkowo wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own}, które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty). Ich celem będzie znaczne zwiększenie wydajności programów pisanych w NianioLangu, które są kompilowane do C.
 
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
@@ -161,8 +177,7 @@
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{Bibliografia}
 
-\bibitem[Bea65]{beaman} Juliusz Beaman, \textit{Morbidity of the Jolly
-    function}, Mathematica Absurdica, 117 (1965) 338--9.
+\bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} - 2006}.
 
 \end{thebibliography}
 
