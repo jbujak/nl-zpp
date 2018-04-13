@@ -53,7 +53,7 @@
 % Instytut
 % ew. Wydział ew. Uczelnia (jeżeli nie MIM UW))
 \opiekun{mgr. Radosława Bartosiaka\\
-  Instytut TODO\\
+  Instytut Informatyki\\
   }
 
 % miesiąc i~rok:
@@ -90,16 +90,7 @@
 
 %tu idzie streszczenie na strone poczatkowa
 \begin{abstract}
-  NianioLang jest językiem programowania ogólnego przeznaczenia, który można
-  skompilować do wykonania na kilku platformach. Między innymi są to Java,
-  JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
-  utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
-  pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
-  jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
-  niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
-  jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia
-  w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
-  zwiększy wydajność kompilowanych aplikacji.
+W pracy opisujemy...
 \end{abstract}
 
 \tableofcontents
@@ -108,29 +99,51 @@
 
 \chapter*{Wprowadzenie}
   \addcontentsline{toc}{chapter}{Wprowadzenie}
-  \emph{O tym że jest to praca licencjacka, o tym kto nam to zadanie zlecił,
-    itp.}
-
+  NianioLang jest językiem programowania ogólnego przeznaczenia, zaprojektowanym przez
+  założyciela firmy Atinea -- Andrzeja Gąsienicę Samka. NianioLanga można
+  skompilować do kilku języków. Między innymi są to Java,
+  JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
+  utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
+  pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
+  jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
+  niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
+  jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia
+  w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
+  zwiększy wydajność kompilowanych aplikacji.
 \chapter{Wstęp}
-\section{Czym jest NianioLang?}
-NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy Nianio\cite{wzorzec_nianio}. Celem twórców języka jest jego stosunkowa niskopoziomowość, pozwalająca na tworzenie szybkich aplikacji, również takich, które można uruchomić na urządzeniach o mniejszej mocy obliczeniowej czy też dostępnej pamięci. Jednocześnie konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, jakie znajdują się w niskopoziomowych programach. Takie zabiegi zmniejszają nieco wydajność, ale twórcy języka doszli do wniosku, że zysk z uproszczenia wysokopoziomowego podejścia do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
+\section{Wprowadzenie do NianioLanga}
+NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy
+Nianio\cite{wzorzec_nianio}.
+Celem twórców języka jest jego stosunkowa niskopoziomowość, pozwalająca na tworzenie szybkich aplikacji,
+również takich, które można uruchomić na urządzeniach o mniejszej mocy obliczeniowej czy też dostępnej pamięci.
+Jednocześnie konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami
+w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, jakie znajdują się w niskopoziomowych programach.
+Takie zabiegi zmniejszają nieco wydajność, ale twórcy języka doszli do wniosku, że zysk z uproszczenia wysokopoziomowego podejścia
+do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
-Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB). Kod źródłowy kompilatora jest dostępny na platformie GitHub na licencji MIT.
+Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB).
+Kod źródłowy kompilatora jest dostępny na platformie GitHub na licencji MIT.
 
 \section{Typy w NianioLangu}
-W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane, co pomaga w zarządzaniu abstrakcją w programie. Dostępne są cztery wbudowane typy: 
+W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
+co pomaga w zarządzaniu abstrakcją w programie. Dostępne są cztery wbudowane typy: 
 \begin{itemize}
   \item \texttt{ptd::sim} - który jest reprezentacją liczb całkowitych oraz ciągów znaków,
   \item \texttt{ptd::rec} - który reprezentuje słowniki/rekordy, gdzie do danego klucza mamy przypisaną pewną wartość,
-  \item \texttt{ptd::var} - który określa typ wariantowy, czyli obiekt, który może być w dokładnie jednym z określonych stanów, i może dodatkowo zawierać dane, szczególne dla danego stanu,
+  \item \texttt{ptd::var} - który określa typ wariantowy, czyli obiekt, który może być w dokładnie jednym z określonych stanów,
+  i może dodatkowo zawierać dane, szczególne dla danego stanu,
   \item \texttt{ptd::array} - tablicę danych tego samego typu.
 \end{itemize}
 
-W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje, przy pomocy odpowiednich abstrakcji. W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
+W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
+przy pomocy odpowiednich abstrakcji. W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
-Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby generowany kod w C zawierał mniejszą ilość wywołań funkcji oraz skomplikowanych struktur dla prostych typów istniejących już w języku C. Dodatkowo wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own}, które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty). Ich celem będzie znaczne zwiększenie wydajności programów pisanych w NianioLangu, które są kompilowane do C.
-
+Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby generowany kod w C zawierał mniejszą ilość wywołań funkcji oraz skomplikowanych
+struktur dla prostych typów istniejących już w języku C. Dodatkowo wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
+które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty).
+Ich celem będzie znaczne zwiększenie wydajności programów pisanych w NianioLangu, które są kompilowane do C.
+\section{Podstawowe pojęcia}
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
 \section{Zgłaszanie zmian i code review}
@@ -145,7 +158,7 @@ Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby gen
 \section{Generowanie kodu C na podstawie nlasma}
 \section{Implementacja typów NianioLanga w C}
 
-\chapter{Rozszerzenie systemu typów}
+\chapter{Zmiana systemu typów}
 \section{Rozdzielenie typu \texttt{ptd::sim}}
 \section{Typy \texttt{own}}
   \emph{Jaki jest cel tych typów, ich semantyka, jakie ograniczenia na ich użycie
@@ -168,7 +181,7 @@ Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby gen
 \chapter{Efekty optymalizacji i wnioski}
 \section{Porównanie czasu wykonania programów}
 
-\chapter{Wkład własny}
+\chapter{Wkład poszczególnych członków zespołu}
 \emph{Co zrobiliśmy w rozbiciu na osoby}
 
 
