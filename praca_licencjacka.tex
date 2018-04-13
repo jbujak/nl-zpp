@@ -99,50 +99,70 @@ W pracy opisujemy...
 
 \chapter*{Wprowadzenie}
   \addcontentsline{toc}{chapter}{Wprowadzenie}
-  NianioLang jest językiem programowania ogólnego przeznaczenia, zaprojektowanym przez
-  założyciela firmy Atinea -- Andrzeja Gąsienicę Samka. NianioLanga można
-  skompilować do kilku języków. Między innymi są to Java,
-  JavaScript i C. Ze względu na chęć uproszczenia kompilacji NianioLanga
-  utworzono środowisko uruchomieniowe przedstawiające odpowiednie abstrakcje,
-  pozwalające na utworzenie dynamicznych struktur odpowiadających typom,
+  NianioLang jest językiem programowania ogólnego przeznaczenia, którego twórcą jest
+  założyciel firmy Atinea -- Andrzej Gąsienica-Samek.
+  Istniejący kompilator umożliwia translację NianioLanga do kilu języków,
+  między innymi do Javy, JavaScriptu i C.
+  Ze względu na chęć uproszczenia kompilacji NianioLanga
+  utworzono środowisko uruchomieniowe dostarczające odpowiednie abstrakcje
+  i pozwalające na korzystanie w C z dynamicznych struktur odpowiadających typom,
   jakie są dostępne do użycia w NianioLangu. Takie rozwiązanie nie jest
   niestety optymalne, szczególnie w przypadku niskopoziomowego języka jakim
-  jest C. W tej pracy opisujemy wprowadzenie nowych typów i ich wsparcia
-  w kompilatorze, które pozwolą na generowanie natywnego kodu w C, co znacznie
-  zwiększy wydajność kompilowanych aplikacji.
+  jest C. W tej pracy opisujemy wprowadzenie nowych typów danych i ich wsparcia
+  w kompilatorze, co umożliwi generowanie natywnego kodu w C i znacznie
+  zwiększy wydajność kompilowanych aplikacji przy zachowaniu podstawowych założeń języka.
 \chapter{Wstęp}
 \section{Wprowadzenie do NianioLanga}
 NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy
 Nianio\cite{wzorzec_nianio}.
-Celem twórców języka jest jego stosunkowa niskopoziomowość, pozwalająca na tworzenie szybkich aplikacji,
-również takich, które można uruchomić na urządzeniach o mniejszej mocy obliczeniowej czy też dostępnej pamięci.
-Jednocześnie konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami
-w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, jakie znajdują się w niskopoziomowych programach.
-Takie zabiegi zmniejszają nieco wydajność, ale twórcy języka doszli do wniosku, że zysk z uproszczenia wysokopoziomowego podejścia
+Celem twórców języka jest dostarczenie narzędzia umożliwiającego operowanie na niemutowalnych strukturach
+o semantyce zbliżonej do języków funkcyjnych, ale prostszego w użyciu.
+Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami
+w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, występujących przy programowaniu niskopoziomowym.
+Takie zabiegi zmniejszają nieco wydajność języka, ale jego twórcy doszli do wniosku, że zysk z wysokopoziomowego podejścia
 do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
-Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB).
+Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB.com).
 Kod źródłowy kompilatora jest dostępny na platformie GitHub na licencji MIT.
 
 \section{Typy w NianioLangu}
 W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
-co pomaga w zarządzaniu abstrakcją w programie. Dostępne są cztery wbudowane typy: 
+co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudowancyh typów: 
 \begin{itemize}
-  \item \texttt{ptd::sim} - który jest reprezentacją liczb całkowitych oraz ciągów znaków,
-  \item \texttt{ptd::rec} - który reprezentuje słowniki/rekordy, gdzie do danego klucza mamy przypisaną pewną wartość,
-  \item \texttt{ptd::var} - który określa typ wariantowy, czyli obiekt, który może być w dokładnie jednym z określonych stanów,
-  i może dodatkowo zawierać dane, szczególne dla danego stanu,
-  \item \texttt{ptd::array} - tablicę danych tego samego typu.
+  \item \texttt{ptd::sim} -- liczby całkowite, zmiennoprzecinkowe oraz ciągi znaków
+  \item \texttt{ptd::rec} -- rekordy, czyli odpowiedniki struktur znanych np. z C
+  \item \texttt{ptd::hash} -- słowniki o kluczach będących ciągami znaków i wartościach danego typu
+  \item \texttt{ptd::var} -- typ wariantowy, który reprezentuje obiekty, mogące być w dokładnie jednym z określonego zbioru stanów i dodatkowo
+  zawierać dane o typie właściwym dla danego stanu
+  \item \texttt{ptd::arr} -- tablice danych tego samego typu
+\end{itemize}
+
+Typy te mogą być ze sobą łączone w bardziej skompilowane konstrukcje, na przykład \texttt{ptd::arr(ptd::sim())} definiuje
+typ tablicy wartości prostych, a \texttt{ptd::rec(\{a => ptd::sim(), b => ptd::sim()\})} definiuje typ rekordu o dwóch polach będących wartościami prostymi.
+
+Podstawowymi założeniami systemu typów w NianioLangu są: niemutowalność struktur i opcjonalne typowanie.
+
+\begin{itemize}
+ \item Niemutowalność struktur w NianioLangu jest pojęciem słabszym, niż w językach funkcyjnych. Oznacza ona,
+ że język daje gwarancję, iż między dwoma kolejnymi dostępami do zmiennej jej wartość nie ulegnie zmianie.
+ W klasycznych językach imperatywnych, posiadających wskaźniki lub referencje nie jest to prawdą -- jeśli istnieją dwa wskaźniki
+ do jednej zmiennej, wartość odczytana z jednego z nich może się zmieniać nawet bez jego jawnej modyfikacji.
+ \item Opcjonalne typowanie oznacza gwarancję, że dodanie lub usunięcie typów z programu nie zmieni jego semantyki.
+ W skrajnym przypadku można usunąć z programu całą informację o typach i będzie on działał bez zmian
+ (oczywiście może to być ze szkodą dla łatwości utrzymania lub wydajności). Jest to podejście przeciwne do stosowanego
+ w takich językach jak C++, czy Haskell, których złożone systemy typów mają istotny wpływ na semantykę programu.
 \end{itemize}
 
 W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
-przy pomocy odpowiednich abstrakcji. W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
+a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
+W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
-Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby generowany kod w C zawierał mniejszą ilość wywołań funkcji oraz skomplikowanych
-struktur dla prostych typów istniejących już w języku C. Dodatkowo wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
+Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz skomplikowanych
+struktur dla prostych typów istniejących już w języku C. W tym celu wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
 które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty).
-Ich celem będzie znaczne zwiększenie wydajności programów pisanych w NianioLangu, które są kompilowane do C.
+Dzięki nałożonym na nie ograniczeniom możliwe jest znaczne zwiększenie wydajności programów pisanych w NianioLangu przy zachowaniu
+niezmienionej semantyki języka.
 \section{Podstawowe pojęcia}
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
