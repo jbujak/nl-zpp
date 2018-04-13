@@ -197,6 +197,51 @@ niezmienionej semantyki języka.
 \section{Tablice}
 \section{Rekordy}
 \section{Typy wariantowe}
+\section{Konwersja own $\rightarrow$ im}
+Konwersja ownów na imy jest naturalną potrzebą języka - pomimo że typy tak naprawdę reprezentują inne podejście do przechowywania danych, nierzadko pojawia się konieczność konwertowania jednych na drugie.
+Podczas prac doszliśmy do wniosku, że przypadek konwersji imów na owny nie musi być przez język obsługiwany, przede wszystkim dlatego,
+że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
+gdyż nie zabezpiecza to przed błędem w chwili konwersji.
+W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
+gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
+
+Początkowo mieliśmy kilka pomysłów dotyczących sposobu implementacji. Pierwszy pomysł polegał na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących owny na imy.
+Szybko dostrzegliśmy wady tego podejścia, przede wszystkim trudność implementacji, dużą podatność na błędy oraz wątpliwą przenośność rozwiązania.
+Szczególnie trzeci argument jest ważny, gdyż dalsze kierunki rozwoju języka prawdopodobnie przewidują przywrócenie do kompilatora możliwości kompilowania na inne języki niż C.
+
+Drugi pomysł polegał na tym, by stworzyć funkcję-wydmuszkę, w miejsce której kompilator inline'owałby właściwą definicję ima skonwertowanego z owna.
+Tutaj z kolei pojawił się problem typów rekurencyjnych (warianty) oraz puchnięcia kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
+
+Trzeci pomysł, który został faktycznie zrealizowany, jest pomysłem pośrednim - dla każdego typu nazwanego oraz dla każdego typu, który korzysta z funkcji-wydmuszki generować funkcję,
+której wywołanie byłoby następnie podpinane. Można to w pewnym sensie porównać do generowania szablonów w C++, chociaż nasz system jest oczywiście bardziej wyspecjalizowany.
+
+Pierwszym elementem rozwiązania jest zebranie informacji o tym, jakie funkcje należy wygenerować. Postanowiliśmy robić to w dwóch miejscach.
+Po pierwsze w momencie załadowania drzewa AST modułu do type checkera przechodzimy po funkcjach definiujących typy, czy przypadkiem nie korzystają one z ownów.
+Miejsce to zostało wybrane, gdyż jest to pierwsze miejsce, gdzie pojawia się konkretna już wiedza o typach zmiennych.
+Po drugie podczas sprawdzania typowania funkcji za każdym razem gdy natrafimy na naszą funkcję-wydmuszkę zapamiętujemy typ argumentu, z jakim została wywołana.
+Oczywiście pamiętać należy o przeskanowaniu, czy dane typy nie zawierają zagnieżdżonych ownów, do których także należy stworzyć stosowne funkcje.
+
+Drugim elementem rozwiązania jest generowanie kodu. Jest to dosyć trywialne zagadnienie, gdyż na podstawie drzewa reprezentującego typ
+po prostu wypisujemy do stringa kolejne instrukcje przypisujące. Warto zwrócić jedynie uwagę na fakt, że typy mogą być zagnieżdżone
+(więc czasem trzeba wołać inną funkcję konwertującego wewnętrznego owna na ima), a dla rekordów trzeba wypisać przypisanie wszystkich wartości, kod wynikowy nie może robić tego pętlą.
+
+Trzecim elementem jest wstrzyknięcie kodu. Skoro za miejsce generowania przyjęliśmy type checker, to nie możemy zrobić tego wcześniej.
+Z drugiej strony nie widzieliśmy potrzeby robienia tego później. Chcieliśmy, by kompilator mógł jak najszybciej wrócić do normalnego trybu pracy.
+Wobec tego korzystając z faktu, że sprawdzanie typów rozdzielone jest od wpisywania ich do drzewa AST, w trakcie wpisywania podmieniamy wywołania do funkcji-wydmuszki na wywołania
+odpowiedniej funkcji o automatycznie generowanej nazwie. Nazwa generowana jest na postawie nazwy dla typów nazwanych oraz na podstawie zawartości
+dla anonimowych - rozwiązanie to ma taką zaletę, że redukujemy liczbę identycznych funkcji w kodzie wynikowym.
+
+W tym momencie pozostaje jedynie problem dodania definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
+następnie przechodzi przez type checkera w sposób podobny do normalnego kodu - jest jedynie parę drobnych różnic technicznych polegających na rozwiązaniu problemu,
+że taki moduł odwołuje się do funkcji, których nie ma, gdyż są w naszym oryginalnym module. Są to jednak szczegóły implementacyjne, które można zobaczyć
+w kodzie kompilatora. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
+dalsza kompilacja przebiega tak, jakby użytkownik sam wpisał sztucznie wygenerowane funkcje.
+
+Skoro sami generujemy funkcje i wiemy, jak wygląda drzewo AST czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia moduły,
+zamiast marnować czas procesora na przejście przez parser i type checker? Doszliśmy do wniosku, że czas kompilacji ma nieduże znaczenie w trakcie pisania programów.
+Automatyczne tworzenie drzewa AST daje zaś gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
+aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ma to duże znaczenie przede wszystkim ze względu na fakt,
+że podczas kompilacji zakładamy, że generowane przez nas samych struktury są poprawne, a tylko program użytkownika może zawierać błędy.
 
 \chapter{Efekty optymalizacji i wnioski}
 \section{Porównanie czasu wykonania programów}
