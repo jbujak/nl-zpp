@@ -282,8 +282,6 @@ def process_value(ref ret : @reference_generator::refs, module : @reference_gene
 		process_value(ref ret, module, val);
 	} case :post_dec(var val) {
 		process_value(ref ret, module, val);
-	} case :var_op(var var_op) {
-		process_value(ref ret, module, var_op->left);
 	}
 }
 
