@@ -1376,6 +1376,7 @@ def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::s
 		c_def .= '#endif';
 	}
 	print_to_header(ref state, c_def . string::lf());
+	print(ref state, get_additional_type_functions_def(c_name, type, state));
 }
 
 def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::sim(), type : @tct::meta_type,
@@ -1400,7 +1401,6 @@ def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::si
 		c_def .= '#endif';
 	}
 	print_to_header(ref state, c_def . string::lf());
-	print(ref state, get_additional_type_functions_def(c_name, type, state));
 }
 
 def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
