@@ -2,7 +2,6 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-
 use tct;
 use array;
 use string;
@@ -273,11 +272,7 @@ def print_val(val : @nast::value_t, destination : @nlasm::reg_t, ref state : @tr
 	} case :parenthesis(var parenthesis) {
 		print_val(parenthesis, destination, ref state);
 	} case :bin_op(var bin_op) {
-		if (bin_op->op eq 'OV_AS' || bin_op->op eq 'OV_IS') {
-			print_var_op(bin_op, destination, ref state);
-		} else {
-			print_bin_op(val, destination, ref state);
-		}
+		print_bin_op(val, destination, ref state);
 	} case :unary_op(var unary_op) {
 		print_unary_op(unary_op, destination, ref state);
 	} case :fun_val(var fun_val) {
@@ -332,34 +327,6 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 	}
 }
 
-def print_var_op(bin_op : @nast::bin_op_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
-	return if nlasm::is_empty(destination);
-	var temporary = dest_val(bin_op->left, ref state);
-	var op_case = bin_op->right->value as :hash_key;
-	if (bin_op->op eq 'OV_IS') {
-		var label_no = get_label_number(ref state, bin_op->left->type, op_case);
-		print(ref state, :ov_is({dest => destination, src => temporary, type => op_case, label_no => label_no}));
-	} elsif (bin_op->op eq 'OV_AS') {
-		var label_no = get_label_number(ref state, bin_op->left->type, op_case);
-		var defined_types = state->logic->defined_types;
-		var left_type = unwrap_ref(bin_op->left->type, defined_types);
-		var expected_dest_type = :im;
-		if (left_type is :tct_own_var) {
-			expected_dest_type = var_type_to_reg_type((left_type as :tct_own_var){op_case} as :with_param, defined_types);
-		}
-		var current_destination = destination;
-		if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
-			current_destination = new_register(ref state, expected_dest_type);
-		}
-		print(ref state, :ov_as({dest => current_destination, src => temporary, type => op_case, label_no => label_no}));
-		if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
-			move(destination, current_destination, ref state);
-		}
-	} else {
-		die;
-	}
-}
-
 def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	var bin_op : @nast::bin_op_t = as_bin_op->value as :bin_op;
 	if (bin_op->op eq '=') {
@@ -367,6 +334,8 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 		var dest = lvalue[array::len(lvalue) - 1] as :value;
 		if (tct::is_own_type(bin_op->left->type, state->logic->defined_types)) {
 			print_own_val_init(bin_op->right, dest, ref state);
+		} elsif (bin_op->left->value is :var) {
+			print_val(bin_op->right, dest, ref state);
 		} else {
 			var destination_empty = nlasm::is_empty(destination);
 			if (destination_empty) {
@@ -384,7 +353,7 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 		var left = lvalue[array::len(lvalue) - 1] as :value;
 		var right = calc_val(bin_op->right, ref state);
 		print_array_push(left, right, ref state);
-	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->') {
+	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->' || bin_op->op eq 'OV_AS') {
 		if (tct::is_own_type(bin_op->left->type, state->logic->defined_types)) {
 			var lvalue = get_value_of_lvalue(as_bin_op, true, ref state);
 			move(destination, lvalue[array::len(lvalue) - 1] as :value, ref state);
@@ -423,10 +392,33 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 				} case :reference {
 					use_field(destination, left_val, field_name, ref state);
 				}
+			} elsif (bin_op->op eq 'OV_AS') {
+				var temporary = dest_val(bin_op->left, ref state);
+				var right_val = bin_op->right->value as :hash_key;
+				var label_no = get_label_number(ref state, bin_op->left->type, right_val);
+				var defined_types = state->logic->defined_types;
+				var left_type = unwrap_ref(bin_op->left->type, defined_types);
+				var expected_dest_type = :im;
+				if (left_type is :tct_own_var) {
+					expected_dest_type = var_type_to_reg_type((left_type as :tct_own_var){right_val} as :with_param, defined_types);
+				}
+				var current_destination = destination;
+				if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
+					current_destination = new_register(ref state, expected_dest_type);
+				}
+				print(ref state, :ov_as({dest => current_destination, src => temporary, type => right_val, label_no => label_no}));
+				if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
+					move(destination, current_destination, ref state);
+				}
 			} else {
 				die;
 			}
 		}
+	} elsif (bin_op->op eq 'OV_IS') {
+		var temporary = dest_val(bin_op->left, ref state);
+		var right_val = bin_op->right->value as :hash_key;
+		var label_no = get_label_number(ref state, bin_op->left->type, right_val);
+		print(ref state, :ov_is({dest => destination, src => temporary, type => right_val, label_no => label_no}));
 	} elsif (bin_op->op eq '+=' || bin_op->op eq '-=' || bin_op->op eq '/=' || bin_op->op eq '*=' || bin_op->op eq '.=') {
 		var right = calc_val(bin_op->right, ref state);
 		var lvalue = get_value_of_lvalue(bin_op->left, true, ref state);

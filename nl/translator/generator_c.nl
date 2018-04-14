@@ -150,7 +150,7 @@ def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd:
 	match (reg->access_type) case :value {
 		return get_reg(ref state, reg);
 	} case :reference {
-		return '*' . get_reg(ref state, reg);
+		return '(*' . get_reg(ref state, reg) . ')';
 	}
 }
 
@@ -977,6 +977,10 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 
 def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
 	return if nlasm::is_empty(dest);
+	if (src->access_type is :reference && dest->access_type is :reference) {
+		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
+		return;
+	}
 	match (dest->type) case :im {
 		print_move_to_im(ref state, src, dest);
 	} case :int {
@@ -986,7 +990,6 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg_value(ref state, src));
 		}
 	} case :string {
-		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg_value(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
@@ -1008,7 +1011,7 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 			die;
 		}
 	} case :variant(var type) {
-		die; #TODO
+		die;
 	} case :hash(var type) {
 		die;
 	}

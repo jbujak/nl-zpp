@@ -5,6 +5,7 @@
 use nl;
 use ptd;
 use own;
+use own_array;
 use string;
 
 def test_own_hash::test() {
@@ -12,6 +13,8 @@ def test_own_hash::test() {
 	napis();
 	rekord();
 	wariant();
+	tablica();
+	slownik();
 }
 
 
@@ -99,7 +102,7 @@ def rekord() {
 }
 
 def test_own_hash::hasz_wariantowy() {
-	return own::hash(ptd::var({liczba => ptd::int(), napis => ptd::string()}));
+	return own::hash(own::var({liczba => ptd::int(), napis => ptd::string()}));
 }
 
 def wariant() {
@@ -107,4 +110,48 @@ def wariant() {
 		a => :liczba(42),
 		b => :napis('abcd'),
 	};
+	die if !(h{'a'} is :liczba) || (h{'a'} as :liczba) != 42;
+	die if !(h{'b'} is :napis) || (h{'b'} as :napis) ne 'abcd';
+	rep var i (string::ord('z') - string::ord('A')) {
+		var nr = i + string::ord('A');
+		h{string::chr(nr)} = :liczba(i);
+	}
+	rep var i (string::ord('z') - string::ord('A')) {
+		var nr = i + string::ord('A');
+		die if !(h{string::chr(nr)} is :liczba) || (h{string::chr(nr)} as :liczba) != i;
+	}
+}
+
+def test_own_hash::hash_tablicowy() {
+	return own::hash(own::arr(ptd::int()));
+}
+
+def tablica() {
+	var h : @test_own_hash::hash_tablicowy = {
+		a => [4],
+		b => [2],
+	};
+	die if h{'a'}[0] != 4 || h{'b'}[0] != 2;
+	die if own_array::len(ref h{'a'}) != 1;
+	h{'a'} []= 1;
+	die if h{'a'}[1] != 1;
+	h{'c'} = [11, 12];
+	die if h{'c'}[1] != 12;
+}
+
+def test_own_hash::hash_slownikowy() {
+	return own::hash(own::hash(ptd::int()));
+}
+
+def slownik() {
+	var h : @test_own_hash::hash_slownikowy = {
+		a => { x => 1 },
+		b => { y => 2 },
+	};
+	h{'a'}{'z'} = 3;
+	h{'c'}{'z'} = 4;
+	die if h{'a'}{'x'} != 1;
+	die if h{'b'}{'y'} != 2;
+	die if h{'a'}{'z'} != 3;
+	die if h{'c'}{'z'} != 4;
 }
