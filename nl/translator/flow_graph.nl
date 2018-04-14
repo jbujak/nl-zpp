@@ -271,6 +271,10 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			#TODO
 		} case :release_index(var release_index) {
 			#TODO
+		} case :use_hash_index(var use_hash_index) {
+			#TODO
+		} case :release_hash_index(var release_hash_index) {
+			#TODO
 		} case :use_variant(var use_variant) {
 			#TODO
 		} case :release_variant(var release_variant) {

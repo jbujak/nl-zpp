@@ -257,6 +257,10 @@ def print_command(command : @nlasm::cmd_t, fun_args : @nlasm::args_type, ref cal
 		die;
 	} case :release_index(var release_index) {
 		die;
+	} case :use_hash_index(var use_hash_index) {
+		die;
+	} case :release_hash_index(var release_hash_index) {
+		die;
 	} case :use_variant(var use_variant) {
 		die;
 	} case :release_variant(var release_variant) {

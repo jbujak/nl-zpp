@@ -552,6 +552,10 @@ def step(ref state : @interpreter::state_t) : ptd::void() {
 		die;
 	} case :release_index(var release_index) {
 		die;
+	} case :use_hash_index(var use_hash_index) {
+		die;
+	} case :release_hash_index(var release_hash_index) {
+		die;
 	} case :use_variant(var use_variant) {
 		die;
 	} case :release_variant(var release_variant) {
@@ -635,6 +639,10 @@ def check_command(state : @interpreter::state_t, cmd : @nlasm::order_t) : @boole
 	} case :use_index(var use_index) {
 		die;
 	} case :release_index(var release_index) {
+		die;
+	} case :use_hash_index(var use_hash_index) {
+		die;
+	} case :release_hash_index(var release_hash_index) {
 		die;
 	} case :use_variant(var use_variant) {
 		die;

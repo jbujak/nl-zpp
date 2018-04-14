@@ -166,7 +166,7 @@ def type_checker::check_modules(ref modules : ptd::hash(@nast::module_t), lib_mo
 		var own_conv : ptd::hash(@tct::meta_type) = {};
 		fora var func (ast->fun_def) {
 			match (func->defines_type) case :yes(var type) {
-				if (tct::is_own_type(type, {})) {
+				if (tct::is_own_type(type, {}) && !type is :tct_own_hash) { #TODO forh
 					var ref_type : @tct::meta_type = :tct_ref(module_name . '::' . func->name);
 					hash::set_value(ref own_conv, own_to_im_converter::get_function_name(ref_type, known_types), ref_type);
 				}
@@ -554,8 +554,10 @@ def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, 
 		@tc_types::errors_t, known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
 	var hash_type : @tc_types::type = ptd_system::can_delete(check_val(as_forh->hash, ref modules, ref vars, ref errors, known_types),
 			ref modules, ref errors);
-	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors)) {
-	} elsif (ptd_system::is_accepted(hash_type, tct::rec({}), ref modules, ref errors)) {
+	if (ptd_system::is_accepted(hash_type, tct::hash(tct::tct_im()), ref modules, ref errors) ||
+		ptd_system::is_accepted(hash_type, tct::own_hash(tct::empty()), ref modules, ref errors)) {
+	} elsif (ptd_system::is_accepted(hash_type, tct::rec({}), ref modules, ref errors) ||
+		ptd_system::is_accepted(hash_type, tct::own_rec({}), ref modules, ref errors)) {
 		add_error(ref errors, 'forh argument should be a hash not rec') if is_known(hash_type);
 	} else {
 		add_error(ref errors, 'forh argument should be a hash type instead of ' . 
@@ -1525,6 +1527,10 @@ def get_type_record_key(bin_op : @nast::bin_op_t, ref modules : @tc_types::modul
 		left_type->type = left_type->type as :tct_hash;
 		return left_type;
 	}
+	if (left_type->type is :tct_own_hash) {
+		left_type->type = left_type->type as :tct_own_hash;
+		return left_type;
+	}
 	if (!ptd_system::is_accepted(left_type, tct::rec({}), ref modules, ref errors)
 			&& !ptd_system::is_accepted(left_type, tct::own_rec({}), ref modules, ref errors)) {
 		add_error(ref errors, 'binary operator -> can be applied only to record : ' . 
@@ -1570,7 +1576,8 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 		return left_type2;
 	}
 	if (op eq 'HASH_INDEX') {
-		if (!ptd_system::is_accepted(left_type2, tct::hash(tct::tct_im()), ref modules, ref errors)) {
+		if (!ptd_system::is_accepted(left_type2, tct::hash(tct::tct_im()), ref modules, ref errors) &&
+			!ptd_system::is_accepted(left_type2, tct::own_hash(tct::empty()), ref modules, ref errors)) {
 			add_error(ref errors, 'hash operator ''{}'' can be applied only to hash');
 			return ret_type;
 		}
@@ -1578,6 +1585,7 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 			add_error(ref errors, 'hash index should be string');
 		}
 		left_type2->type = left_type2->type as :tct_hash if left_type2->type is :tct_hash;
+		left_type2->type = left_type2->type as :tct_own_hash if left_type2->type is :tct_own_hash;
 		return left_type2;
 	}
 	if (op eq '[]=') {
@@ -2150,6 +2158,8 @@ def fill_value_types(ref value : @nast::value_t, vars : @tc_types::vars_t, modul
 			hash_decl[i]->key->type = :tct_string;
 			if (value_type is :tct_own_rec) {
 				hash_decl[i]->val->type = (value_type as :tct_own_rec){hash_decl[i]->key->value as :hash_key};
+			} elsif (value_type is :tct_own_hash) {
+				hash_decl[i]->val->type = (value_type as :tct_own_hash);
 			}
 			fill_value_types(ref hash_decl[i]->val, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		}
@@ -2231,11 +2241,11 @@ def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::va
 
 	if (binary_op->op eq '=') {
 		binary_op_val->type = binary_op->left->type;
+		binary_op->right->type = binary_op->left->type;
 	} elsif (binary_op->op eq 'ARRAY_INDEX') {
 		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq 'HASH_INDEX') {
-		#TODO set type
-		binary_op_val->type = :tct_im;
+		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq '->') {
 		binary_op_val->type = get_type_from_bin_op_and_check(binary_op, ref modules, ref vars, ref errors, known_types)->type;
 	} elsif (binary_op->op eq '[]=') {
