@@ -11,6 +11,7 @@ def test_own_hash::test() {
 	liczba();
 	napis();
 	rekord();
+	wariant();
 }
 
 
@@ -97,16 +98,13 @@ def rekord() {
 	}
 }
 
-#def test_own_hash::wariant_wewnetrzny() {
-#	return own::var({liczba1 => ptd::int()});
-#}
-#def test_own_hash::hasz_wariantowy() {
-#	return own::hash(@test_own_hash::wariant_wewnetrzny);
-#}
-#
-#def wariant() {
-#	var h : @test_own_hash::hasz_wariantowy = {
-#		a => :liczba(42),
-#		b => :napis('abcd'),
-#	};
-#}
+def test_own_hash::hasz_wariantowy() {
+	return own::hash(ptd::var({liczba => ptd::int(), napis => ptd::string()}));
+}
+
+def wariant() {
+	var h : @test_own_hash::hasz_wariantowy = {
+		a => :liczba(42),
+		b => :napis('abcd'),
+	};
+}
