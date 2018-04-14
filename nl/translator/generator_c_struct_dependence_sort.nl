@@ -65,23 +65,32 @@ def get_fun_name(fun : ptd::sim()) : ptd::sim() {
 	return (string::split('::', fun))[1];
 }
 
+def get_name(type : @tct::meta_type) : ptd::sim() {
+	if (type is :tct_ref) {
+		return get_fun_name(type as :tct_ref);
+	}
+	return anon_naming::get_anon_name(type);
+}
+
 def get_required_types_list(type : @tct::meta_type, ref node : @generator_c_struct_dependence_sort::graph_node,
-		module : ptd::sim(), known_types : ptd::hash(@tct::meta_type)) : ptd::void() {
+		module : ptd::sim()) : ptd::void() {
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
-		array::push(ref node->struct, anon_naming::get_anon_name(type));
+		array::push(ref node->struct, get_name(type));
+		get_required_types_list(arr_type, ref node, module);
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
-		array::push(ref node->struct, anon_naming::get_anon_name(type));
+		array::push(ref node->struct, get_name(type));
+		get_required_types_list(hash_type, ref node, module);
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
-		array::push(ref node->struct, anon_naming::get_anon_name(type));
+		array::push(ref node->struct, get_name(type));
 		forh var r_name, var r_type (records) {
-			get_required_types_list(r_type, ref node, module, known_types);
+			get_required_types_list(r_type, ref node, module);
 		}
 	} case :tct_ref(var ref_name) {
-		if (get_module_name(ref_name) eq module && tct::is_own_type(type, known_types)) {
+		if (get_module_name(ref_name) eq module) {
 			array::push(ref node->struct, get_fun_name(ref_name));
 		}
 	} case :tct_void {
@@ -91,13 +100,13 @@ def get_required_types_list(type : @tct::meta_type, ref node : @generator_c_stru
 	} case :tct_bool {
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var vars) {
+		array::push(ref node->struct, get_name(type));
 		forh var v_name, var v_type (vars) {
 			match (v_type) case :with_param(var param_type) {
-				get_required_types_list(param_type, ref node, module, known_types);
+				get_required_types_list(param_type, ref node, module);
 			} case :no_param {
 			}
 		}
-		array::push(ref node->struct, anon_naming::get_anon_name(type));
 	} case :tct_empty {
 	}
 }
@@ -106,7 +115,6 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
-		return true;
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 	} case :tct_rec(var records) {
@@ -131,10 +139,12 @@ def in_funs_to_graph(types : ptd::hash(@tct::meta_type), module : ptd::sim()) : 
 	forh var f_name, var f_type (types) {
 		var node = {pointer => [], struct => [], is_divisible =>
 			generator_c_struct_dependence_sort::is_divisible(f_type), type => f_type};
-		if (f_type is :tct_own_rec) {
-			forh var r_name, var r_type (f_type as :tct_own_rec) {
-				get_required_types_list(r_type, ref node, module, types);
-			}
+		get_required_types_list(f_type, ref node, module);
+		if(array::len(node->pointer) > 0) {
+			array::remove(ref node->pointer, 0);
+		}
+		if(array::len(node->struct) > 0) {
+			array::remove(ref node->struct, 0);
 		}
 		hash::set_value(ref graph, f_name, node);
 	}
