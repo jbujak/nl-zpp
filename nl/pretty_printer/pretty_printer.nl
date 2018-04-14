@@ -339,6 +339,24 @@ def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 				left = print_val(bin_op->left);
 			}
 			return wprinter::build_pretty_op_l([left, wprinter::build_sim(op), print_val(bin_op->right)]);
+		} elsif (op eq 'OV_AS') {
+			return wprinter::build_pretty_op_l([
+					print_val(bin_op->left),
+					wprinter::get_sep(),
+					wprinter::build_sim('as'),
+					wprinter::get_sep(),
+					wprinter::build_sim(':'),
+					wprinter::build_sim(bin_op->right->value as :hash_key)
+				]);
+		} elsif (op eq 'OV_IS') {
+			return wprinter::build_pretty_op_l([
+					print_val(bin_op->left),
+					wprinter::get_sep(),
+					wprinter::build_sim('is'),
+					wprinter::get_sep(),
+					wprinter::build_sim(':'),
+					wprinter::build_sim(bin_op->right->value as :hash_key)
+				]);
 		} else {
 			return wprinter::build_pretty_op_l([
 					wprinter::build_pretty_op_l([print_val(bin_op->left), wprinter::get_sep(), wprinter::build_sim(op)]),
@@ -346,21 +364,6 @@ def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 					print_val(bin_op->right)
 				]);
 		}
-	} case :var_op(var var_op) {
-		var op : ptd::sim();
-		match (var_op->op) case :ov_as {
-			op = 'as';
-		} case :ov_is {
-			op = 'is';
-		}
-		return wprinter::build_pretty_op_l([
-				print_val(var_op->left),
-				wprinter::get_sep(),
-				wprinter::build_sim(op),
-				wprinter::get_sep(),
-				wprinter::build_sim(':'),
-				wprinter::build_sim(var_op->case)
-			]);
 	} case :post_dec(var dec) {
 		return wprinter::build_pretty_op_l([print_val(dec), wprinter::build_sim('--')]);
 	} case :post_inc(var inc) {

@@ -151,14 +151,6 @@ def nast::bin_op_t() {
 	return ptd::rec({left => @nast::value_t, right => @nast::value_t, op => ptd::sim()});
 }
 
-def nast::var_op_t() {
-	return ptd::rec({
-			left => @nast::value_t,
-			op => ptd::var({ov_is => ptd::none(), ov_as => ptd::none()}),
-			case => ptd::sim()
-		});
-}
-
 def nast::fun_label_t() {
 	return ptd::rec({module => ptd::sim(), name => ptd::sim()});
 }
@@ -195,7 +187,6 @@ def nast::value_only_t() {
 		hash_decl => @nast::hash_decl_t,
 		var => ptd::sim(),
 		bin_op => @nast::bin_op_t,
-		var_op => @nast::var_op_t,
 		unary_op => @nast::unary_op_t,
 		fun_label => @nast::fun_label_t,
 		fun_val => @nast::fun_val_t,

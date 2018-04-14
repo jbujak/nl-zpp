@@ -537,15 +537,9 @@ def check_lvalue(lval : @nast::value_t, ref state : @module_checker::state_t) : 
 		return;
 	} elsif (lval->value is :bin_op) {
 		var bin_op = lval->value as :bin_op;
-		if (bin_op->op eq '->' || bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX') {
+		if (bin_op->op eq '->' || bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq 'OV_AS') {
 			check_lvalue(bin_op->left, ref state);
 			check_val(bin_op->right, ref state);
-			return;
-		}
-	} elsif (lval->value is :var_op) {
-		var var_op = lval->value as :var_op;
-		if (var_op->op is :ov_as) {
-			check_lvalue(var_op->left, ref state);
 			return;
 		}
 	} elsif (lval->value is :parenthesis) {
@@ -591,8 +585,6 @@ def check_val(val : @nast::value_t, ref state : @module_checker::state_t) : ptd:
 			check_val(bin_op->left, ref state);
 		}
 		check_val(bin_op->right, ref state);
-	} case :var_op(var var_op) {
-		check_val(var_op->left, ref state);
 	} case :unary_op(var unary_op) {
 		check_val(unary_op->val, ref state);
 	} case :fun_label(var fun_label) {
