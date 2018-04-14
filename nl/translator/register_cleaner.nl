@@ -221,6 +221,18 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 				current_owner => map{release_index->current_owner->reg_no},
 				index => map{release_index->index->reg_no},
 			});
+		} case :use_hash_index(var use_hash_index) {
+			new_cmd = :use_hash_index({
+				new_owner => map{use_hash_index->new_owner->reg_no},
+				old_owner => map{use_hash_index->old_owner->reg_no},
+				index => map{use_hash_index->index->reg_no},
+				create_if_not_exist => use_hash_index->create_if_not_exist,
+			});
+		} case :release_hash_index(var release_hash_index) {
+			new_cmd = :release_hash_index({
+				current_owner => map{release_hash_index->current_owner->reg_no},
+				index => map{release_hash_index->index->reg_no},
+			});
 		} case :use_variant(var use_variant) {
 			new_cmd = :use_variant({
 				new_owner => map{use_variant->new_owner->reg_no},
@@ -354,6 +366,11 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{use_index->val->reg_no} = true;
 			regs{use_index->index->reg_no} = true;
 		} case :release_index(var release_index) {
+		} case :use_hash_index(var use_hash_index) {
+			regs{use_hash_index->src->reg_no} = true;
+			regs{use_hash_index->val->reg_no} = true;
+			regs{use_hash_index->index->reg_no} = true;
+		} case :release_hash_index(var release_hash_index) {
 		} case :use_variant(var use_variant) {
 			regs{use_variant->src->reg_no} = true;
 			regs{use_variant->val->reg_no} = true;

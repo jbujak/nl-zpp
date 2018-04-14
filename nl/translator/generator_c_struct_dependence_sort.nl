@@ -71,9 +71,11 @@ def get_required_types_list(type : @tct::meta_type, ref node : @generator_c_stru
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
 		array::push(ref node->struct, anon_naming::get_anon_name(type));
+		get_required_types_list(arr_type, ref node, module, known_types);
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		array::push(ref node->struct, anon_naming::get_anon_name(type));
+		get_required_types_list(hash_type, ref node, module, known_types);
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 		array::push(ref node->struct, anon_naming::get_anon_name(type));
@@ -109,6 +111,7 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 		return true;
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
+		return true;
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 		return true;
@@ -326,7 +329,7 @@ def sort_graph(graph : @generator_c_struct_dependence_sort::graph)
 }
 
 def anon_add(type : @tct::meta_type, ref anons : ptd::hash(@tct::meta_type)) {
-	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var) {
+	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var || type is :tct_own_hash) {
 		var anon_name = anon_naming::get_anon_name(type);
 		if (hash::has_key(anons, anon_name)) {
 			return;
@@ -352,6 +355,9 @@ def deep_anon_add(type : @tct::meta_type, ref anons : ptd::hash(@tct::meta_type)
 			}
 		}
 		anon_add(type, ref anons);
+	} elsif (type is :tct_own_hash) {
+		deep_anon_add(type as :tct_own_hash, ref anons);
+		anon_add(type, ref anons);
 	}
 }
 
@@ -372,6 +378,8 @@ def get_anons(funs : ptd::arr(@nlasm::function_t)) : ptd::hash(@tct::meta_type) 
 				deep_anon_add(r->type as :arr, ref anons);
 			} elsif (r->type is :variant) {
 				deep_anon_add(r->type as :variant, ref anons);
+			} elsif (r->type is :hash) {
+				deep_anon_add(r->type as :hash, ref anons);
 			}
 		}
 		match (f->defines_type) case :no {

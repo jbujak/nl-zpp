@@ -16,7 +16,7 @@ def anon_naming::get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_hash(var hash_type) {
 		return '0im';
 	} case :tct_own_hash(var hash_type) {
-		return '0im';
+		return '0ownhash' . anon_naming::get_anon_name(hash_type);
 	} case :tct_rec(var records) {
 		return '0im';
 	} case :tct_own_rec(var records) {

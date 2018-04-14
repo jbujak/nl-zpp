@@ -325,27 +325,30 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_rec(var reca) {
+		var recb;
 		if (b is :tct_own_rec) {
-			var recb = b as :tct_own_rec;
-			var err = false;
-			forh var field, var type (reca) {
-				err = true if (!hash::has_key(recb, field));
-			}
-			forh var field, var type (recb) {
-				err = true if (!hash::has_key(reca, field));
-			}
-			if (err) {
-				add_error(ref errors, 'cannot merge incompatible own::rec types');
-			} else {
-				var ret = {};
-				forh var field, var type (reca) {
-					hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
-							ref errors, known_types));
-				}
-				return tct::own_rec(ret);
-			}
+			recb = b as :tct_own_rec;
+		} elsif (b is :tct_rec) {
+			recb = b as :tct_rec;
 		} else {
 			add_error(ref errors, 'cannot merge non own::rec with own::rec');
+		}
+		var err = false;
+		forh var field, var type (reca) {
+			err = true if (!hash::has_key(recb, field));
+		}
+		forh var field, var type (recb) {
+			err = true if (!hash::has_key(reca, field));
+		}
+		if (err) {
+			add_error(ref errors, 'cannot merge incompatible own::rec types');
+		} else {
+			var ret = {};
+			forh var field, var type (reca) {
+				hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
+						ref errors, known_types));
+			}
+			return tct::own_rec(ret);
 		}
 	} case :tct_hash(var hash) {
 		if (b is :tct_hash) {
@@ -356,7 +359,9 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::hash(ptd_system::cross_type(hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_hash(var hash) {
-		die; #TODO
+		if (b is :tct_own_hash) {
+			return tct::own_hash(cross_type(hash, b as :tct_own_hash, ref_inf, ref modules, ref errors, known_types));
+		}
 	}
 	return :tct_im;
 }
@@ -445,7 +450,29 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_hash(var hash_type) {
-		die; #TODO
+		if (from is :tct_rec) {
+			forh var name, var record (from as :tct_rec) {
+				match (check_assignment_info(hash_type, record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+				} case :err(var info) {
+					array::push(ref info->stack, :ptd_rec(name));
+					return :err(info);
+				}
+			}
+			return :ok;
+		}
+		return mk_err(to, from) unless from is :tct_own_hash || from is :tct_hash;
+		var from_inner;
+		if (from is :tct_hash) {
+			from_inner = from as :tct_hash;
+		} elsif (from is :tct_own_hash) {
+			from_inner = from as :tct_own_hash;
+		}
+		match (check_assignment_info(hash_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			return :ok;
+		} case :err(var info) {
+			array::push(ref info->stack, :own_hash);
+			return :err(info);
+		}
 	} case :tct_rec(var records) {
 		if (ref_inf->cast && from is :tct_hash) {
 			var left = from as :tct_hash;
