@@ -112,6 +112,10 @@ def nlasm::order_t() {
 			release_hash_index => @nlasm::release_hash_index_t,
 			use_variant => @nlasm::use_variant_t,
 			release_variant => @nlasm::release_variant_t,
+			hash_init_iter => @nlasm::hash_iter_t,
+			hash_next_iter => @nlasm::hash_iter_t,
+			hash_get_key_iter => @nlasm::hash_dest_iter_t,
+			hash_is_end => @nlasm::hash_dest_iter_t,
 		});
 }
 
@@ -187,6 +191,21 @@ def nlasm::hash_decl_t() {
 	return ptd::rec({
 		dest => @nlasm::reg_t,
 		src => ptd::arr(ptd::rec({key => ptd::sim(), val => @nlasm::reg_t}))
+	});
+}
+
+def nlasm::hash_iter_t() {
+	return ptd::rec({
+		iter => @nlasm::reg_t,
+		hash => @nlasm::reg_t
+	});
+}
+
+def nlasm::hash_dest_iter_t() {
+	return ptd::rec({
+		dest => @nlasm::reg_t,
+		iter => @nlasm::reg_t,
+		hash => @nlasm::reg_t
 	});
 }
 

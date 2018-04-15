@@ -2,7 +2,6 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-
 use array;
 use ptd;
 use tct;
@@ -563,11 +562,30 @@ def check_forh(ref as_forh : @nast::forh_t, ref modules : @tc_types::modules_t, 
 		add_error(ref errors, 'forh argument should be a hash type instead of ' . 
 			get_print_tct_type_name(hash_type->type));
 	}
-	hash_type->type = hash_type->type is :tct_hash ? hash_type->type as :tct_hash : tct::tct_im();
+	match (as_forh->val_mod) case :none {
+		if (tct::is_own_type(hash_type->type, known_types)) {
+			add_error(ref errors, 'value iterator of own hash has to be ref');
+		}
+	} case :ref {
+		if (!tct::is_own_type(hash_type->type, known_types)) {
+			add_error(ref errors, 'value iterator of non-own hash cannot be ref');
+		}
+		vars{as_forh->hash->value as :var}->referenced_by = :variable(as_forh->val->name);
+	}
+	if (hash_type->type is :tct_hash) {
+		hash_type->type = hash_type->type as :tct_hash;
+	} elsif (hash_type->type is :tct_own_hash) {
+		hash_type->type = hash_type->type as :tct_own_hash;
+	} else {
+		hash_type->type = tct::tct_im();
+	}
 	var vars_op : @tc_types::vars_t = vars;
 	add_var_decl_with_type_and_check(ref as_forh->key, {type => tct::string(), src => :speculation}, ref vars_op, ref errors);
 	add_var_decl_with_type_and_check(ref as_forh->val, hash_type, ref vars_op, ref errors);
 	break_continue_block(ref as_forh->cmd, ref modules, ref vars_op, ref errors, known_types);
+	if (as_forh->hash->value is :var) {
+		vars{as_forh->hash->value as :var}->referenced_by = :none;
+	}
 	join_vars(ref vars, vars_op, ref modules, ref errors, known_types);
 }
 
@@ -2066,8 +2084,17 @@ def fill_value_types_in_forh(ref as_forh : @nast::forh_t, vars : @tc_types::vars
 	} case :none {
 		die;
 	}
-	#TODO set hash element type
-	add_var_to_vars({overwrited => :no, type => :tct_im, referenced_by => :none}, as_forh->val->name , ref vars);
+	var value_type;
+	var hash_type = unwrap_ref(as_forh->hash->type, ref modules, ref errors);
+	if (hash_type is :tct_hash) {
+		value_type = hash_type as :tct_hash;
+	} elsif (hash_type is :tct_own_hash) {
+		value_type = hash_type as :tct_own_hash;
+	} else {
+		value_type = :tct_im;
+	}
+	as_forh->val->tct_type = :type(value_type);
+	add_var_to_vars({overwrited => :no, type => value_type, referenced_by => :none}, as_forh->val->name , ref vars);
 	fill_value_types_in_cmd(ref as_forh->cmd, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 }
 

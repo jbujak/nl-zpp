@@ -225,6 +225,14 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 		die;
 	} case :release_variant(var release_variant) {
 		die;
+	} case :hash_init_iter(var init_iter) {
+		die;
+	} case :hash_next_iter(var next_iter) {
+		die;
+	} case :hash_get_key_iter(var get_key_iter) {
+		die;
+	} case :hash_is_end(var is_end) {
+		die;
 	}
 	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
 }

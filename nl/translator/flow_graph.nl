@@ -279,6 +279,10 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			#TODO
 		} case :release_variant(var release_variant) {
 			#TODO
+		} case :hash_init_iter(var init_iter) {
+		} case :hash_next_iter(var next_iter) {
+		} case :hash_get_key_iter(var get_key_iter) {
+		} case :hash_is_end(var is_end) {
 		}
 		++nr;
 	}

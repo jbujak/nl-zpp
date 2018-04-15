@@ -415,7 +415,7 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :forh(var as_forh) {
 		var prev = save_block(ref state);
 		check_val(as_forh->hash, ref state);
-		add_var_dec(as_forh->val, true, true, true, ref state);
+		add_var_dec(as_forh->val, (!as_forh->val_mod is :ref), true, true, ref state);
 		add_var_dec(as_forh->key, true, true, true, ref state);
 		state->in_loop = true;
 		check_cmd(as_forh->cmd, ref state);

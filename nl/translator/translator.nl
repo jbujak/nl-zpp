@@ -708,6 +708,14 @@ def print_rep(as_rep : @nast::rep_t, ref state : @translator::state_t) {
 }
 
 def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
+	if (tct::is_own_type(as_forh->hash->type, state->logic->defined_types)) {
+		print_own_forh(as_forh, ref state);
+	} else {
+		print_ptd_forh(as_forh, ref state);
+	}
+}
+
+def print_ptd_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	var forh_debug = state->debug->nast_debug;
 	var after_forh_label = get_sim_label(ref state);
 	var next_iterator_label = get_sim_label(ref state);
@@ -716,12 +724,12 @@ def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	var key_register = print_var_decl(as_forh->key, ref state, :value);
 	var condition_register = new_register(ref state, :bool);
 	var value_register = print_var_decl(as_forh->val, ref state, :value);
-	var keys_arr = new_register(ref state, :im); #TODO set type
-	print_call_base(keys_arr, 'init_iter', [:val(hash)], ref state);
+	var keys_arr = new_register(ref state, :im);
+	print(ref state, :hash_init_iter({iter => keys_arr, hash => hash}));
 	print_sim_label(condition_label, ref state);
-	print_call_base(condition_register, 'is_end_hash', [:val(keys_arr)], ref state);
+	print(ref state, :hash_is_end({dest => condition_register, iter => keys_arr, hash => hash}));
 	print_if_goto(after_forh_label, condition_register, ref state);
-	print_call_base(key_register, 'get_key_iter', [:val(keys_arr)], ref state);
+	print(ref state, :hash_get_key_iter({dest => key_register, iter => keys_arr, hash => hash}));
 
 	var dest_cast_needed = !nlasm::eq_reg_type(:im, value_register->type);
 	var tmp_destination = value_register;
@@ -733,7 +741,36 @@ def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	print_cmd(as_forh->cmd, ref state);
 	print_sim_label(next_iterator_label, ref state);
 	start_new_instruction(translator::last_debug_char(forh_debug), ref state) unless as_forh->short;
-	print_call_base(keys_arr, 'next_iter', [:val(keys_arr)], ref state);
+	print(ref state, :hash_next_iter({iter => keys_arr, hash => hash}));
+	print(ref state, :goto(condition_label));
+	print_sim_label(after_forh_label, ref state);
+	state->loop_label = loop_label;
+}
+
+def print_own_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
+	var forh_debug = state->debug->nast_debug;
+	var after_forh_label = get_sim_label(ref state);
+	var next_iterator_label = get_sim_label(ref state);
+	var condition_label = get_sim_label(ref state);
+	var hash = calc_val(as_forh->hash, ref state);
+	var key_register = print_var_decl(as_forh->key, ref state, :value);
+	var condition_register = new_register(ref state, :bool);
+	var value_register = print_var_decl(as_forh->val, ref state, :reference);
+	var iter = new_register(ref state, :int);
+	print(ref state, :hash_init_iter({iter => iter, hash => hash}));
+	print_sim_label(condition_label, ref state);
+	print(ref state, :hash_is_end({dest => condition_register, iter => iter, hash => hash}));
+	print_if_goto(after_forh_label, condition_register, ref state);
+	print(ref state, :hash_get_key_iter({dest => key_register, iter => iter, hash => hash}));
+
+	use_hash_index(value_register, hash, key_register, false, ref state);
+
+	var loop_label = save_loop_break(ref state, after_forh_label, next_iterator_label);
+	print_cmd(as_forh->cmd, ref state);
+	release_hash_index(value_register, hash, ref state);
+	print_sim_label(next_iterator_label, ref state);
+	start_new_instruction(translator::last_debug_char(forh_debug), ref state) unless as_forh->short;
+	print(ref state, :hash_next_iter({iter => iter, hash => hash}));
 	print(ref state, :goto(condition_label));
 	print_sim_label(after_forh_label, ref state);
 	state->loop_label = loop_label;

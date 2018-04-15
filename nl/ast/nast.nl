@@ -230,6 +230,7 @@ def nast::forh_t() {
 	return ptd::rec({
 			key => @nast::variable_declaration_t,
 			val => @nast::variable_declaration_t,
+			val_mod => ptd::var({none => ptd::none(), ref => ptd::none()}),
 			hash => @nast::value_t,
 			cmd => @nast::cmd_t,
 			short => @nast::bool_t

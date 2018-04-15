@@ -926,6 +926,14 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		if (release_variant->current_owner->type is :im || release_variant->current_owner->access_type is :reference) {
 			print(ref state, get_reg(ref state, release_variant->current_owner) . ' = NULL');
 		}
+	} case :hash_init_iter(var init_iter) {
+		print_hash_init_iter(ref state, init_iter);
+	} case :hash_next_iter(var next_iter) {
+		print_hash_next_iter(ref state, next_iter);
+	} case :hash_get_key_iter(var get_key_iter) {
+		print_hash_get_key_iter(ref state, get_key_iter);
+	} case :hash_is_end(var is_end) {
+		print_hash_is_end(ref state, is_end);
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }
@@ -1197,6 +1205,64 @@ def print_use_variant(ref state : @generator_c::state_t, use_variant : @nlasm::u
 	print(ref state, ret);
 }
 
+def print_hash_init_iter(ref state : @generator_c::state_t, init_iter : @nlasm::hash_iter_t) : ptd::void() {
+	if (init_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => init_iter->iter,
+			mod => 'c_rt_lib',
+			fun_name => 'init_iter',
+			args => [:val(init_iter->hash)],
+		});
+	} else {
+		var new_iter = get_hash_next_iter_fun_name(get_type_name(init_iter->hash->type as :hash), state->mod_name) . '(' .
+			get_reg_ref(ref state, init_iter->hash) . ', -1)';
+		print(ref state, get_assign(ref state, init_iter->iter, new_iter));
+	}
+}
+
+def print_hash_next_iter(ref state : @generator_c::state_t, next_iter : @nlasm::hash_iter_t) : ptd::void() {
+	if (next_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => next_iter->iter,
+			mod => 'c_rt_lib',
+			fun_name => 'next_iter',
+			args => [:val(next_iter->iter)],
+		});
+	} else {
+		var new_iter = get_hash_next_iter_fun_name(get_type_name(next_iter->hash->type as :hash), state->mod_name) . '(' .
+			get_reg_ref(ref state, next_iter->hash) . ', ' . get_reg_value(ref state, next_iter->iter) . ')';
+		print(ref state, get_assign(ref state, next_iter->iter, new_iter));
+	}
+}
+
+def print_hash_get_key_iter(ref state : @generator_c::state_t, get_key_iter : @nlasm::hash_dest_iter_t) : ptd::void() {
+	if (get_key_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => get_key_iter->dest,
+			mod => 'c_rt_lib',
+			fun_name => 'get_key_iter',
+			args => [:val(get_key_iter->iter)],
+		});
+	} else {
+		var key = get_reg_value(ref state, get_key_iter->hash) . '.keys[' . get_reg_value(ref state, get_key_iter->iter) . ']';
+		print(ref state, get_fun_lib('copy', [get_reg_ref(ref state, get_key_iter->dest), key]));
+	}
+}
+
+def print_hash_is_end(ref state : @generator_c::state_t, is_end : @nlasm::hash_dest_iter_t) : ptd::void() {
+	if (is_end->hash->type is :im) {
+		generate_call(ref state, {
+			dest => is_end->dest,
+			mod => 'c_rt_lib',
+			fun_name => 'is_end_hash',
+			args => [:val(is_end->iter)],
+		});
+	} else {
+		var result = get_reg_value(ref state, is_end->iter) . ' == -1';
+		print(ref state, get_assign(ref state, is_end->dest, result));
+	}
+}
+
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
@@ -1206,7 +1272,6 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		} case :int {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :string {
-			#TODO string
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		} case :bool {
 			return get_reg_value(ref state, reg) . ' = ' . right;
@@ -1484,6 +1549,7 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		ret .= get_hash_get_fun_header(type_name, hash_type, state->mod_name) . ';' . string::lf();
+		ret .= get_hash_next_iter_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 	} case :tct_ref(var ref_name) {
@@ -1512,6 +1578,7 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		ret .= get_hash_get_fun_def(type_name, hash_type, state->mod_name) . string::lf();
+		ret .= get_hash_next_iter_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 	} case :tct_ref(var ref_name) {
@@ -1663,6 +1730,30 @@ def get_hash_get_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_typ
 		'}
 		'return &(hash->values[nr]);
 		'}';
+	return ret;
+}
+
+def get_hash_next_iter_fun_name(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . hash_type_name . '0next_iter';
+}
+
+def get_hash_next_iter_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= 'INT ' . get_hash_next_iter_fun_name(hash_type_name, mod_name) . '(';
+	ret .= hash_type_name . ' *hash, ';
+	ret .= 'INT last_iter)';
+	return ret;
+}
+
+def get_hash_next_iter_fun_def(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = get_hash_next_iter_fun_header(hash_type_name, mod_name) . '{
+	'	INT iter = last_iter + 1;
+	'	while (iter + 1 < hash->capacity && hash->keys[iter] == NULL) {
+	'		iter++;
+	'	}
+	'	if (hash->keys[iter] == NULL) return -1;
+	'	return iter;
+	'}';
 	return ret;
 }
 
