@@ -244,6 +244,28 @@ def recalculate_registers(cmds : @nlasm::cmds_t, map : ptd::hash(@nlasm::reg_t))
 			new_cmd = :release_variant({
 				current_owner => map{release_variant->current_owner->reg_no},
 			});
+		} case :hash_init_iter(var init_iter) {
+			new_cmd = :hash_init_iter({
+				iter => map{init_iter->iter->reg_no},
+				hash => map{init_iter->hash->reg_no},
+			});
+		} case :hash_next_iter(var next_iter) {
+			new_cmd = :hash_next_iter({
+				iter => map{next_iter->iter->reg_no},
+				hash => map{next_iter->hash->reg_no},
+			});
+		} case :hash_get_key_iter(var get_key_iter) {
+			new_cmd = :hash_get_key_iter({
+				dest => map{get_key_iter->dest->reg_no},
+				iter => map{get_key_iter->iter->reg_no},
+				hash => map{get_key_iter->hash->reg_no},
+			});
+		} case :hash_is_end(var is_end) {
+			new_cmd = :hash_is_end({
+				dest => map{is_end->dest->reg_no},
+				iter => map{is_end->iter->reg_no},
+				hash => map{is_end->hash->reg_no},
+			});
 		}
 		new_cmds []= {
 			annotation => recalculate_annotation(cmd->annotation, map),
@@ -375,6 +397,20 @@ def find_unused_regs(func : @nlasm::function_t) : ptd::hash(@boolean_t::type) {
 			regs{use_variant->src->reg_no} = true;
 			regs{use_variant->val->reg_no} = true;
 		} case :release_variant(var release_variant) {
+		} case :hash_init_iter(var init_iter) {
+			regs{init_iter->iter->reg_no} = true;
+			regs{init_iter->hash->reg_no} = true;
+		} case :hash_next_iter(var next_iter) {
+			regs{next_iter->iter->reg_no} = true;
+			regs{next_iter->hash->reg_no} = true;
+		} case :hash_get_key_iter(var get_key_iter) {
+			regs{get_key_iter->dest->reg_no} = true;
+			regs{get_key_iter->iter->reg_no} = true;
+			regs{get_key_iter->hash->reg_no} = true;
+		} case :hash_is_end(var is_end) {
+			regs{is_end->dest->reg_no} = true;
+			regs{is_end->iter->reg_no} = true;
+			regs{is_end->hash->reg_no} = true;
 		}
 	}
 	return regs;

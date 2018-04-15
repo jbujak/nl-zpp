@@ -641,7 +641,13 @@ def parse_cmd(ref state : @nparser::state_t) : @nparser::try_cmd_t {
 		tmp->short = false;
 		tmp->key = parse_var_decl_sim(ref state);
 		eat(ref state, ',');
-		tmp->val = parse_var_decl_sim(ref state);
+		if (ntokenizer::next_is(ref state->state, 'var')) {
+			tmp->val = parse_var_decl_sim(ref state);
+			tmp->val_mod = :none;
+		} else {
+			tmp->val = parse_ref_var_decl_sim(ref state);
+			tmp->val_mod = :ref;
+		}
 		try tmp->hash = parse_cond(ref state);
 		try tmp->cmd = parse_block(ref state);
 		ret = :forh(tmp);
@@ -752,7 +758,13 @@ def parse_cmd(ref state : @nparser::state_t) : @nparser::try_cmd_t {
 			el->short = true;
 			el->key = parse_var_decl_sim(ref state);
 			eat(ref state, ',');
-			el->val = parse_var_decl_sim(ref state);
+			if (ntokenizer::next_is(ref state->state, 'var')) {
+				el->val = parse_var_decl_sim(ref state);
+				el->val_mod = :none;
+			} else {
+				el->val = parse_ref_var_decl_sim(ref state);
+				el->val_mod = :ref;
+			}
 			eat(ref state, '(');
 			try el->hash = parse_expr(ref state);
 			eat(ref state, ')');

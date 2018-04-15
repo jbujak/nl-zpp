@@ -42,6 +42,15 @@ def liczba() {
 		nr += string::ord('A');
 		die if h{string::chr(nr)} != nr;
 	}
+	forh var key, ref val (h) {
+		die if string::ord(key) != val;
+	}
+	forh var key, ref val (h) {
+		val++;
+	}
+	forh var key, ref val (h) {
+		die if string::ord(key) + 1 != val;
+	}
 }
 
 def test_own_hash::hasz_napisowy() {
@@ -67,6 +76,15 @@ def napis() {
 	rep var i (1000) {
 		die if h{str} ne str;
 		str .= 'a';
+	}
+	forh var key, ref val (h) {
+		die if key ne val;
+	}
+	forh var key, ref val (h) {
+		val .= 'b';
+	}
+	forh var key, ref val (h) {
+		die if val ne key . 'b';
 	}
 }
 
@@ -99,6 +117,19 @@ def rekord() {
 		die if h{string::chr(nr)}->liczba != nr;
 		die if h{string::chr(nr)}->napis ne string::chr(nr);
 	}
+
+	forh var key, ref val (h) {
+		die if val->liczba != string::ord(key);
+		die if val->napis ne key;
+	}
+	forh var key, ref val (h) {
+		val->liczba++;
+		val->napis .= 'b';
+	}
+	forh var key, ref val (h) {
+		die if val->liczba != string::ord(key) + 1;
+		die if val->napis  ne key . 'b';
+	}
 }
 
 def test_own_hash::hasz_wariantowy() {
@@ -120,6 +151,28 @@ def wariant() {
 		var nr = i + string::ord('A');
 		die if !(h{string::chr(nr)} is :liczba) || (h{string::chr(nr)} as :liczba) != i;
 	}
+
+	forh var key, ref val (h) {
+		match (val) case :liczba(ref liczba) {
+			die if liczba + string::ord('A') != string::ord(key);
+		} case :napis(ref napis) {
+			die;
+		}
+	}
+	forh var key, ref val (h) {
+		match (val) case :liczba(ref liczba) {
+			liczba++;
+		} case :napis(ref napis) {
+			die;
+		}
+	}
+	forh var key, ref val (h) {
+		match (val) case :liczba(ref liczba) {
+			die if liczba + string::ord('A') != string::ord(key) + 1;
+		} case :napis(ref napis) {
+			die;
+		}
+	}
 }
 
 def test_own_hash::hash_tablicowy() {
@@ -137,6 +190,32 @@ def tablica() {
 	die if h{'a'}[1] != 1;
 	h{'c'} = [11, 12];
 	die if h{'c'}[1] != 12;
+
+	forh var key, ref val (h) {
+		if (key eq 'a') {
+			die if val[0] != 4 || val[1] != 1;
+		} elsif (key eq 'b') {
+			die if val[0] != 2;
+		} elsif (key eq 'c') {
+			die if val[0] != 11 || val[1] != 12;
+		} else {
+			die;
+		}
+	}
+	forh var key, ref val (h) {
+		val[0] = 0;
+	}
+	forh var key, ref val (h) {
+		if (key eq 'a') {
+			die if val[0] != 0 || val[1] != 1;
+		} elsif (key eq 'b') {
+			die if val[0] != 0;
+		} elsif (key eq 'c') {
+			die if val[0] != 0 || val[1] != 12;
+		} else {
+			die;
+		}
+	}
 }
 
 def test_own_hash::hash_slownikowy() {
@@ -149,9 +228,37 @@ def slownik() {
 		b => { y => 2 },
 	};
 	h{'a'}{'z'} = 3;
-	h{'c'}{'z'} = 4;
+	h{'b'}{'z'} = 4;
+	h{'c'}{'z'} = 5;
 	die if h{'a'}{'x'} != 1;
 	die if h{'b'}{'y'} != 2;
 	die if h{'a'}{'z'} != 3;
-	die if h{'c'}{'z'} != 4;
+	die if h{'b'}{'z'} != 4;
+	die if h{'c'}{'z'} != 5;
+
+	forh var key, ref val (h) {
+		if (key eq 'a') {
+			die if val{'x'} != 1 || val{'z'} != 3;
+		} elsif (key eq 'b') {
+			die if val{'y'} != 2 || val{'z'} != 4;
+		} elsif (key eq 'c') {
+			die if val{'z'} != 5;
+		} else {
+			die;
+		}
+	}
+	forh var key, ref val (h) {
+		val{'z'}++;
+	}
+	forh var key, ref val (h) {
+		if (key eq 'a') {
+			die if val{'x'} != 1 || val{'z'} != 4;
+		} elsif (key eq 'b') {
+			die if val{'y'} != 2 || val{'z'} != 5;
+		} elsif (key eq 'c') {
+			die if val{'z'} != 6;
+		} else {
+			die;
+		}
+	}
 }
