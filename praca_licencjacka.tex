@@ -198,7 +198,7 @@ niezmienionej semantyki języka.
 \section{Rekordy}
 \section{Typy wariantowe}
 \section{Konwersja own $\rightarrow$ im}
-Konwersja ownów na imy jest naturalną potrzebą języka -- pomimo że typy tak naprawdę reprezentują inne podejście do przechowywania danych, nierzadko pojawia się konieczność konwertowania jednych na drugie.
+Konwersja ownów na imy jest naturalną potrzebą języka -- rodziny typów im oraz own tak naprawdę reprezentują inne podejście do przechowywania danych, nierzadko pojawia się konieczność konwertowania jednych na drugie.
 Podczas prac doszliśmy do wniosku, że przypadek konwersji imów na owny nie musi być przez język obsługiwany, przede wszystkim dlatego,
 że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
 gdyż narzut wydajnościowy związany z tworzeniem obiektów typu im, a potem konstruowanie z nich obiektów typu own byłby zbyt duży.
@@ -237,7 +237,7 @@ następnie przechodzi przez type checker w sposób podobny do normalnego kodu --
 w kodzie kompilatora. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
 dalsza kompilacja przebiega tak, jakby użytkownik sam wpisał sztucznie wygenerowane funkcje.
 
-Skoro sami generujemy funkcje i wiemy, jak wygląda drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy,
+Skoro sami generujemy funkcje i wiemy, jak wygląda drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy w C,
 zamiast marnować czas procesora na przejście przez parser i type checker. Doszliśmy do wniosku, że czas kompilacji ma nieduże znaczenie w trakcie pisania programów.
 Automatyczne tworzenie drzewa AST daje zaś gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
 aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ma to duże znaczenie przede wszystkim ze względu na fakt,
