@@ -346,6 +346,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			recb = b as :tct_rec;
 		} else {
 			add_error(ref errors, 'cannot merge non own::rec with own::rec');
+			return tct::tct_im();
 		}
 		var err = false;
 		forh var field, var type (reca) {
@@ -432,12 +433,13 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_arr(var arr_type) {
-		return mk_err(to, from) unless from is :tct_own_arr || from is :tct_arr;
 		var from_inner;
 		if (from is :tct_arr) {
 			from_inner = from as :tct_arr;
 		} elsif (from is :tct_own_arr) {
 			from_inner = from as :tct_own_arr;
+		} else {
+			return mk_err(to, from);
 		}
 		match (check_assignment_info(arr_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			return :ok;
@@ -474,12 +476,13 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			}
 			return :ok;
 		}
-		return mk_err(to, from) unless from is :tct_own_hash || from is :tct_hash;
 		var from_inner;
 		if (from is :tct_hash) {
 			from_inner = from as :tct_hash;
 		} elsif (from is :tct_own_hash) {
 			from_inner = from as :tct_own_hash;
+		} else {
+			return mk_err(to, from);
 		}
 		match (check_assignment_info(hash_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			return :ok;

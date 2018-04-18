@@ -480,6 +480,7 @@ def print_try_ensure(try_ensure : @nast::try_ensure_t, is_try : @nast::bool_t, r
 		match (decl->value) case :value(var value) {
 			arg = calc_val(value, ref state);
 		} case :none {
+			die;
 		}
 	} case :lval(var lval) {
 		arg = calc_val(lval->right, ref state);

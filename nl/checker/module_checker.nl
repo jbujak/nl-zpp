@@ -329,7 +329,7 @@ def use_var(name : ptd::sim(), mode : ptd::var({mod => ptd::none(), set => ptd::
 	match (mode) case :get {
 		info->read = true;
 		if (!info->initialized) {	
-			add_error(ref state->errors, 'can''t use uninitialized variable: ' . name); 
+			add_error(ref state->errors, 'variable ' . name . ' can be uninitilized in some paths'); 
 			info->initialized = true; # already failed so don't propagate error
 		}
 	} case :set {
@@ -497,6 +497,9 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 		} case :void {
 			add_error(ref state->errors, 'return value in void function') unless as_return->value is :nop;
 		}
+		forh var key, var val (state->vars) {
+			state->vars{key}->initialized = true;
+		}
 		state->return->was = true;
 	} case :block(var block) {
 		var prev = save_block(ref state);
@@ -507,6 +510,9 @@ def check_cmd(cmd : @nast::cmd_t, ref state : @module_checker::state_t) {
 	} case :die(var as_die) {
 		fora var arg (as_die) {
 			check_val(arg, ref state);
+		}
+		forh var key, var val (state->vars) {
+			state->vars{key}->initialized = true;
 		}
 		state->return->was = true;
 	} case :var_decl(var var_decl) {

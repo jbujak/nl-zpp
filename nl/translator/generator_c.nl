@@ -585,7 +585,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 	return false if (array::len(function->args_type) > 0);
 	var is_math = function->annotation is :math;
 	var was_singleton = false;
-	var dest;
+	var dest = -1;
 	fora var cmd (function->commands) {
 		var command = cmd->cmd;
 		if (command is :call) {

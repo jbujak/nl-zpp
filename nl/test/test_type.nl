@@ -73,6 +73,7 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 		return '';
 	} case :b(var b_param) {
 		ret = '';
+		return ret;
 	} case :d(var dd) {
 		var cop = dd;
 		emp = cop;
@@ -80,7 +81,5 @@ def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => 
 		cop->g = '';
 		die;
 	}
-	die unless test_is(:h);
-	return ret;
 }
 

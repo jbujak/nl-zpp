@@ -221,7 +221,7 @@ def count_structs(struct : ptd::arr(@nast::fun_val_arg_t)) : ptd::sim() {
 }
 
 def get_compressed_fun_val(arg : @nast::value_t, open : ptd::sim(), close : ptd::sim()) : @wprinter::pretty_t {
-	var pprint : @wprinter::pretty_arr_t;
+	var pprint : @wprinter::pretty_arr_t = [];
 	var begin : ptd::sim() = open;
 	var end : ptd::sim() = close;
 	loop {
