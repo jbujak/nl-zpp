@@ -165,7 +165,7 @@ def type_checker::check_modules(ref modules : ptd::hash(@nast::module_t), lib_mo
 		var own_conv : ptd::hash(@tct::meta_type) = {};
 		fora var func (ast->fun_def) {
 			match (func->defines_type) case :yes(var type) {
-				if (tct::is_own_type(type, {}) && !type is :tct_own_hash) { #TODO forh
+				if (tct::is_own_type(type, {})) {
 					var ref_type : @tct::meta_type = :tct_ref(module_name . '::' . func->name);
 					hash::set_value(ref own_conv, own_to_im_converter::get_function_name(ref_type, known_types), ref_type);
 				}
