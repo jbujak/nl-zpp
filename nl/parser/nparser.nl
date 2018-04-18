@@ -325,12 +325,12 @@ def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, pr
 				new_left = :bin_op({op => op, left => left, right => parse_hash_key(ref state)});
 			} elsif (op eq 'as') {
 				eat(ref state, ':');
-				var name : ptd::sim() = parse_variant_label(ref state);
-				new_left = :var_op({op => :ov_as, left => left, case => name});
+				var name = parse_hash_key(ref state);
+				new_left = :bin_op({op => 'OV_AS', left => left, right => name});
 			} elsif (op eq 'is') {
 				eat(ref state, ':');
-				var name : ptd::sim() = parse_variant_label(ref state);
-				new_left = :var_op({op => :ov_is, left => left, case => name});
+				var name = parse_hash_key(ref state);
+				new_left = :bin_op({op => 'OV_IS', left => left, right => name});
 			} else {
 				check_lvalue(ref state, left) if (op eq '=');
 				try var tmp = parse_expr_rec(ref state, hash::get_value(nast::get_bin_ops(), op)->prec);
@@ -487,14 +487,8 @@ def check_lvalue(ref state : @nparser::state_t, lval : @nast::value_t) : ptd::vo
 		return;
 	} elsif (lval->value is :bin_op) {
 		var bin_op = lval->value as :bin_op;
-		if (bin_op->op eq '->' || bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX') {
+		if (bin_op->op eq '->' || bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq 'OV_AS') {
 			check_lvalue(ref state, bin_op->left);
-			return;
-		}
-	} elsif (lval->value is :var_op) {
-		var var_op = lval->value as :var_op;
-		if (var_op->op is :ov_as) {
-			check_lvalue(ref state, var_op->left);
 			return;
 		}
 	} elsif (lval->value is :parenthesis) {
@@ -647,7 +641,13 @@ def parse_cmd(ref state : @nparser::state_t) : @nparser::try_cmd_t {
 		tmp->short = false;
 		tmp->key = parse_var_decl_sim(ref state);
 		eat(ref state, ',');
-		tmp->val = parse_var_decl_sim(ref state);
+		if (ntokenizer::next_is(ref state->state, 'var')) {
+			tmp->val = parse_var_decl_sim(ref state);
+			tmp->val_mod = :none;
+		} else {
+			tmp->val = parse_ref_var_decl_sim(ref state);
+			tmp->val_mod = :ref;
+		}
 		try tmp->hash = parse_cond(ref state);
 		try tmp->cmd = parse_block(ref state);
 		ret = :forh(tmp);
@@ -758,7 +758,13 @@ def parse_cmd(ref state : @nparser::state_t) : @nparser::try_cmd_t {
 			el->short = true;
 			el->key = parse_var_decl_sim(ref state);
 			eat(ref state, ',');
-			el->val = parse_var_decl_sim(ref state);
+			if (ntokenizer::next_is(ref state->state, 'var')) {
+				el->val = parse_var_decl_sim(ref state);
+				el->val_mod = :none;
+			} else {
+				el->val = parse_ref_var_decl_sim(ref state);
+				el->val_mod = :ref;
+			}
 			eat(ref state, '(');
 			try el->hash = parse_expr(ref state);
 			eat(ref state, ')');

@@ -108,8 +108,14 @@ def nlasm::order_t() {
 			release_field => @nlasm::release_field_t,
 			use_index => @nlasm::use_index_t,
 			release_index => @nlasm::release_index_t,
+			use_hash_index => @nlasm::use_hash_index_t,
+			release_hash_index => @nlasm::release_hash_index_t,
 			use_variant => @nlasm::use_variant_t,
 			release_variant => @nlasm::release_variant_t,
+			hash_init_iter => @nlasm::hash_iter_t,
+			hash_next_iter => @nlasm::hash_iter_t,
+			hash_get_key_iter => @nlasm::hash_dest_iter_t,
+			hash_is_end => @nlasm::hash_dest_iter_t,
 		});
 }
 
@@ -150,6 +156,22 @@ def nlasm::release_index_t() {
 	});
 }
 
+def nlasm::use_hash_index_t() {
+	return ptd::rec({
+		new_owner => @nlasm::reg_t,
+		old_owner => @nlasm::reg_t,
+		index => @nlasm::reg_t,
+		create_if_not_exist => @boolean_t::type,
+	});
+}
+
+def nlasm::release_hash_index_t() {
+	return ptd::rec({
+		current_owner => @nlasm::reg_t,
+		index => @nlasm::reg_t,
+	});
+}
+
 def nlasm::use_variant_t() {
 	return ptd::rec({
 		new_owner => @nlasm::reg_t,
@@ -169,6 +191,21 @@ def nlasm::hash_decl_t() {
 	return ptd::rec({
 		dest => @nlasm::reg_t,
 		src => ptd::arr(ptd::rec({key => ptd::sim(), val => @nlasm::reg_t}))
+	});
+}
+
+def nlasm::hash_iter_t() {
+	return ptd::rec({
+		iter => @nlasm::reg_t,
+		hash => @nlasm::reg_t
+	});
+}
+
+def nlasm::hash_dest_iter_t() {
+	return ptd::rec({
+		dest => @nlasm::reg_t,
+		iter => @nlasm::reg_t,
+		hash => @nlasm::reg_t
 	});
 }
 
@@ -216,6 +253,7 @@ def nlasm::reg_type() {
 		rec => @tct::meta_type,
 		arr => @tct::meta_type,
 		variant => @tct::meta_type,
+		hash => @tct::meta_type,
 	});
 }
 
@@ -249,6 +287,8 @@ def nlasm::eq_reg_type(reg1 : @nlasm::reg_type, reg2 : @nlasm::reg_type) : @bool
 		return reg2 is :arr;
 	} case :variant(var type) {
 		return reg2 is :variant;
+	} case :hash (var type) {
+		return reg2 is :hash;
 	}
 }
 

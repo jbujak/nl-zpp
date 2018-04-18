@@ -150,7 +150,7 @@ def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd:
 	match (reg->access_type) case :value {
 		return get_reg(ref state, reg);
 	} case :reference {
-		return '*' . get_reg(ref state, reg);
+		return '(*' . get_reg(ref state, reg) . ')';
 	}
 }
 
@@ -784,6 +784,8 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 			die;
 		} case :variant(var type) {
 			die;
+		} case :hash(var type) {
+			die;
 		}
 	} case :get_frm_idx(var get) {
 		var r = get_fun_lib('array_get', [get_reg_value(ref state, get->src), get_reg(ref state, get->idx)]);
@@ -901,6 +903,9 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		} case :variant(var type) {
 			#TODO
 			print(ref state, '//clear ' . get_reg(ref state, reg));
+		} case :hash(var type) {
+			#TODO
+			print(ref state, '//clear ' . get_reg(ref state, reg));
 		}
 	} case :var_decl(var decl) {
 	} case :use_field(var use_field) {
@@ -911,12 +916,24 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t) : ptd::voi
 		print_use_index(ref state, use_index);
 	} case :release_index(var release_index) {
 		print(ref state, get_reg(ref state, release_index->current_owner) . ' = NULL');
+	} case :use_hash_index(var use_hash_index) {
+		print_use_hash_index(ref state, use_hash_index);
+	} case :release_hash_index(var release_hash_index) {
+		print(ref state, get_reg(ref state, release_hash_index->current_owner) . ' = NULL');
 	} case :use_variant(var use_variant) {
 		print_use_variant(ref state, use_variant);
 	} case :release_variant(var release_variant) {
 		if (release_variant->current_owner->type is :im || release_variant->current_owner->access_type is :reference) {
 			print(ref state, get_reg(ref state, release_variant->current_owner) . ' = NULL');
 		}
+	} case :hash_init_iter(var init_iter) {
+		print_hash_init_iter(ref state, init_iter);
+	} case :hash_next_iter(var next_iter) {
+		print_hash_next_iter(ref state, next_iter);
+	} case :hash_get_key_iter(var get_key_iter) {
+		print_hash_get_key_iter(ref state, get_key_iter);
+	} case :hash_is_end(var is_end) {
+		print_hash_is_end(ref state, is_end);
 	}
 	print(ref state, ';' . string::lf()) unless is_nop;
 }
@@ -949,6 +966,14 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 	} case :variant(var type) {
 		target_type_name = get_type_name(type);
 		default_value = '{}';
+	} case :hash(var type) {
+		target_type_name = get_type_name(type);
+		default_value = '{
+			'.capacity = 0,
+			'.size = 0,
+			'.values = NULL,
+			'.keys = NULL
+			'}';
 	}
 	match (reg->access_type) case :value {
 	} case :reference {
@@ -960,6 +985,10 @@ def print_declaration(ref state : @generator_c::state_t, reg : @nlasm::reg_t){
 
 def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @nlasm::reg_t) {
 	return if nlasm::is_empty(dest);
+	if (src->access_type is :reference && dest->access_type is :reference) {
+		print(ref state, get_reg(ref state, dest) . ' = ' . get_reg(ref state, src));
+		return;
+	}
 	match (dest->type) case :im {
 		print_move_to_im(ref state, src, dest);
 	} case :int {
@@ -969,7 +998,6 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 			print(ref state, get_reg_value(ref state, dest) . ' = ' . get_reg_value(ref state, src));
 		}
 	} case :string {
-		#TODO string
 		var arg = [get_reg_ref(ref state, dest), get_reg_value(ref state, src)];
 		print(ref state, get_fun_lib('copy', arg));
 	} case :bool {
@@ -991,7 +1019,9 @@ def print_move(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest : @n
 			die;
 		}
 	} case :variant(var type) {
-		die; #TODO
+		die;
+	} case :hash(var type) {
+		die;
 	}
 }
 
@@ -1015,6 +1045,8 @@ def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, des
 		die;
 	} case :variant(var type) {
 		die;
+	} case :hash(var type) {
+		die;
 	}
 }
 
@@ -1034,6 +1066,8 @@ def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : pt
 		die;
 	} case :variant(var type) {
 		die;
+	} case :hash(var type) {
+		die;
 	}
 }
 
@@ -1051,6 +1085,8 @@ def get_value_from_im(type : @nlasm::reg_type, im : ptd::sim()) : ptd::sim() {
 	} case :arr(var arr_type) {
 		die;
 	} case :variant(var var_type) {
+		die;
+	} case :hash(var hash_type) {
 		die;
 	}
 }
@@ -1096,7 +1132,14 @@ def print_hash_declaration(ref state : @generator_c::state_t, hash_decl : @nlasm
 	} elsif (hash_decl->dest->type is :rec)  {
 		var fields = [];
 		fora var el (hash_decl->src) {
-			fields []= get_reg(ref state, hash_decl->dest) . '.' . get_field_name(el->key) . ' = ' . get_reg(ref state, el->val);
+			var lhs = get_reg(ref state, hash_decl->dest) . '.' . get_field_name(el->key);
+			var rhs = get_reg(ref state, el->val);
+			if (el->val->type is :im) {
+				fields []= lhs . ' = NULL';
+				fields []=  get_fun_lib('copy', ['&(' . lhs . ')', rhs]);
+			} else {
+				fields []= lhs . ' = ' . rhs;
+			}
 		}
 		print(ref state, array::join(';' . string::lf(), fields));
 	} else {
@@ -1135,12 +1178,89 @@ def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_i
 	}
 }
 
+def print_use_hash_index(ref state : @generator_c::state_t, use_hash_index : @nlasm::use_hash_index_t) : ptd::void() {
+	if (use_hash_index->old_owner->type is :hash) {
+		var ret =  get_reg(ref state, use_hash_index->new_owner) . ' = ' .
+			get_hash_get_fun_name(get_type_name(use_hash_index->old_owner->type as :hash), state->mod_name) . '(';
+		match (use_hash_index->old_owner->access_type) case :value {
+			ret .= '&';
+		} case :reference {
+		}
+		ret .= get_reg(ref state, use_hash_index->old_owner) . ', ';
+		ret .=  get_reg_value(ref state, use_hash_index->index) . ', ';
+		ret .=  (use_hash_index->create_if_not_exist ? 'true' : 'false') . ')';
+		print(ref state, ret);
+	} elsif (use_hash_index->old_owner->type is :im) {
+		#TODO
+	} else {
+		die;
+	}
+}
+
 def print_use_variant(ref state : @generator_c::state_t, use_variant : @nlasm::use_variant_t) : ptd::void() {
 	var access_op = get_access_op(use_variant->old_owner);
 	var ret = 'if (' . get_reg(ref state, use_variant->old_owner) . access_op . 'label != ' . use_variant->label_no . ') nl_die();' . string::lf();
 	ret .= get_reg(ref state, use_variant->new_owner) . ' = ' . get_reg(ref state, use_variant->old_owner) . access_op;
 	ret .= 'value.' . get_case_name(use_variant->label);
 	print(ref state, ret);
+}
+
+def print_hash_init_iter(ref state : @generator_c::state_t, init_iter : @nlasm::hash_iter_t) : ptd::void() {
+	if (init_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => init_iter->iter,
+			mod => 'c_rt_lib',
+			fun_name => 'init_iter',
+			args => [:val(init_iter->hash)],
+		});
+	} else {
+		var new_iter = get_hash_next_iter_fun_name(get_type_name(init_iter->hash->type as :hash), state->mod_name) . '(' .
+			get_reg_ref(ref state, init_iter->hash) . ', -1)';
+		print(ref state, get_assign(ref state, init_iter->iter, new_iter));
+	}
+}
+
+def print_hash_next_iter(ref state : @generator_c::state_t, next_iter : @nlasm::hash_iter_t) : ptd::void() {
+	if (next_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => next_iter->iter,
+			mod => 'c_rt_lib',
+			fun_name => 'next_iter',
+			args => [:val(next_iter->iter)],
+		});
+	} else {
+		var new_iter = get_hash_next_iter_fun_name(get_type_name(next_iter->hash->type as :hash), state->mod_name) . '(' .
+			get_reg_ref(ref state, next_iter->hash) . ', ' . get_reg_value(ref state, next_iter->iter) . ')';
+		print(ref state, get_assign(ref state, next_iter->iter, new_iter));
+	}
+}
+
+def print_hash_get_key_iter(ref state : @generator_c::state_t, get_key_iter : @nlasm::hash_dest_iter_t) : ptd::void() {
+	if (get_key_iter->hash->type is :im) {
+		generate_call(ref state, {
+			dest => get_key_iter->dest,
+			mod => 'c_rt_lib',
+			fun_name => 'get_key_iter',
+			args => [:val(get_key_iter->iter)],
+		});
+	} else {
+		var key = get_reg_value(ref state, get_key_iter->hash) . '.keys[' . get_reg_value(ref state, get_key_iter->iter) . ']';
+		print(ref state, get_fun_lib('copy', [get_reg_ref(ref state, get_key_iter->dest), key]));
+	}
+}
+
+def print_hash_is_end(ref state : @generator_c::state_t, is_end : @nlasm::hash_dest_iter_t) : ptd::void() {
+	if (is_end->hash->type is :im) {
+		generate_call(ref state, {
+			dest => is_end->dest,
+			mod => 'c_rt_lib',
+			fun_name => 'is_end_hash',
+			args => [:val(is_end->iter)],
+		});
+	} else {
+		var result = get_reg_value(ref state, is_end->iter) . ' == -1';
+		print(ref state, get_assign(ref state, is_end->dest, result));
+	}
 }
 
 def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
@@ -1152,7 +1272,6 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		} case :int {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :string {
-			#TODO string
 			return get_fun_lib('move', [get_reg_ref(ref state, reg), right]);
 		} case :bool {
 			return get_reg_value(ref state, reg) . ' = ' . right;
@@ -1161,6 +1280,8 @@ def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : p
 		} case :arr(var type) {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		} case :variant(var type) {
+			return get_reg_value(ref state, reg) . ' = ' . right;
+		} case :hash(var type) {
 			return get_reg_value(ref state, reg) . ' = ' . right;
 		}
 	}
@@ -1234,7 +1355,13 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_hash(var hash_type) {
 		return im_t();
 	} case :tct_own_hash(var hash_type) {
-		return im_t();
+		var ret = 'struct ' . name . ' {
+			'INT capacity;
+			'INT size;
+			'' . get_type_name(hash_type) . ' *values;
+			'' . im_t() . ' *keys;
+			'}';
+		return ret;
 	} case :tct_rec(var records) {
 		return im_t();
 	} case :tct_own_rec(var records) {
@@ -1287,7 +1414,7 @@ def get_case_name(field : ptd::sim()) : ptd::sim() {
 }
 
 def get_type_name(type : @tct::meta_type) : ptd::sim() {
-	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var) {
+	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var || type is :tct_own_hash) {
 		return anon_naming::get_anon_name(type);
 	} else {
 		return get_type_to_c(type, '');
@@ -1317,6 +1444,7 @@ def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::s
 		c_def .= '#endif';
 	}
 	print_to_header(ref state, c_def . string::lf());
+	print(ref state, get_additional_type_functions_def(c_name, type, state));
 }
 
 def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::sim(), type : @tct::meta_type,
@@ -1341,7 +1469,6 @@ def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::si
 		c_def .= '#endif';
 	}
 	print_to_header(ref state, c_def . string::lf());
-	print(ref state, get_additional_type_functions_def(c_name, type, state));
 }
 
 def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
@@ -1364,6 +1491,8 @@ def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
 		ret = 'arr';
 	} case :variant(var type) {
 		ret = 'var';
+	} case :hash(var type) {
+		ret = 'hash';
 	}
 	match (reg->access_type) case :value {
 	} case :reference {
@@ -1419,6 +1548,8 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 		ret .= get_array_len_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
+		ret .= get_hash_get_fun_header(type_name, hash_type, state->mod_name) . ';' . string::lf();
+		ret .= get_hash_next_iter_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 	} case :tct_ref(var ref_name) {
@@ -1446,6 +1577,8 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 		ret .= get_array_len_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
+		ret .= get_hash_get_fun_def(type_name, hash_type, state->mod_name) . string::lf();
+		ret .= get_hash_next_iter_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 	} case :tct_ref(var ref_name) {
@@ -1535,6 +1668,95 @@ def get_array_len_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
 	return ret;
 }
 
+def get_hash_get_fun_name(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . hash_type_name . '0get_ptr';
+}
+
+def get_hash_get_fun_header(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= get_type_name(hash_type) . ' *' . get_hash_get_fun_name(hash_type_name, mod_name) . '(';
+	ret .= hash_type_name . ' *hash, ';
+	ret .= im_t() . 'key, ';
+	ret .= bool_t() . 'create_if_not_exist)';
+	return ret;
+}
+
+def get_hash_get_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) {
+	var ret = '';
+	var default_size = 16;
+	var type = get_type_name(hash_type);
+	var sizeof = 'sizeof(' . type . ')';
+	ret .= get_hash_get_fun_header(hash_type_name, hash_type, mod_name) . ' {
+		'if (hash->values == NULL) {
+		'	hash->capacity = ' . default_size . ';
+		'	hash->size = 0;
+		'	hash->values = alloc_mem(hash->capacity*' . sizeof .');
+		'	hash->keys = alloc_mem(hash->capacity*sizeof(' . im_t() .'));
+		'	memset(hash->values, 0, hash->capacity*' . sizeof .');
+		'	memset(hash->keys, 0, hash->capacity*sizeof(' . im_t() .'));
+		'} else if (2*hash->size >= hash->capacity) {
+		'	' . int_t() . ' old_capacity = hash->capacity;
+		'	' . im_t() . ' *old_keys = hash->keys;
+		'	' . type . ' *old_values = hash->values;
+		'	hash->capacity *= 2;
+		'	hash->values = alloc_mem(hash->capacity*' . sizeof . ');
+		'	hash->keys = alloc_mem(hash->capacity*sizeof(' . im_t() .'));
+		'	memset(hash->values, 0, hash->capacity*' . sizeof .');
+		'	memset(hash->keys, 0, hash->capacity*sizeof(' . im_t() .'));
+		'	for (int i = 0; i < old_capacity; i++) {
+		'		if (old_keys[i] != NULL) {
+		'		unsigned nr = get_hash_key(old_keys[i]) % hash->capacity;
+		'		while (hash->keys[nr] != NULL && !nl_compare_internal(hash->keys[nr], old_keys[i])) {
+		'			nr = (nr + 1) % hash->capacity;
+		'		}
+		'		hash->keys[nr] = old_keys[i];
+		'		hash->values[nr] = old_values[i];
+		'		}
+		'	}
+		'free_mem(old_keys, old_capacity*sizeof(' . im_t() . '));
+		'free_mem(old_values, old_capacity*sizeof(' . type . '));
+		'}
+		'unsigned nr = get_hash_key(key) % hash->capacity;
+		'while (hash->keys[nr] != NULL && !nl_compare_internal(hash->keys[nr], key)) {
+		'	nr = (nr + 1) % hash->capacity;
+		'}
+		'if (hash->keys[nr] == NULL) {
+		'	if (create_if_not_exist) {
+		'		c_rt_lib0copy(&hash->keys[nr], key);
+		'		hash->size++;
+		'	} else {
+		'		nl_die();
+		'	}
+		'}
+		'return &(hash->values[nr]);
+		'}';
+	return ret;
+}
+
+def get_hash_next_iter_fun_name(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	return mod_name . '0' . hash_type_name . '0next_iter';
+}
+
+def get_hash_next_iter_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = '';
+	ret .= 'INT ' . get_hash_next_iter_fun_name(hash_type_name, mod_name) . '(';
+	ret .= hash_type_name . ' *hash, ';
+	ret .= 'INT last_iter)';
+	return ret;
+}
+
+def get_hash_next_iter_fun_def(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+	var ret = get_hash_next_iter_fun_header(hash_type_name, mod_name) . '{
+	'	INT iter = last_iter + 1;
+	'	while (iter + 1 < hash->capacity && hash->keys[iter] == NULL) {
+	'		iter++;
+	'	}
+	'	if (hash->keys[iter] == NULL) return -1;
+	'	return iter;
+	'}';
+	return ret;
+}
+
 def get_variant_make_fun_name(variant_type_name : ptd::sim(), mod_name : ptd::sim()) : ptd::sim() {
 	return mod_name . '0' . variant_type_name . '0ov_mk';
 }
@@ -1563,7 +1785,6 @@ def get_variant_make_fun_def(variant_type_name : ptd::sim(), mod_name : ptd::sim
 		'}';
 	return ret;
 }
-
 
 def takes_own_arg(function : @nlasm::function_t) : @boolean_t::type {
 	fora var arg (function->args_type) {

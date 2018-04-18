@@ -267,9 +267,16 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 		} case :use_index(var use_index) {
 			#TODO
 		} case :release_index(var release_index) {
+		} case :use_hash_index(var use_hash_index) {
+			#TODO
+		} case :release_hash_index(var release_hash_index) {
 		} case :use_variant(var use_variant) {
 			#TODO
 		} case :release_variant(var release_variant) {
+		} case :hash_init_iter(var init_iter) {
+		} case :hash_next_iter(var next_iter) {
+		} case :hash_get_key_iter(var get_key_iter) {
+		} case :hash_is_end(var is_end) {
 		}
 		if (const is :yes) {
 			fora var dest (const_dest) {
