@@ -196,19 +196,19 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		if (b is :tct_int) {
 			return :tct_int;
 		} else {
-			add_error(ref errors, 'cannot assign non int to int');
+			return :tct_im;
 		}
 	} case :tct_string {
 		if (b is :tct_string) {
 			return :tct_string;
 		} else {
-			add_error(ref errors, 'cannot assign non string to string');
+			return :tct_im;
 		}
 	} case :tct_bool {
 		if (b is :tct_bool) {
 			return :tct_bool;
 		} else {
-			add_error(ref errors, 'cannot assign non boolean to bool');
+			return :tct_im;
 		}
 	} case :tct_ref(var ref_name) {
 		die;

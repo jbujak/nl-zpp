@@ -176,9 +176,9 @@ def own_to_im_converter::get_function(type : @tct::meta_type, known_types : ptd:
 	} case :tct_own_hash (var p) {
 		conv_fun_name = own_to_im_converter::get_function_name(p, known_types);
 		body .= 'var h : ' . ret_type . ' = {};';
-		body .= 'forh var key, var value (arg) {';
+		body .= 'forh var key, ref value (arg) {';
 		body .= 'h{key} = ' . conv_fun_name . '('. own_to_im_converter::get_required_arg_type(p, known_types)
-			. 'value);';
+			. ' value);';
 		body .= '} return h;';
 		hash::set_value(ref required_functions, conv_fun_name, p);
 	} case :tct_arr (var p) {
