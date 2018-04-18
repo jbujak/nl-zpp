@@ -2,7 +2,6 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-
 use tct;
 use array;
 use string;
@@ -54,6 +53,7 @@ def translator::lvalue_values_t() {
 			as => ptd::rec({value => @nlasm::reg_t, label => ptd::sim()}),
 			use_variant => ptd::rec({src_reg => @nlasm::reg_t, dest_reg => @nlasm::reg_t, label => ptd::sim()}),
 			hashkey => ptd::rec({value => @nlasm::reg_t, key => @nlasm::reg_t}),
+			use_hash_index => ptd::rec({src_reg => @nlasm::reg_t, dest_reg => @nlasm::reg_t, index => @nlasm::reg_t}),
 		}));
 }
 
@@ -264,7 +264,7 @@ def print_val(val : @nast::value_t, destination : @nlasm::reg_t, ref state : @tr
 	} case :ternary_op(var op) {
 		print_ternary_op(op, destination, ref state);
 	} case :hash_key(var key) {
-		die;
+		load_const(key, destination, ref state);
 	} case :variant(var variant) {
 		print_variant(variant, destination, ref state);
 	} case :var(var variable) {
@@ -273,8 +273,6 @@ def print_val(val : @nast::value_t, destination : @nlasm::reg_t, ref state : @tr
 		print_val(parenthesis, destination, ref state);
 	} case :bin_op(var bin_op) {
 		print_bin_op(val, destination, ref state);
-	} case :var_op(var var_op) {
-		print_var_op(var_op, destination, ref state);
 	} case :unary_op(var unary_op) {
 		print_unary_op(unary_op, destination, ref state);
 	} case :fun_val(var fun_val) {
@@ -329,44 +327,25 @@ def print_unary_op(unary_op : @nast::unary_op_t, destination : @nlasm::reg_t, re
 	}
 }
 
-def print_var_op(var_op : @nast::var_op_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
-	return if nlasm::is_empty(destination);
-	var temporary = dest_val(var_op->left, ref state);
-	match (var_op->op) case :ov_is {
-		var label_no = get_label_number(ref state, var_op->left->type, var_op->case);
-		print(ref state, :ov_is({dest => destination, src => temporary, type => var_op->case, label_no => label_no}));
-	} case :ov_as {
-		var label_no = get_label_number(ref state, var_op->left->type, var_op->case);
-		var defined_types = state->logic->defined_types;
-		var left_type = unwrap_ref(var_op->left->type, defined_types);
-		var expected_dest_type = :im;
-		if (left_type is :tct_own_var) {
-			expected_dest_type = var_type_to_reg_type((left_type as :tct_own_var){var_op->case} as :with_param, defined_types);
-		}
-		var current_destination = destination;
-		if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
-			current_destination = new_register(ref state, expected_dest_type);
-		}
-		print(ref state, :ov_as({dest => current_destination, src => temporary, type => var_op->case, label_no => label_no}));
-		if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
-			move(destination, current_destination, ref state);
-		}
-	}
-}
-
 def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	var bin_op : @nast::bin_op_t = as_bin_op->value as :bin_op;
 	if (bin_op->op eq '=') {
 		var lvalue = get_value_of_lvalue(bin_op->left, false, ref state);
-		var destination_empty = nlasm::is_empty(destination);
-		if (destination_empty) {
-			destination = {type => :im, reg_no => '', access_type => :value};
-		}
-		var right = dest_val(bin_op->right, ref state);
 		var dest = lvalue[array::len(lvalue) - 1] as :value;
-		move(dest, right, ref state);
-		if (!destination_empty) {
-			move(destination, dest, ref state);
+		if (tct::is_own_type(bin_op->left->type, state->logic->defined_types)) {
+			print_own_val_init(bin_op->right, dest, ref state);
+		} elsif (bin_op->left->value is :var) {
+			print_val(bin_op->right, dest, ref state);
+		} else {
+			var destination_empty = nlasm::is_empty(destination);
+			if (destination_empty) {
+				destination = {type => :im, reg_no => '', access_type => :value};
+			}
+			var right = dest_val(bin_op->right, ref state);
+			move(dest, right, ref state);
+			if (!destination_empty) {
+				move(destination, dest, ref state);
+			}
 		}
 		set_value_of_lvalue(lvalue, false, ref state);
 	} elsif (bin_op->op eq '[]=') {
@@ -374,7 +353,7 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 		var left = lvalue[array::len(lvalue) - 1] as :value;
 		var right = calc_val(bin_op->right, ref state);
 		print_array_push(left, right, ref state);
-	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->') {
+	} elsif (bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->' || bin_op->op eq 'OV_AS') {
 		if (tct::is_own_type(bin_op->left->type, state->logic->defined_types)) {
 			var lvalue = get_value_of_lvalue(as_bin_op, true, ref state);
 			move(destination, lvalue[array::len(lvalue) - 1] as :value, ref state);
@@ -390,6 +369,8 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 					release_index(use_index->dest_reg, use_index->index, ref state);
 				} case :use_variant(var use_variant) {
 					release_variant(use_variant->dest_reg, ref state);
+				} case :use_hash_index(var use_hash_index) {
+					release_hash_index(use_hash_index->dest_reg, use_hash_index->index, ref state);
 				}
 			}
 		} else {
@@ -399,7 +380,11 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 				print_get_from_index(destination, left_val, index_val, ref state);
 			} elsif (bin_op->op eq 'HASH_INDEX') {
 				var key_val = calc_val(bin_op->right, ref state);
-				print_call_base(destination, 'hash_get_value', [:val(left_val), :val(key_val)], ref state);
+				var dest_cast_needed = !nlasm::eq_reg_type(:im, destination->type);
+				var tmp_destination = destination;
+				tmp_destination = new_register(ref state, :im) if dest_cast_needed;
+				print_call_base(tmp_destination, 'hash_get_value', [:val(left_val), :val(key_val)], ref state);
+				move(destination, tmp_destination, ref state) if dest_cast_needed;
 			} elsif (bin_op->op eq '->') {
 				var field_name = bin_op->right->value as :hash_key;
 				match (destination->access_type) case :value {
@@ -407,10 +392,33 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 				} case :reference {
 					use_field(destination, left_val, field_name, ref state);
 				}
+			} elsif (bin_op->op eq 'OV_AS') {
+				var temporary = dest_val(bin_op->left, ref state);
+				var right_val = bin_op->right->value as :hash_key;
+				var label_no = get_label_number(ref state, bin_op->left->type, right_val);
+				var defined_types = state->logic->defined_types;
+				var left_type = unwrap_ref(bin_op->left->type, defined_types);
+				var expected_dest_type = :im;
+				if (left_type is :tct_own_var) {
+					expected_dest_type = var_type_to_reg_type((left_type as :tct_own_var){right_val} as :with_param, defined_types);
+				}
+				var current_destination = destination;
+				if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
+					current_destination = new_register(ref state, expected_dest_type);
+				}
+				print(ref state, :ov_as({dest => current_destination, src => temporary, type => right_val, label_no => label_no}));
+				if (!nlasm::eq_reg_type(destination->type, expected_dest_type)) {
+					move(destination, current_destination, ref state);
+				}
 			} else {
 				die;
 			}
 		}
+	} elsif (bin_op->op eq 'OV_IS') {
+		var temporary = dest_val(bin_op->left, ref state);
+		var right_val = bin_op->right->value as :hash_key;
+		var label_no = get_label_number(ref state, bin_op->left->type, right_val);
+		print(ref state, :ov_is({dest => destination, src => temporary, type => right_val, label_no => label_no}));
 	} elsif (bin_op->op eq '+=' || bin_op->op eq '-=' || bin_op->op eq '/=' || bin_op->op eq '*=' || bin_op->op eq '.=') {
 		var right = calc_val(bin_op->right, ref state);
 		var lvalue = get_value_of_lvalue(bin_op->left, true, ref state);
@@ -700,6 +708,14 @@ def print_rep(as_rep : @nast::rep_t, ref state : @translator::state_t) {
 }
 
 def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
+	if (tct::is_own_type(as_forh->hash->type, state->logic->defined_types)) {
+		print_own_forh(as_forh, ref state);
+	} else {
+		print_ptd_forh(as_forh, ref state);
+	}
+}
+
+def print_ptd_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	var forh_debug = state->debug->nast_debug;
 	var after_forh_label = get_sim_label(ref state);
 	var next_iterator_label = get_sim_label(ref state);
@@ -708,18 +724,53 @@ def print_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
 	var key_register = print_var_decl(as_forh->key, ref state, :value);
 	var condition_register = new_register(ref state, :bool);
 	var value_register = print_var_decl(as_forh->val, ref state, :value);
-	var keys_arr = new_register(ref state, :im); #TODO set type
-	print_call_base(keys_arr, 'init_iter', [:val(hash)], ref state);
+	var keys_arr = new_register(ref state, :im);
+	print(ref state, :hash_init_iter({iter => keys_arr, hash => hash}));
 	print_sim_label(condition_label, ref state);
-	print_call_base(condition_register, 'is_end_hash', [:val(keys_arr)], ref state);
+	print(ref state, :hash_is_end({dest => condition_register, iter => keys_arr, hash => hash}));
 	print_if_goto(after_forh_label, condition_register, ref state);
-	print_call_base(key_register, 'get_key_iter', [:val(keys_arr)], ref state);
-	print_call_base(value_register, 'hash_get_value', [:val(hash), :val(key_register)], ref state);
+	print(ref state, :hash_get_key_iter({dest => key_register, iter => keys_arr, hash => hash}));
+
+	var dest_cast_needed = !nlasm::eq_reg_type(:im, value_register->type);
+	var tmp_destination = value_register;
+	tmp_destination = new_register(ref state, :im) if dest_cast_needed;
+	print_call_base(tmp_destination, 'hash_get_value', [:val(hash), :val(key_register)], ref state);
+	move(value_register, tmp_destination, ref state) if dest_cast_needed;
+
 	var loop_label = save_loop_break(ref state, after_forh_label, next_iterator_label);
 	print_cmd(as_forh->cmd, ref state);
 	print_sim_label(next_iterator_label, ref state);
 	start_new_instruction(translator::last_debug_char(forh_debug), ref state) unless as_forh->short;
-	print_call_base(keys_arr, 'next_iter', [:val(keys_arr)], ref state);
+	print(ref state, :hash_next_iter({iter => keys_arr, hash => hash}));
+	print(ref state, :goto(condition_label));
+	print_sim_label(after_forh_label, ref state);
+	state->loop_label = loop_label;
+}
+
+def print_own_forh(as_forh : @nast::forh_t, ref state : @translator::state_t) {
+	var forh_debug = state->debug->nast_debug;
+	var after_forh_label = get_sim_label(ref state);
+	var next_iterator_label = get_sim_label(ref state);
+	var condition_label = get_sim_label(ref state);
+	var hash = calc_val(as_forh->hash, ref state);
+	var key_register = print_var_decl(as_forh->key, ref state, :value);
+	var condition_register = new_register(ref state, :bool);
+	var value_register = print_var_decl(as_forh->val, ref state, :reference);
+	var iter = new_register(ref state, :int);
+	print(ref state, :hash_init_iter({iter => iter, hash => hash}));
+	print_sim_label(condition_label, ref state);
+	print(ref state, :hash_is_end({dest => condition_register, iter => iter, hash => hash}));
+	print_if_goto(after_forh_label, condition_register, ref state);
+	print(ref state, :hash_get_key_iter({dest => key_register, iter => iter, hash => hash}));
+
+	use_hash_index(value_register, hash, key_register, false, ref state);
+
+	var loop_label = save_loop_break(ref state, after_forh_label, next_iterator_label);
+	print_cmd(as_forh->cmd, ref state);
+	release_hash_index(value_register, hash, ref state);
+	print_sim_label(next_iterator_label, ref state);
+	start_new_instruction(translator::last_debug_char(forh_debug), ref state) unless as_forh->short;
+	print(ref state, :hash_next_iter({iter => iter, hash => hash}));
 	print(ref state, :goto(condition_label));
 	print_sim_label(after_forh_label, ref state);
 	state->loop_label = loop_label;
@@ -826,6 +877,14 @@ def release_index(current_owner : @nlasm::reg_t, index : @nlasm::reg_t, ref stat
 	print(ref state, :release_index({current_owner => current_owner, index => index}));
 }
 
+def use_hash_index(new_owner : @nlasm::reg_t, old_owner : @nlasm::reg_t, index : @nlasm::reg_t,
+		create_if_not_exist : @boolean_t::type, ref state : @translator::state_t) : ptd::void() {
+	print(ref state, :use_hash_index({new_owner => new_owner, old_owner => old_owner, index => index, create_if_not_exist => create_if_not_exist}));
+}
+
+def release_hash_index(current_owner : @nlasm::reg_t, index : @nlasm::reg_t, ref state : @translator::state_t) : ptd::void() {
+	print(ref state, :release_hash_index({current_owner => current_owner, index => index}));
+}
 def use_variant(new_owner : @nlasm::reg_t, old_owner : @nlasm::reg_t, label : ptd::sim(), ref state : @translator::state_t) : ptd::void() {
 	var label_no = get_label_number(ref state, old_owner->type as :variant, label);
 	print(ref state, :use_variant({new_owner => new_owner, old_owner => old_owner, label => label, label_no => label_no}));
@@ -944,6 +1003,10 @@ def translator::struct_of_lvalue_t() {
 			field_name => ptd::sim(),
 		}),
 		hashkey => @nast::value_t,
+		use_hash_index => ptd::rec({
+			dest_type => @tct::meta_type,
+			index => @nast::value_t,
+		}),
 		as => ptd::sim(),
 		use_variant => ptd::rec({
 			dest_type => @tct::meta_type,
@@ -957,7 +1020,8 @@ def get_struct_of_lvalue(ref left : @nast::value_t, state : @translator::state_t
 	while (true) {
 		if (left->value is :bin_op) {
 			var bin_op : @nast::bin_op_t = left->value as :bin_op;
-			die unless bin_op->op eq 'ARRAY_INDEX' || bin_op->op eq 'HASH_INDEX' || bin_op->op eq '->';
+			var op = bin_op->op;
+			die unless op eq 'ARRAY_INDEX' || op eq 'HASH_INDEX' || op eq '->' || op eq 'OV_AS';
 			var new_ret = [];
 			if (bin_op->op eq 'ARRAY_INDEX') {
 				var left_type = unwrap_ref(bin_op->left->type, state->logic->defined_types);
@@ -970,7 +1034,15 @@ def get_struct_of_lvalue(ref left : @nast::value_t, state : @translator::state_t
 					new_ret = [:index(bin_op->right)];
 				}
 			} elsif (bin_op->op eq 'HASH_INDEX') {
+				var left_type = unwrap_ref(bin_op->left->type, state->logic->defined_types);
+				if (left_type is :tct_own_hash) {
+					new_ret = [:use_hash_index({
+						dest_type => (left_type as :tct_own_hash),
+						index => bin_op->right,
+					})];
+				} else {
 				new_ret = [:hashkey(bin_op->right)];
+				}
 			} elsif (bin_op->op eq '->') {
 				var left_type = unwrap_ref(bin_op->left->type, state->logic->defined_types);
 				if (left_type is :tct_own_rec) {
@@ -979,8 +1051,26 @@ def get_struct_of_lvalue(ref left : @nast::value_t, state : @translator::state_t
 						dest_type => (left_type as :tct_own_rec){field_name},
 						field_name => field_name,
 					})];
+				} elsif (left_type is :tct_own_hash) {
+					new_ret = [:use_hash_index({
+						dest_type => (left_type as :tct_own_hash),
+						index => bin_op->right,
+					})];
 				} else {
 					new_ret = [:key(bin_op->right->value as :hash_key)];
+				}
+			} elsif (bin_op->op eq 'OV_AS') {
+				var left_type = unwrap_ref(bin_op->left->type, state->logic->defined_types);
+				var right_val = bin_op->right->value as :hash_key;
+				if (left_type is :tct_own_var) {
+					new_ret = [:use_variant({
+						dest_type => (left_type as :tct_own_var){right_val} as :with_param,
+						label => right_val,
+					})];
+				} elsif (left_type is :tct_var || left_type is :tct_im) {
+					new_ret = [:as(right_val)];
+				} else {
+					die;
 				}
 			} else {
 				die;
@@ -988,27 +1078,6 @@ def get_struct_of_lvalue(ref left : @nast::value_t, state : @translator::state_t
 			array::append(ref new_ret, ret);
 			ret = new_ret;
 			left = bin_op->left;
-		} elsif (left->value is :var_op) {
-			var var_op : @nast::var_op_t = left->value as :var_op;
-			var new_ret = [];
-			match (var_op->op) case :ov_as {
-				var left_type = unwrap_ref(var_op->left->type, state->logic->defined_types);
-				if (left_type is :tct_own_var) {
-					new_ret = [:use_variant({
-						dest_type => (left_type as :tct_own_var){var_op->case} as :with_param,
-						label => var_op->case,
-					})];
-				} elsif (left_type is :tct_var || left_type is :tct_im) {
-					new_ret = [:as(var_op->case)];
-				} else {
-					die;
-				}
-			} case :ov_is {
-				die;
-			}
-			array::append(ref new_ret, ret);
-			ret = new_ret;
-			left = var_op->left;
 		} elsif (left->value is :parenthesis) {
 			left = left->value as :parenthesis;
 		} else {
@@ -1066,6 +1135,12 @@ def get_value_of_lvalue(left : @nast::value_t, get_value : @boolean_t::type, ref
 			array::push(ref temp_structures, new_reference_register(ref state, new_reg_type));
 			array::push(ref lvalue_values, :use_variant({src_reg => temp_structures[i], dest_reg => temp_structures[i + 1], label => value->label}));
 			use_variant(temp_structures[i + 1], temp_structures[i], value->label, ref state);
+		} case :use_hash_index(var value) {
+			var new_reg_type = var_type_to_reg_type(value->dest_type, state->logic->defined_types);
+			var index = calc_val(value->index, ref state);
+			array::push(ref temp_structures, new_reference_register(ref state, new_reg_type));
+			array::push(ref lvalue_values, :use_hash_index({src_reg => temp_structures[i], dest_reg => temp_structures[i + 1], index => index}));
+			use_hash_index(temp_structures[i + 1], temp_structures[i], index, !get_value, ref state);
 		}
 	}
 	array::push(ref lvalue_values, :value(temp_structures[array::len(temp_structures) - 1]));
@@ -1112,6 +1187,8 @@ def set_value_of_lvalue(lvalue_values : @translator::lvalue_values_t, get_value 
 			last_reg = as_value->value;
 		} case :use_variant(var use_variant) {
 			release_variant(use_variant->dest_reg, ref state);
+		} case :use_hash_index(var use_hash_index) {
+			release_hash_index(use_hash_index->dest_reg, use_hash_index->index, ref state);
 		}
 	}
 }
@@ -1322,7 +1399,7 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 	} case :tct_hash(var hash_type) {
 		return :im;
 	} case :tct_own_hash(var hash_type) {
-		return :im;
+		return :hash(type);
 	} case :tct_arr(var arr_type) {
 		return :im;
 	} case :tct_own_arr(var arr_type) {
@@ -1334,12 +1411,14 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 	} case :tct_ref(var ref_type) {
 		if (ref_type eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
 			return :bool;
-		} elsif (defined_types{ref_type} is :tct_own_rec) { #TODO unwrap ref
+		} elsif (defined_types{ref_type} is :tct_own_rec) {
 			return :rec(type);
 		} elsif (defined_types{ref_type} is :tct_own_arr) {
 			return :arr(type);
 		} elsif (defined_types{ref_type} is :tct_own_var) {
 			return :variant(type);
+		} elsif (defined_types{ref_type} is :tct_own_hash) {
+			return :hash(type);
 		}
 		return :im;
 	} case :tct_sim {
@@ -1403,8 +1482,6 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 		die;
 	} case :bin_op(var bin_op) {
 		die;
-	} case :var_op(var var_op) {
-		die;
 	} case :unary_op(var unary_op) {
 		die;
 	} case :fun_val(var fun_val) {
@@ -1415,12 +1492,26 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 			print_array_push(destination, el_value, ref state);
 		}
 	} case :hash_decl(var hash_decl) {
-		fora var hash_el (hash_decl) {
-			var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
-			var field_name = hash_el->key->value as :hash_key;
-			use_field(new_reg, destination, field_name, ref state);
-			print_own_val_init(hash_el->val, new_reg, ref state);
-			release_field(new_reg, field_name, ref state);
+		var hash_type = unwrap_ref(val->type, state->logic->defined_types);
+		if (hash_type is :tct_own_rec) {
+			fora var hash_el (hash_decl) {
+				var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
+				var field_name = hash_el->key->value as :hash_key;
+				use_field(new_reg, destination, field_name, ref state);
+				print_own_val_init(hash_el->val, new_reg, ref state);
+				release_field(new_reg, field_name, ref state);
+			}
+		} elsif (hash_type is :tct_own_hash) {
+			fora var hash_el (hash_decl) {
+				var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
+				var key = new_register(ref state, :string);
+				load_const(hash_el->key->value as :hash_key, key, ref state);
+				use_hash_index(new_reg, destination, key, true, ref state);
+				print_own_val_init(hash_el->val, new_reg, ref state);
+				release_hash_index(new_reg, key, ref state);
+			}
+		} else {
+			die;
 		}
 	} case :nop {
 		die;

@@ -97,3 +97,7 @@ def main::main() {
 	#test_own_double_pass(ref bigger->fst, ref bigger->snd);
 	#nl::print(ii);
 }
+
+def main::a() {
+	return own::rec({a => @main::typ_wewnetrzny});
+}

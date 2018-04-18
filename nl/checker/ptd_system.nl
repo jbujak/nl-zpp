@@ -2,7 +2,6 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-
 use ov;
 use hash;
 use ptd;
@@ -197,19 +196,19 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		if (b is :tct_int) {
 			return :tct_int;
 		} else {
-			add_error(ref errors, 'cannot assign non int to int');
+			return :tct_im;
 		}
 	} case :tct_string {
 		if (b is :tct_string) {
 			return :tct_string;
 		} else {
-			add_error(ref errors, 'cannot assign non string to string');
+			return :tct_im;
 		}
 	} case :tct_bool {
 		if (b is :tct_bool) {
 			return :tct_bool;
 		} else {
-			add_error(ref errors, 'cannot assign non boolean to bool');
+			return :tct_im;
 		}
 	} case :tct_ref(var ref_name) {
 		die;
@@ -263,39 +262,54 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 		}
 	} case :tct_own_var(var variants) {
 		var fin = variants;
+		var inner_type;
 		if (b is :tct_own_var) {
-			var ret = b as :tct_own_var;
-			forh var field, var type (variants) {
-				if (hash::has_key(ret, field)) {
-					var t2 = hash::get_value(ret, field);
-					match (t2) case :with_param(var typ) {
-						match (type) case :with_param(var typ2) {
-							hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors, known_types));
-						} case :no_param {
-							add_error(ref errors, 'incompatible own types');
-						}
+			inner_type = b as :tct_own_var;
+		} elsif (b is :tct_var) {
+			inner_type = b as :tct_var;
+		} else {
+			add_error(ref errors, 'incompatible own types');
+			return :tct_im;
+		}
+		var ret = inner_type;
+		forh var field, var type (variants) {
+			if (hash::has_key(ret, field)) {
+				var t2 = hash::get_value(ret, field);
+				match (t2) case :with_param(var typ) {
+					match (type) case :with_param(var typ2) {
+						hash::set_value(ref fin, field, cross_type(typ, typ2, ref_inf, ref modules, ref errors, known_types));
 					} case :no_param {
-						match (type) case :with_param(var typ) {
-							add_error(ref errors, 'incompatible own types');
-						} case :no_param {
-							hash::set_value(ref fin, field, tct::none());
-						}
+						add_error(ref errors, 'incompatible own types');
+						return :tct_im;
 					}
-				} else {
-					add_error(ref errors, 'incompatible own types');
+				} case :no_param {
+					match (type) case :with_param(var typ) {
+						add_error(ref errors, 'incompatible own types');
+						return :tct_im;
+					} case :no_param {
+						hash::set_value(ref fin, field, tct::none());
+					}
 				}
-			}
-			forh var field, var type (ret) {
-				continue if (hash::has_key(fin, field));
+			} else {
 				match (type) case :with_param(var typ) {
 					hash::set_value(ref fin, field, typ);
 				} case :no_param {
 					hash::set_value(ref fin, field, tct::none());
 				}
 			}
+		}
+		forh var field, var type (ret) {
+			continue if (hash::has_key(fin, field));
+			match (type) case :with_param(var typ) {
+				hash::set_value(ref fin, field, typ);
+			} case :no_param {
+				hash::set_value(ref fin, field, tct::none());
+			}
+		}
+		if (b is :tct_var) {
 			return tct::var(fin);
 		} else {
-			add_error(ref errors, 'incompatible own types');
+			return tct::own_var(fin);
 		}
 	} case :tct_rec(var reca) {
 		if (b is :tct_rec) {
@@ -325,27 +339,30 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::hash(ptd_system::cross_type(b as :tct_hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_rec(var reca) {
+		var recb;
 		if (b is :tct_own_rec) {
-			var recb = b as :tct_own_rec;
-			var err = false;
-			forh var field, var type (reca) {
-				err = true if (!hash::has_key(recb, field));
-			}
-			forh var field, var type (recb) {
-				err = true if (!hash::has_key(reca, field));
-			}
-			if (err) {
-				add_error(ref errors, 'cannot merge incompatible own::rec types');
-			} else {
-				var ret = {};
-				forh var field, var type (reca) {
-					hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
-							ref errors, known_types));
-				}
-				return tct::own_rec(ret);
-			}
+			recb = b as :tct_own_rec;
+		} elsif (b is :tct_rec) {
+			recb = b as :tct_rec;
 		} else {
 			add_error(ref errors, 'cannot merge non own::rec with own::rec');
+		}
+		var err = false;
+		forh var field, var type (reca) {
+			err = true if (!hash::has_key(recb, field));
+		}
+		forh var field, var type (recb) {
+			err = true if (!hash::has_key(reca, field));
+		}
+		if (err) {
+			add_error(ref errors, 'cannot merge incompatible own::rec types');
+		} else {
+			var ret = {};
+			forh var field, var type (reca) {
+				hash::set_value(ref ret, field, cross_type(type, hash::get_value(recb, field), ref_inf, ref modules,
+						ref errors, known_types));
+			}
+			return tct::own_rec(ret);
 		}
 	} case :tct_hash(var hash) {
 		if (b is :tct_hash) {
@@ -356,7 +373,9 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			return tct::hash(ptd_system::cross_type(hash, sum, ref modules, ref errors, known_types));
 		}
 	} case :tct_own_hash(var hash) {
-		die; #TODO
+		if (b is :tct_own_hash) {
+			return tct::own_hash(cross_type(hash, b as :tct_own_hash, ref_inf, ref modules, ref errors, known_types));
+		}
 	}
 	return :tct_im;
 }
@@ -445,7 +464,29 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_hash(var hash_type) {
-		die; #TODO
+		if (from is :tct_rec) {
+			forh var name, var record (from as :tct_rec) {
+				match (check_assignment_info(hash_type, record, ref_inf, type_src, ref modules, ref errors)) case :ok {
+				} case :err(var info) {
+					array::push(ref info->stack, :ptd_rec(name));
+					return :err(info);
+				}
+			}
+			return :ok;
+		}
+		return mk_err(to, from) unless from is :tct_own_hash || from is :tct_hash;
+		var from_inner;
+		if (from is :tct_hash) {
+			from_inner = from as :tct_hash;
+		} elsif (from is :tct_own_hash) {
+			from_inner = from as :tct_own_hash;
+		}
+		match (check_assignment_info(hash_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
+			return :ok;
+		} case :err(var info) {
+			array::push(ref info->stack, :own_hash);
+			return :err(info);
+		}
 	} case :tct_rec(var records) {
 		if (ref_inf->cast && from is :tct_hash) {
 			var left = from as :tct_hash;

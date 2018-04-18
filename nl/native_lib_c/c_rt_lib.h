@@ -110,6 +110,8 @@ ImmT c_rt_lib0hash_set_value_dec(ImmT *hash, ImmT key, ImmT val);
 ImmT c_rt_lib0hash_set_value(ImmT *hash, ImmT key, ImmT val);
 ImmT c_rt_lib0hash_delete(ImmT *hash, ImmT key);
 bool c_rt_lib0hash_has_key(ImmT hash, ImmT key);
+unsigned get_hash_key(ImmT key);
+int nl_compare_internal(ImmT left, ImmT right);
 
 //forh
 ImmT c_rt_lib0init_iter(ImmT hashI);
