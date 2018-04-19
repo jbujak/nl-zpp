@@ -100,8 +100,9 @@ W pracy opisujemy...
 \chapter*{Wprowadzenie}
   \addcontentsline{toc}{chapter}{Wprowadzenie}
   NianioLang jest językiem programowania ogólnego przeznaczenia, którego twórcą jest
-  założyciel firmy Atinea -- Andrzej Gąsienica-Samek.
-  Istniejący kompilator umożliwia translację NianioLanga do kilu języków,
+  założyciel firmy Atinea -- Andrzej Gąsienica-Samek. Poniższa praca realizowana jest
+  na zlecenie firmy Atinea, która wykorzystuje NianioLang.
+  Istniejący kompilator umożliwia translację NianioLanga do kilku języków,
   między innymi do Javy, JavaScriptu i C.
   Ze względu na chęć uproszczenia kompilacji NianioLanga
   utworzono środowisko uruchomieniowe dostarczające odpowiednie abstrakcje
@@ -113,17 +114,19 @@ W pracy opisujemy...
   zwiększy wydajność kompilowanych aplikacji przy zachowaniu podstawowych założeń języka.
 \chapter{Wstęp}
 \section{Wprowadzenie do NianioLanga}
-NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy
+NianioLang jest proceduralnym, imperatywnym językiem, którego celem jest
+uproszczenie pisania rozproszonych aplikacji stosując wzorzec projektowy
 Nianio\cite{wzorzec_nianio}.
 Celem twórców języka jest dostarczenie narzędzia umożliwiającego operowanie na niemutowalnych strukturach
 o semantyce zbliżonej do języków funkcyjnych, ale prostszego w użyciu.
-Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce zaimplementowano system zarządzania obiektami
+Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce, w przypadku kompilacji do C,
+zaimplementowano system zarządzania obiektami
 w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, występujących przy programowaniu niskopoziomowym.
 Takie zabiegi zmniejszają nieco wydajność języka, ale jego twórcy doszli do wniosku, że zysk z wysokopoziomowego podejścia
 do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
 Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB.com).
-Kod źródłowy kompilatora jest dostępny na platformie GitHub na licencji MIT.
+Kod źródłowy kompilatora jest dostępny na platformie GitHub\cite{github_repo_nianiolang_original} na licencji MIT.
 
 \section{Typy w NianioLangu}
 W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
@@ -159,10 +162,18 @@ W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powy�
 
 \section{Cele projektu}
 Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz skomplikowanych
-struktur dla prostych typów istniejących już w języku C. W tym celu wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
+struktur dla prostych typów istniejących już w języku C.
+Dzięki temu zmniejszymy czas wykonania aplikacji, pozwalając kompilatorowi GCC na zastosowanie dodatkowych optymalizacji.
+W tym celu wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
 które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty).
 Dzięki nałożonym na nie ograniczeniom możliwe jest znaczne zwiększenie wydajności programów pisanych w NianioLangu przy zachowaniu
 niezmienionej semantyki języka.
+Jednocześnie zmienione zostają pewne podstawowe typy, mianowicie \texttt{ptd::sim} zostanie rozbity na
+\texttt{ptd::int} oraz \texttt{ptd::string} oraz wprowadzony zostaje typ \texttt{ptd::bool}.
+Liczby całkowite i wartości Boole'owskie mają w języku C natywną reprezentację i używając ich bezpośrednio
+uzyskujemy prostszy kod wynikowy w C, który jest łatwiejszy do optymalizacji przez kompilator GCC.
+
+Skutkiem zmian jakie muszą zostać wprowadzone by osiągnąć cel projektu, będzie utracenie możliwości kompilacji NianioLanga do języków innych niż C, dopóki nie zostaną wprowadzone dodatkowe poprawki.
 \section{Podstawowe pojęcia}
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
@@ -198,50 +209,57 @@ niezmienionej semantyki języka.
 \section{Rekordy}
 \section{Typy wariantowe}
 \section{Konwersja own $\rightarrow$ im}
-Konwersja ownów na imy jest naturalną potrzebą języka -- rodziny typów im oraz own tak naprawdę reprezentują inne podejście do przechowywania danych, nierzadko pojawia się konieczność konwertowania jednych na drugie.
-Podczas prac doszliśmy do wniosku, że przypadek konwersji imów na owny nie musi być przez język obsługiwany, przede wszystkim dlatego,
+Konwersja typów \texttt{own} na typ \texttt{ptd::im}, który jest uniwersalną reprezentacją typów z przestrzeni \texttt{ptd},
+jest naturalną potrzebą języka. Obiekty o typie z przestrzeni nazw \texttt{own} są ograniczone w zasięgu,
+więc chcąc zwrócić wartość takiego obiektu lub przekazać do funkcji, która przyjmuje argumenty z przestrzeni
+nazw \texttt{ptd}, musimy go przekonwertować.
+
+Analiza przypadków użycia konwersji pokazała, że konwersja z typów \texttt{ptd} na typy \texttt{own} nie ma 
+szczególnego zastosowania i nie musi być przez język obsługiwana, przede wszystkim dlatego,
 że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
 gdyż narzut wydajnościowy związany z tworzeniem obiektów typu im, a potem konstruowanie z nich obiektów typu own byłby zbyt duży.
 W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
 gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
 
-Początkowo mieliśmy kilka pomysłów dotyczących sposobu implementacji. Pierwszy pomysł polegał na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących owny na imy.
-Szybko dostrzegliśmy wady tego podejścia, przede wszystkim trudność implementacji, dużą podatność na błędy oraz wątpliwą przenośność rozwiązania.
+Istnieje parę sposobów na implementację konwersji. Pierwszy sposób polega na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących obiekty \texttt{own} na obiekty \texttt{ptd::im}.
+Podejście to ma jednak wiele wad, przede wszystkim trudność implementacji, dużą podatność na błędy oraz wątpliwą przenośność rozwiązania.
 Szczególnie trzeci argument jest ważny, gdyż dalsze kierunki rozwoju języka prawdopodobnie przewidują przywrócenie do kompilatora możliwości kompilowania na inne języki niż C.
 
-Drugi pomysł polegał na tym, by stworzyć funkcję-wydmuszkę, w miejsce której kompilator inline'owałby właściwą definicję ima skonwertowanego z owna.
-Tutaj z kolei pojawił się problem typów rekurencyjnych (warianty) oraz puchnięcia kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
+Drugi sposób polega na stworzeniu funkcji-wydmuszki, przyjmującej w argumencie obiekt \texttt{own}, która w trakcie kompilacji podmieniana jest na właściwy kod dokonujący konstrukcji obiektu \texttt{ptd::im}.
+Problematyczna jest jednak implementacja dla typów rekurencyjnych (warianty) oraz puchnięcie kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
 
-Trzeci pomysł, który został faktycznie zrealizowany, jest pomysłem pośrednim -- dla każdego typu nazwanego oraz dla każdego typu, który korzysta z funkcji-wydmuszki generować funkcję,
-której wywołanie byłoby następnie podpinane w miejsce wydmuszki. Można to w pewnym sensie porównać do generowania szablonów w C++, chociaż nasz system jest oczywiście bardziej wyspecjalizowany.
+Trzeci sposobów, który został zrealizowany, jest niejako połączeniem dwóch poprzednich -- dla każdego typu
+nazwanego oraz dla każdego typu, który korzysta z funkcji-wydmuszki, generowana jest funkcja,
+podpinana w miejsce wydmuszki. Można to w pewnym sensie porównać do generowania szablonów w C++, aczkolwiek ten system jest bardziej wyspecjalizowany.
 
-Pierwszym elementem rozwiązania jest zebranie informacji o tym, jakie funkcje należy wygenerować. Postanowiliśmy robić to w dwóch miejscach.
-Po pierwsze w momencie załadowania drzewa AST modułu do type checkera przechodzimy po funkcjach definiujących typy, sprawdzając czy nie definiują one ownów.
-Miejsce to zostało wybrane, gdyż jest to pierwsze miejsce, gdzie pojawia się konkretna już wiedza o typach zmiennych.
-Po drugie podczas sprawdzania typowania funkcji za każdym razem gdy natrafimy na naszą funkcję-wydmuszkę zapamiętujemy typ argumentu, z jakim została wywołana.
-Oczywiście należy pamiętać o przeskanowaniu, czy dane typy nie zawierają zagnieżdżonych ownów, do których także należy stworzyć stosowne funkcje.
+Pierwszym elementem rozwiązania jest zebranie informacji o tym, jakie funkcje należy wygenerować,
+co przeprowadzane jest w dwóch miejscach.
+Najpierw, po załadowaniu drzewa AST modułu do type checkera, przechodzimy po funkcjach definiujących typy, sprawdzając czy nie definiują one typów \texttt{own}.
+Miejsce to zostało wybrane, gdyż jest to pierwsze miejsce, gdzie pojawia się konkretna wiedza o typach zmiennych.
+Następnie, podczas sprawdzania typów funkcji, za każdym razem gdy natrafimy na funkcję-wydmuszkę zapamiętywany jest typ argumentu, z jakim została wywołana.
+Typy te są również rekurencyjnie sprawdzane czy nie zawierają innych typów \texttt{own}, do których także należy stworzyć stosowne funkcje.
 
-Drugim elementem rozwiązania jest generowanie kodu. Jest to dosyć trywialne zagadnienie, gdyż na podstawie drzewa reprezentującego typ
-po prostu wypisujemy do zmiennej tekstowej kolejne instrukcje przypisujące. Warto zwrócić jedynie uwagę na fakt, że typy mogą być zagnieżdżone
-(więc czasem trzeba wołać inną funkcję konwertującego wewnętrznego owna na ima), a dla rekordów trzeba wypisać przypisanie wszystkich wartości, kod wynikowy nie może robić tego pętlą.
+Drugim elementem rozwiązania jest generowanie kodu. Tworzona jest zmienna tekstowa, która następnie wypełniana jest instrukcjami tworzącymi obiekt \texttt{ptd::im}.
+Ponieważ typy mogą być zagnieżdżone, to czasem trzeba wołać inną funkcję konwertującą wewnętrzny obiekt \texttt{own} na \texttt{im}.
+Dla rekordów wypisywane są przypisania wszystkich wartości, \textit{które w kodzie wynikowym C nie mogą być w postaci iteracji po polach rekordu.}
 
-Trzecim elementem jest wstrzyknięcie kodu. Skoro za miejsce generowania przyjęliśmy type checker, to nie możemy zrobić tego wcześniej.
-Z drugiej strony nie widzieliśmy potrzeby robienia tego później. Chcieliśmy, by kompilator mógł jak najszybciej wrócić do normalnego trybu pracy.
-Wobec tego korzystając z faktu, że sprawdzanie typów rozdzielone jest od wpisywania ich do drzewa AST, w trakcie wpisywania podmieniamy wywołania do funkcji-wydmuszki na wywołania
-odpowiedniej funkcji o automatycznie generowanej nazwie. Nazwa generowana jest na postawie nazwy dla typów nazwanych oraz na podstawie zawartości
-dla anonimowych -- rozwiązanie to ma taką zaletę, że redukujemy liczbę identycznych funkcji w kodzie wynikowym.
+Trzecim elementem jest wstrzyknięcie kodu. Sprawdzanie typów rozdzielone jest od wpisywania ich do drzewa AST
+i w trakcie tego wpisywania podmieniane są wywołania funkcji-wydmuszki na wywołania
+odpowiedniej funkcji o automatycznie generowanej nazwie. Generowana nazwa jest tworzona na postawie nazwy dla typów nazwanych oraz na podstawie zawartości
+dla typów anonimowych -- uzyskujemy w ten sposób deduplikację kodu, generując w kodzie wynikowym C tylko jedną funkcję dla danego typu.
 
-W tym momencie pozostaje jedynie problem dodania definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
-następnie przechodzi przez type checker w sposób podobny do normalnego kodu -- jest jedynie parę drobnych różnic technicznych polegających na rozwiązaniu problemu,
+Pozostaje jeszcze problem dodania definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
+który przechodzi przez type checker w sposób podobny do normalnego kodu -- \textit{jest jedynie parę drobnych różnic technicznych polegających na rozwiązaniu problemu,
 że taki moduł odwołuje się do funkcji, których nie ma, gdyż są w naszym oryginalnym module. Są to jednak szczegóły implementacyjne, które można zobaczyć
-w kodzie kompilatora. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
-dalsza kompilacja przebiega tak, jakby użytkownik sam wpisał sztucznie wygenerowane funkcje.
+w kodzie kompilatora}. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
+dalsza kompilacja przebiega tak, jak gdyby użytkownik sam utworzył sztucznie wygenerowane funkcje.
 
-Skoro sami generujemy funkcje i wiemy, jak wygląda drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy w C,
-zamiast marnować czas procesora na przejście przez parser i type checker. Doszliśmy do wniosku, że czas kompilacji ma nieduże znaczenie w trakcie pisania programów.
-Automatyczne tworzenie drzewa AST daje zaś gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
-aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ma to duże znaczenie przede wszystkim ze względu na fakt,
-że podczas kompilacji zakładamy, że generowane przez nas samych struktury są poprawne, a tylko program użytkownika może zawierać błędy.
+Generując funkcje, a z nich drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy w C,
+zamiast marnować czas procesora na przejście przez parser i type checker. 
+\textit{Doszliśmy do wniosku, że czas kompilacji ma nieduże znaczenie w trakcie pisania programów.}
+Zautomatyzowane tworzenie drzewa AST daje gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
+aby każda zmiana miała także i odzwierciedlenie w module generowania kodu.
+Zostało przyjęte, że generowane struktury są poprawne, a tylko program użytkownika może zawierać błędy.
 
 \chapter{Efekty optymalizacji i wnioski}
 \section{Porównanie czasu wykonania programów}
@@ -256,6 +274,7 @@ aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ma
 \addcontentsline{toc}{chapter}{Bibliografia}
 
 \bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} - 2006}.
+\bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler - GitHub}
 
 \end{thebibliography}
 
