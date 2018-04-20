@@ -161,19 +161,19 @@ a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu ni
 W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
-Celem projektu jest modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz skomplikowanych
+Celem projektu była modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz skomplikowanych
 struktur dla prostych typów istniejących już w języku C.
-Dzięki temu zmniejszymy czas wykonania aplikacji, pozwalając kompilatorowi GCC na zastosowanie dodatkowych optymalizacji.
-W tym celu wprowadzone zostają nowe typy z przestrzeni nazw \texttt{own},
-które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (mianowicie rekordy, tablice i warianty).
+Dzięki temu zmniejszony został czas wykonania aplikacji, pozwalając kompilatorowi GCC na zastosowanie dodatkowych optymalizacji.
+W tym celu wprowadzone zostały nowe typy z przestrzeni nazw \texttt{own},
+które będą bardziej niskopoziomowymi odpowiednikami typów z przestrzeni nazw \texttt{ptd} (rekordy, tablice i warianty).
 Dzięki nałożonym na nie ograniczeniom możliwe jest znaczne zwiększenie wydajności programów pisanych w NianioLangu przy zachowaniu
 niezmienionej semantyki języka.
-Jednocześnie zmienione zostają pewne podstawowe typy, mianowicie \texttt{ptd::sim} zostanie rozbity na
-\texttt{ptd::int} oraz \texttt{ptd::string} oraz wprowadzony zostaje typ \texttt{ptd::bool}.
-Liczby całkowite i wartości Boole'owskie mają w języku C natywną reprezentację i używając ich bezpośrednio
+Jednocześnie zmienione zostały pewne podstawowe typy, mianowicie \texttt{ptd::sim} został rozbity na
+\texttt{ptd::int} oraz \texttt{ptd::string}, oraz wprowadzony został typ \texttt{ptd::bool}.
+Liczby całkowite i wartości boole'owskie mają w języku C natywną reprezentację i używając ich bezpośrednio
 uzyskujemy prostszy kod wynikowy w C, który jest łatwiejszy do optymalizacji przez kompilator GCC.
 
-Skutkiem zmian jakie muszą zostać wprowadzone by osiągnąć cel projektu, będzie utracenie możliwości kompilacji NianioLanga do języków innych niż C, dopóki nie zostaną wprowadzone dodatkowe poprawki.
+Skutkiem zmian jakie musiały zostać wprowadzone by osiągnąć cel projektu było utracenie możliwości kompilacji NianioLanga do języków innych niż C, dopóki nie zostaną wprowadzone dodatkowe poprawki.
 \section{Podstawowe pojęcia}
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
@@ -217,7 +217,7 @@ nazw \texttt{ptd}, musimy go przekonwertować.
 Analiza przypadków użycia konwersji pokazała, że konwersja z typów \texttt{ptd} na typy \texttt{own} nie ma 
 szczególnego zastosowania i nie musi być przez język obsługiwana, przede wszystkim dlatego,
 że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
-gdyż narzut wydajnościowy związany z tworzeniem obiektów typu im, a potem konstruowanie z nich obiektów typu own byłby zbyt duży.
+gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::im}, a potem konstruowanie z nich obiektów typu own byłby zbyt duży.
 W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
 gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
 
@@ -226,40 +226,40 @@ Podejście to ma jednak wiele wad, przede wszystkim trudność implementacji, du
 Szczególnie trzeci argument jest ważny, gdyż dalsze kierunki rozwoju języka prawdopodobnie przewidują przywrócenie do kompilatora możliwości kompilowania na inne języki niż C.
 
 Drugi sposób polega na stworzeniu funkcji-wydmuszki, przyjmującej w argumencie obiekt \texttt{own}, która w trakcie kompilacji podmieniana jest na właściwy kod dokonujący konstrukcji obiektu \texttt{ptd::im}.
-Problematyczna jest jednak implementacja dla typów rekurencyjnych (warianty) oraz puchnięcie kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
+Duże problemy stwarza jednak implementacja dla typów rekurencyjnych (warianty) oraz puchnięcie kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
 
-Trzeci sposobów, który został zrealizowany, jest niejako połączeniem dwóch poprzednich -- dla każdego typu
+Trzeci sposób, który został zrealizowany, jest niejako połączeniem dwóch poprzednich -- dla każdego typu
 nazwanego oraz dla każdego typu, który korzysta z funkcji-wydmuszki, generowana jest funkcja,
 podpinana w miejsce wydmuszki. Można to w pewnym sensie porównać do generowania szablonów w C++, aczkolwiek ten system jest bardziej wyspecjalizowany.
 
 Pierwszym elementem rozwiązania jest zebranie informacji o tym, jakie funkcje należy wygenerować,
 co przeprowadzane jest w dwóch miejscach.
-Najpierw, po załadowaniu drzewa AST modułu do type checkera, przechodzimy po funkcjach definiujących typy, sprawdzając czy nie definiują one typów \texttt{own}.
+Ze względu na możliwość używania typów z innych modułów, niż w danym momencie wykonywany, każdy moduł udostępniać musi komplet funkcji do rzutowania typów, które definiuje.
+Najpierw, po załadowaniu drzewa AST modułu do type checkera, dokonywany jest obchód po funkcjach definiujących typy sprawdzający, czy nie definiują one typów \texttt{own}.
 Miejsce to zostało wybrane, gdyż jest to pierwsze miejsce, gdzie pojawia się konkretna wiedza o typach zmiennych.
-Następnie, podczas sprawdzania typów funkcji, za każdym razem gdy natrafimy na funkcję-wydmuszkę zapamiętywany jest typ argumentu, z jakim została wywołana.
-Typy te są również rekurencyjnie sprawdzane czy nie zawierają innych typów \texttt{own}, do których także należy stworzyć stosowne funkcje.
+Następnie, podczas sprawdzania typów funkcji, za każdym razem, gdy napotykana jest funkcja-wydmuszka, zapamiętywany jest typ argumentu, z jakim została ona wywołana.
+Typy te są również rekurencyjnie sprawdzane, czy nie zawierają innych typów \texttt{own}, do których także należy stworzyć stosowne funkcje.
 
 Drugim elementem rozwiązania jest generowanie kodu. Tworzona jest zmienna tekstowa, która następnie wypełniana jest instrukcjami tworzącymi obiekt \texttt{ptd::im}.
-Ponieważ typy mogą być zagnieżdżone, to czasem trzeba wołać inną funkcję konwertującą wewnętrzny obiekt \texttt{own} na \texttt{im}.
-Dla rekordów wypisywane są przypisania wszystkich wartości, \textit{które w kodzie wynikowym C nie mogą być w postaci iteracji po polach rekordu.}
+Ponieważ typy mogą być zagnieżdżone, w razie potrzeb wywołują one inne funkcje konwertujące wewnętrzne obiekty \texttt{own} na \texttt{im}.
+Warto podkreślić, że w przypadku typów \texttt{own::rec} oraz \texttt{own::var} funkcje rzutujące nawet podobne typy są istotnie różne.
+Rzutując rekordy należy explicite przypisać wszystkie pola, nie jest możliwe zrobienie tego w ogólny sposób pętlą, zaś rzutując warianty
+wykonać należy pełną instrukcję \texttt{match}.
 
 Trzecim elementem jest wstrzyknięcie kodu. Sprawdzanie typów rozdzielone jest od wpisywania ich do drzewa AST
 i w trakcie tego wpisywania podmieniane są wywołania funkcji-wydmuszki na wywołania
-odpowiedniej funkcji o automatycznie generowanej nazwie. Generowana nazwa jest tworzona na postawie nazwy dla typów nazwanych oraz na podstawie zawartości
+odpowiedniej funkcji o automatycznie generowanej nazwie. Generowana nazwa jest tworzona na postawie nazwy dla typów nazwanych, oraz na podstawie zawartości
 dla typów anonimowych -- uzyskujemy w ten sposób deduplikację kodu, generując w kodzie wynikowym C tylko jedną funkcję dla danego typu.
 
 Pozostaje jeszcze problem dodania definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
-który przechodzi przez type checker w sposób podobny do normalnego kodu -- \textit{jest jedynie parę drobnych różnic technicznych polegających na rozwiązaniu problemu,
-że taki moduł odwołuje się do funkcji, których nie ma, gdyż są w naszym oryginalnym module. Są to jednak szczegóły implementacyjne, które można zobaczyć
-w kodzie kompilatora}. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
+który przechodzi przez type checker w sposób podobny do normalnego kodu. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
 dalsza kompilacja przebiega tak, jak gdyby użytkownik sam utworzył sztucznie wygenerowane funkcje.
 
 Generując funkcje, a z nich drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy w C,
 zamiast marnować czas procesora na przejście przez parser i type checker. 
-\textit{Doszliśmy do wniosku, że czas kompilacji ma nieduże znaczenie w trakcie pisania programów.}
 Zautomatyzowane tworzenie drzewa AST daje gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
-aby każda zmiana miała także i odzwierciedlenie w module generowania kodu.
-Zostało przyjęte, że generowane struktury są poprawne, a tylko program użytkownika może zawierać błędy.
+aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ze względu na dużą dynamikę rozwoju języka jest to cecha pożądana.
+Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem projektu, a analiza przypadków użycia wykazała, że narzut czasowy jest w pełni akceptowalny.
 
 \chapter{Efekty optymalizacji i wnioski}
 \section{Porównanie czasu wykonania programów}
