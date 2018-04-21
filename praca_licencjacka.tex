@@ -173,7 +173,9 @@ Jednocześnie zmienione zostały pewne podstawowe typy, mianowicie \texttt{ptd::
 Liczby całkowite i wartości boole'owskie mają w języku C natywną reprezentację i używając ich bezpośrednio
 uzyskujemy prostszy kod wynikowy w C, który jest łatwiejszy do optymalizacji przez kompilator GCC.
 
-Skutkiem zmian jakie musiały zostać wprowadzone by osiągnąć cel projektu było utracenie możliwości kompilacji NianioLanga do języków innych niż C, dopóki nie zostaną wprowadzone dodatkowe poprawki.
+Skutkiem zmian jakie musiały zostać wprowadzone by osiągnąć cel projektu było utracenie możliwości
+kompilacji NianioLanga do języków innych niż C do czasu implementacji nowych typów w pozostałych językach.
+To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 \section{Podstawowe pojęcia}
 \chapter{Metodyka pracy}
 \section{Korzystanie z systemu kontroli wersji}
@@ -217,15 +219,15 @@ nazw \texttt{ptd}, musimy go przekonwertować.
 Analiza przypadków użycia konwersji pokazała, że konwersja z typów \texttt{ptd} na typy \texttt{own} nie ma 
 szczególnego zastosowania i nie musi być przez język obsługiwana, przede wszystkim dlatego,
 że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
-gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::im}, a potem konstruowanie z nich obiektów typu own byłby zbyt duży.
+gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::im}, a potem konstruowanie z nich obiektów typu \texttt{own} byłby zbyt duży.
 W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
 gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
 
-Istnieje parę sposobów na implementację konwersji. Pierwszy sposób polega na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących obiekty \texttt{own} na obiekty \texttt{ptd::im}.
+Istnieje wiele sposobów na implementację konwersji. Pierwszy z nich polega na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących obiekty \texttt{own} na obiekty \texttt{ptd::im}.
 Podejście to ma jednak wiele wad, przede wszystkim trudność implementacji, dużą podatność na błędy oraz wątpliwą przenośność rozwiązania.
 Szczególnie trzeci argument jest ważny, gdyż dalsze kierunki rozwoju języka prawdopodobnie przewidują przywrócenie do kompilatora możliwości kompilowania na inne języki niż C.
 
-Drugi sposób polega na stworzeniu funkcji-wydmuszki, przyjmującej w argumencie obiekt \texttt{own}, która w trakcie kompilacji podmieniana jest na właściwy kod dokonujący konstrukcji obiektu \texttt{ptd::im}.
+Drugi sposób polega na stworzeniu funkcji-wydmuszki przyjmującej w argumencie obiekt \texttt{own}, która w trakcie kompilacji podmieniana jest na właściwy kod dokonujący konstrukcji obiektu \texttt{ptd::im}.
 Duże problemy stwarza jednak implementacja dla typów rekurencyjnych (warianty) oraz puchnięcie kodu wynikowego, zawierającego bardzo podobne, potencjalnie bardzo długie sekcje.
 
 Trzeci sposób, który został zrealizowany, jest niejako połączeniem dwóch poprzednich -- dla każdego typu
@@ -258,7 +260,7 @@ dalsza kompilacja przebiega tak, jak gdyby użytkownik sam utworzył sztucznie w
 Generując funkcje, a z nich drzewo AST, można mieć wątpliwości, czy nie lepiej byłoby od razu tworzyć gotowe do podczepienia poddrzewa, czy nawet kod wynikowy w C,
 zamiast marnować czas procesora na przejście przez parser i type checker. 
 Zautomatyzowane tworzenie drzewa AST daje gwarancję, że w przypadku dalszej ewolucji kompilatora nie trzeba będzie pamiętać o tym,
-aby każda zmiana miała także i odzwierciedlenie w module generowania kodu. Ze względu na dużą dynamikę rozwoju języka jest to cecha pożądana.
+aby każda zmiana miała odzwierciedlenie w module generowania kodu. Ze względu na dużą dynamikę rozwoju języka jest to cecha pożądana.
 Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem projektu, a analiza przypadków użycia wykazała, że narzut czasowy jest w pełni akceptowalny.
 
 \chapter{Efekty optymalizacji i wnioski}
