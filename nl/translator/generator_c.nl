@@ -1579,15 +1579,18 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 		ret .= get_array_push_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 		ret .= get_array_get_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 		ret .= get_array_len_fun_def(type_name, state->mod_name) . string::lf();
+		ret .= get_array_clean_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 		ret .= get_array_free_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		ret .= get_hash_get_fun_def(type_name, hash_type, state->mod_name) . string::lf();
 		ret .= get_hash_next_iter_fun_def(type_name, state->mod_name) . string::lf();
+		ret .= get_hash_clean_fun_def(type_name, hash_type, state->mod_name) . string::lf();
 		ret .= get_hash_free_fun_def(type_name, hash_type, state->mod_name) . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
-		ret .= get_rec_free_fun_def(type_name, records, state->mod_name) . string::lf();
+		ret .= get_rec_clean_fun_def(type_name, records, state->mod_name) . string::lf();
+		ret .= get_rec_free_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_ref(var ref_name) {
 	} case :tct_void {
 	} case :tct_sim {
@@ -1597,6 +1600,7 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var var_type) {
 		ret .= get_variant_make_fun_def(type_name, state->mod_name) . string::lf();
+		ret .= get_variant_clean_fun_def(type_name, var_type, state->mod_name) . string::lf();
 		ret .= get_variant_free_fun_def(type_name, var_type, state->mod_name) . string::lf();
 	} case :tct_empty {
 	}
@@ -1828,22 +1832,22 @@ def get_clean_fun_call(type : @tct::meta_type, mod_name : ptd::sim(), var_name :
 	} case :tct_own_var(var var_types) {
 		ret = get_variant_clean_fun_name(get_type_name(type), mod_name) . '(' . var_name . ');';
 	} case :tct_im {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_rec(var rec_types) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_hash(var hash_type) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_arr(var arr_type) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_var(var var_types) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_int {
 	} case :tct_ref(var ref_type) {
 		#TODO
 	} case :tct_string {
-		#TODO
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_sim {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = 'c_rt_lib0delete(' . var_name . ')';
 	} case :tct_bool {
 	} case :tct_void {
 	} case :tct_empty {
@@ -1864,7 +1868,7 @@ def get_rec_clean_fun_header(rec_type_name : ptd::sim(), mod_name : ptd::sim()) 
 
 def get_rec_clean_fun_def(rec_type_name : ptd::sim(), rec_types : ptd::hash(@tct::meta_type), mod_name : ptd::sim()) 
 		: ptd::sim() {
-	var ret = get_rec_free_fun_header(rec_type_name, mod_name) . ' {' . string::lf();
+	var ret = get_rec_clean_fun_header(rec_type_name, mod_name) . ' {' . string::lf();
 	forh var key, var value (rec_types) {
 		var field_name = get_field_name(key);
 		ret .= get_clean_fun_call(value, mod_name, 'rec.' . field_name) . ';' . string::lf();
@@ -1888,10 +1892,10 @@ def get_hash_clean_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim()
 
 def get_hash_clean_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) 
 		: ptd::sim() {
-	return get_hash_free_fun_header(hash_type_name, mod_name) . ' {
-		'for (int i = 0; i < hash->size; i++) {
-		'	' . get_free_fun_call(:tct_sim, mod_name, '&(hash.keys[i])') . ';
-		'	' . get_free_fun_call(hash_type, mod_name, '&(hash.values[i])') . ';
+	return get_hash_clean_fun_header(hash_type_name, mod_name) . ' {
+		'for (int i = 0; i < hash.size; i++) {
+		'	' . get_clean_fun_call(:tct_sim, mod_name, 'hash.keys[i]') . ';
+		'	' . get_clean_fun_call(hash_type, mod_name, 'hash.values[i]') . ';
 		'}
 		'free_mem(hash.values, sizeof(void*)*hash.capacity);
 		'free_mem(hash.keys, sizeof(void*)*hash.capacity);
@@ -1912,10 +1916,11 @@ def get_array_clean_fun_header(array_type_name : ptd::sim(), mod_name : ptd::sim
 
 def get_array_clean_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) 
 		: ptd::sim() {
-	return get_array_free_fun_header(array_type_name, mod_name) . ' {
+	return get_array_clean_fun_header(array_type_name, mod_name) . ' {
 		'for (int i = 0; i < arr.size; i++) {
-		'	' . get_free_fun_call(array_type, mod_name, '&(arr.value[i])') . ';
+		'	' . get_clean_fun_call(array_type, mod_name, 'arr.value[i]') . ';
 		'}
+		'free_mem(arr.value, arr.capacity);
 		'}';
 }
 
@@ -1927,7 +1932,7 @@ def get_variant_clean_fun_name(variant_type_name : ptd::sim(), mod_name : ptd::s
 def get_variant_clean_fun_header(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
 	var ret = '';
 	ret .= 'void ' . get_variant_clean_fun_name(variant_type_name, mod_name) . '(';
-	ret .= variant_type_name . ' *var)';
+	ret .= variant_type_name . ' var)';
 	return ret;
 }
 
@@ -1935,7 +1940,7 @@ def get_variant_clean_fun_def(variant_type_name : ptd::sim(),
 		variant_type : ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})), 
 		mod_name : ptd::sim()) : ptd::sim() {
 	var ret = get_variant_clean_fun_header(variant_type_name, mod_name) . ' {
-		'switch (var->label) {' . string::lf();
+		'switch (var.label) {' . string::lf();
 	var i = 0;
 	forh var key, var value (variant_type) {
 		match (value) case :no_param {
@@ -1977,7 +1982,7 @@ def get_free_fun_call(type : @tct::meta_type, mod_name : ptd::sim(), var_name : 
 	} case :tct_ref(var ref_type) {
 		#TODO
 	} case :tct_string {
-		#TODO
+		ret = 'c_rt_lib0clear(' . var_name . ')';
 	} case :tct_sim {
 		ret = 'c_rt_lib0clear(' . var_name . ')';
 	} case :tct_bool {
@@ -2000,7 +2005,7 @@ def get_rec_free_fun_header(rec_type_name : ptd::sim(), mod_name : ptd::sim()) :
 	return ret;
 }
 
-def get_rec_free_fun_def(rec_type_name : ptd::sim(), rec_types : ptd::hash(@tct::meta_type), mod_name : ptd::sim()) 
+def get_rec_free_fun_def(rec_type_name : ptd::sim(), mod_name : ptd::sim()) 
 		: ptd::sim() {
 	return get_rec_free_fun_header(rec_type_name, mod_name) . ' {
 		''	. get_rec_clean_fun_name(rec_type_name, mod_name) . '(*rec);
