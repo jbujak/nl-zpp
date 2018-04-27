@@ -1,5 +1,7 @@
 all: clean old compiler tester
 
+some: compiler tester
+
 compiler: compiler_nl compiler_gcc
 
 tester: tester_nl tester_gcc tester_run
