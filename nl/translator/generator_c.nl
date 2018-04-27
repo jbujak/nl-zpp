@@ -1546,14 +1546,17 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 		ret .= get_array_push_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
 		ret .= get_array_get_fun_header(type_name, arr_type, state->mod_name) . ';' . string::lf();
 		ret .= get_array_len_fun_header(type_name, state->mod_name) . ';' . string::lf();
+		ret .= get_array_clean_fun_header(type_name, state->mod_name) . ';' . string::lf();
 		ret .= get_array_free_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		ret .= get_hash_get_fun_header(type_name, hash_type, state->mod_name) . ';' . string::lf();
 		ret .= get_hash_next_iter_fun_header(type_name, state->mod_name) . ';' . string::lf();
+		ret .= get_hash_clean_fun_header(type_name, state->mod_name) . ';' . string::lf();
 		ret .= get_hash_free_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
+		ret .= get_rec_clean_fun_header(type_name, state->mod_name) . ';' . string::lf();
 		ret .= get_rec_free_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_ref(var ref_name) {
 	} case :tct_void {
@@ -1564,6 +1567,7 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	} case :tct_var(var vars) {
 	} case :tct_own_var(var vars) {
 		ret .= get_variant_make_fun_header(type_name, state->mod_name) . ';' . string::lf();
+		ret .= get_variant_clean_fun_header(type_name, state->mod_name) . ';' . string::lf();
 		ret .= get_variant_free_fun_header(type_name, state->mod_name) . ';' . string::lf();
 	} case :tct_empty {
 	}
