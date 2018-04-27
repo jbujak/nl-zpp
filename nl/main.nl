@@ -2,7 +2,6 @@ use ptd;
 use hash;
 use own;
 use boolean_t;
-use string;
 use nl;
 ###
 # (c) Atinea Sp. z o.o.
@@ -15,5 +14,4 @@ def main::main() {
 		h{s} = i;
 		s .= 'a';
 	}
-	nl::print(s . string::lf());
 }
