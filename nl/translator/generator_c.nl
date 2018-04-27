@@ -1901,7 +1901,7 @@ def get_hash_clean_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_t
 		'	' . get_clean_fun_call(:tct_sim, mod_name, 'hash.keys[i]') . ';
 		'	' . get_clean_fun_call(hash_type, mod_name, 'hash.values[i]') . ';
 		'}
-		'free_mem(hash.values, sizeof('. hash_type_name .')*hash.capacity);
+		'free_mem(hash.values, sizeof('. get_type_name(hash_type) .')*hash.capacity);
 		'free_mem(hash.keys, sizeof(ImmT)*hash.capacity);
 		'}';
 }
@@ -1924,7 +1924,7 @@ def get_array_clean_fun_def(array_type_name : ptd::sim(), array_type : @tct::met
 		'for (int i = 0; i < arr.size; i++) {
 		'	' . get_clean_fun_call(array_type, mod_name, 'arr.value[i]') . ';
 		'}
-		'free_mem(arr.value, arr.capacity);
+		'free_mem(arr.value, sizeof(' . get_type_name(array_type) . ')*arr.capacity);
 		'}';
 }
 
