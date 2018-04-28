@@ -202,17 +202,22 @@ Samą budowę type checker ma podobną w pewnym sensie do parsera. W rekurencyjn
 \section{Architektura nlasma}
 nlasm to język stosowany w kompilatorze jako pomost pomiędzy NianioLangiem a językiem wyjściowym, gdyż bezpośrednia kompilacja NianioLanga do C, lub też innego języka, może okazać się trudna, ponieważ używane struktury językowe znacząco od siebie odbiegają. Umożliwia to w łatwy sposób tworzenie modułów kompilujących NianioLanga do różnych języków. Taka technika jest szeroko stosowana w świecie kompilatorów, jednym z najszerzej znanych przykładów jest LLVM. Obecność autorskiego nlasma podyktowana jest przede wszystkim potrzebą języka pośredniego, który z jednej strony będzie możliwie najprostszy, z drugiej w pewnym sensie zachowa strukturę programu wyjściowego.
 
-
 Funkcje w nlasmie nie operują na zmiennych, lecz na rejestrach. Każdy rejestr ma swój unikalny w obrębie funkcji numer oraz typ. Także argumenty funkcji są rejestrami. Wprowadzenie typów do nlasma było jednym z elementów projektu, gdyż o ile poprzednio wszystkie zmienne konwertowane były do typu \texttt{im}, o tyle teraz przechować należy strukturę typów \texttt{own} czy \texttt{int}. Typy w nlasmie mają charakter wyłącznie informacyjny, to znaczy nie mają żadnego znaczenia semantycznego.
-
 
 Najważniejszą cechą nlasma jest nie drzewiasta, lecz liniowa struktura programu. Oznacza to, że argumentami wywołań mogą być wyłącznie rejestry, a nie zmienne czy inne wywołania. W znacznym stopniu ułatwia to dalszą pracę kompilatora, przede wszystkim z powodu mniejszej liczby niuansów dotyczących na przykład wartości zwracanych, przez co kod generatora języka docelowego może być znacznie prostszy. Ponadto generowanie kodu może odbywać się w sposób liniowy, to znaczy każda komenda nlasma może mieć jednoznaczne, proste odzwierciedlenie w języku docelowym. Dzięki temu generator może dokonywać analizy wyłącznie w zakresie charakterystycznym dla danego języka, na przykład do generatora C zostało wprowadzone sortowanie topologiczne deklaracji typów.
 
-
 Inną ważną cechą nlasma, wynikającą częściowo z poprzedniej, jest brak pętli. Translator NianioLanga do nlasm musi rozbić każdą pętlę na etykietę oraz komendę \texttt{goto}. Takie podejście ułatwia tłumaczenie kodu na język docelowy, gdyż w różnych językach pętle działają w odrobinę inny sposób, zaś \texttt{goto} tworzy nieskomplikowany, wspólny interfejs.
 
-
 Ponadto nlasm zawiera polecenia służące do zarządzania pamięcią. Zakłada się, że język docelowy będzie korzystał ze zliczania referencji w celu zwalniania pamięci. Aby nie pisać tej samej funkcjonalności oddzielnie dla wielu generatorów, nlasm zawiera polecenia mówiące o tym, że licznik referencji danego rejestru (o ile jest on wskaźnikiem) należy zmniejszyć lub zwiększyć, co można w prosty sposób przełożyć na wywołania innych języków. Oczywiście, jeżeli generator wybierze inną metodę zarządzania pamięcią, na przykład generując kod Javy, może te polecenia po prostu zignorować. W przypadku generowania języka z manualnym zarządzaniem pamięcią, na przykład C, polecenia te są bardzo pomocne.
+
+
+Przykładowe komendy nlasma:
+\begin{itemize}
+\item if\_goto -- sprawdza wartość w rejestrze. Jeżeli prawda, wykonuje skok pod etykietę
+\item clear -- sygnalizuje, że wartość licznika referencji powinna spaść
+\item call -- wywołuje funkcję o danej nazwie z danymi rejestrami jako argumentami, zapisuje wynik w danym rejestrze
+\item move -- kopiuje wartość między dwoma rejestrami
+\end{itemize}
 \section{Translacja drzewa AST do nlasma}
 \section{Generowanie kodu C na podstawie nlasma}
 \section{Implementacja typów NianioLanga w C}
