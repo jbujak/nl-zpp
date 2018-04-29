@@ -1897,9 +1897,11 @@ def get_hash_clean_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim()
 def get_hash_clean_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) 
 		: ptd::sim() {
 	return get_hash_clean_fun_header(hash_type_name, mod_name) . ' {
-		'for (int i = 0; i < hash.size; i++) {
-		'	' . get_clean_fun_call(:tct_sim, mod_name, 'hash.keys[i]') . ';
-		'	' . get_clean_fun_call(hash_type, mod_name, 'hash.values[i]') . ';
+		'for (int i = 0; i < hash.capacity; i++) {
+		'	if (hash.keys[i] != NULL) {
+		'		' . get_clean_fun_call(:tct_sim, mod_name, 'hash.keys[i]') . ';
+		'		' . get_clean_fun_call(hash_type, mod_name, 'hash.values[i]') . ';
+		'	}
 		'}
 		'free_mem(hash.values, sizeof('. get_type_name(hash_type) .')*hash.capacity);
 		'free_mem(hash.keys, sizeof(ImmT)*hash.capacity);
