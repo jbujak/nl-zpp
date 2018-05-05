@@ -15,6 +15,7 @@ use string_utils;
 def translator::function_logic_t() {
 	return ptd::rec({
 		registers => ptd::arr(@nlasm::reg_t),
+		register_to_clear => ptd::arr(@boolean_t::type),
 		variables => ptd::hash(@nlasm::reg_t),
 		defined_types => ptd::hash(@tct::meta_type),
 	});
@@ -73,6 +74,7 @@ def translator::translate(ast : @nast::module_t, defined_types : ptd::hash(@tct:
 		var logic = {
 			variables => {},
 			registers => [],
+			register_to_clear => [],
 			defined_types => defined_types,
 		};
 		var state : @translator::state_t = {
@@ -357,7 +359,7 @@ def print_bin_op(as_bin_op : @nast::value_t, destination : @nlasm::reg_t, ref st
 		if (tct::is_own_type(bin_op->left->type, state->logic->defined_types)) {
 			var lvalue = get_value_of_lvalue(as_bin_op, true, ref state);
 			move(destination, lvalue[array::len(lvalue) - 1] as :value, ref state);
-			for(var i = array::len(lvalue) - 2; i >= 0; --i) {
+			for(var i = array::len(lvalue) - 1; i >= 0; --i) {
 				match (lvalue[i]) case :value(var reg) {
 				} case :index(var arr) {
 				} case :hashkey(var hash) {
@@ -1346,6 +1348,7 @@ def new_register(ref state : @translator::state_t, type : @nlasm::reg_type) : @n
 	var new_reg_no = array::len(state->logic->registers);
 	var register = {type => type, reg_no => new_reg_no, access_type => :value};
 	state->logic->registers []= register;
+	state->logic->register_to_clear []= true;
 	state->result->registers []= register;
 	return state->logic->registers[new_reg_no];
 }
@@ -1354,6 +1357,7 @@ def new_reference_register(ref state : @translator::state_t, type : @nlasm::reg_
 	var new_reg_no = array::len(state->logic->registers);
 	var register = {type => type, reg_no => new_reg_no, access_type => :reference};
 	state->logic->registers []= register;
+	state->logic->register_to_clear []= true;
 	state->result->registers []= register;
 	return state->logic->registers[new_reg_no];
 }
@@ -1364,7 +1368,7 @@ def save_registers(ref state : @translator::state_t) : @translator::function_log
 
 def undef_reg(reg : @nlasm::reg_t, ref state : @translator::state_t) {
 	match (reg->access_type) case :value {
-		print(ref state, :clear(reg));
+		print(ref state, :clear(reg)) if state->logic->register_to_clear[reg->reg_no];
 	} case :reference {
 	}
 }
@@ -1441,6 +1445,7 @@ def var_type_to_reg_type(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref state : @translator::state_t) {
 	state->debug->nast_debug = val->debug;
 	if (!tct::is_own_type(val->type, state->logic->defined_types)) {
+		state->logic->register_to_clear[destination->reg_no] = false;
 		print_val(val, destination, ref state);
 		return;
 	}
@@ -1461,7 +1466,9 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 		} else {
 			var variant_values = unwrap_ref(val->type, state->logic->defined_types) as :tct_own_var;
 			inner_type = variant_values{variant->name} as :with_param;
-			var_value = :arg(get_cast(calc_val(variant->var, ref state), var_type_to_reg_type(inner_type, state->logic->defined_types), ref state));
+			var var_value_reg = get_cast(calc_val(variant->var, ref state), var_type_to_reg_type(inner_type, state->logic->defined_types), ref state);
+			state->logic->register_to_clear[var_value_reg->reg_no] = false;
+			var_value = :arg(var_value_reg);
 		}
 		print(ref state, :ov_mk({
 			dest => destination,
@@ -1470,12 +1477,6 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 			label_no => get_label_number(ref state, val->type, variant->name),
 			inner_type => inner_type
 		}));
-		match (var_value) case :arg(var arg) {
-			print(ref state, :release_variant({
-				current_owner => arg,
-			}));
-		} case :emp {
-		}
 	} case :var(var variable) {
 		die;
 	} case :parenthesis(var parenthesis) {
@@ -1505,6 +1506,7 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 			fora var hash_el (hash_decl) {
 				var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
 				var key = new_register(ref state, :string);
+				state->logic->register_to_clear[key->reg_no] = false;
 				load_const(hash_el->key->value as :hash_key, key, ref state);
 				use_hash_index(new_reg, destination, key, true, ref state);
 				print_own_val_init(hash_el->val, new_reg, ref state);
