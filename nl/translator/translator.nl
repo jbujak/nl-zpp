@@ -1506,7 +1506,6 @@ def print_own_val_init(val : @nast::value_t, destination : @nlasm::reg_t, ref st
 			fora var hash_el (hash_decl) {
 				var new_reg = new_reference_register(ref state, var_type_to_reg_type(hash_el->val->type, state->logic->defined_types));
 				var key = new_register(ref state, :string);
-				state->logic->register_to_clear[key->reg_no] = false;
 				load_const(hash_el->key->value as :hash_key, key, ref state);
 				use_hash_index(new_reg, destination, key, true, ref state);
 				print_own_val_init(hash_el->val, new_reg, ref state);
