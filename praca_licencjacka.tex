@@ -18,6 +18,27 @@
 
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{textcomp}
+
+
+\lstset{
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4,
+  escapeinside=``,
+  frame=tb
+}
 
 % Dane magistrantów:
 \autori{Michał Borkowski}{370727}
@@ -272,6 +293,7 @@ Przykładowe komendy nlasma:
 \section{Translacja drzewa AST do nlasma}
 \section{Generowanie kodu C na podstawie nlasma}
 \section{Implementacja typów NianioLanga w C}
+\label{sec:c_types_implementation}
 
 \chapter{Zmiana systemu typów}
 \section{Rozdzielenie typu \texttt{ptd::sim}}
@@ -285,10 +307,53 @@ Przykładowe komendy nlasma:
 \section{Statyczne sprawdzanie poprawności}
 
 \chapter{Nowe implementacje typów}
-  \emph{W tej sekcji w każdym podrozdziale będziemy opisywać dlaczego
-    dotychczasowe rozwiązanie było nieefektywne, jak można je
-    było poprawić, które rozwiązanie wybraliśmy, dlaczego.}
 \section{Typy proste}
+Pierwszą zmianą, jaka została wprowadzona w generatorze kodu, było uproszczenie,
+tam gdzie to możliwe, kodu generowanego dla operacji na typach prostych.
+Rozdzielenie typu \texttt{ptd::sim} na osobne typy dla liczb naturalnych,
+łańcuchów znaków i wartości logicznych umożliwiło bardziej uważny dobór instrukcji języka C,
+co przełożyło się na wydajniejszy kod wynikowy.
+
+\subsection{Liczby całkowite}
+Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
+do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji artytmetycznych,
+które na obecnych procesorach wykonują się w czasie jednego cyklu procesora. Użycie typu języka C
+dedykowanego dla liczb całkowitych umożliwia też kompilatorowi \texttt{gcc} lepszą optymalizację
+na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
+\subsection{Łańcuchów znaków}
+Implementacja łańcuchów znaków nie została zmieniona w stosunku do istniejącej wcześniej.
+Decyzja ta była spowodowana efektywnością już istniejącej implementacji -- łańcuchy znaków
+są kompilowane to tablic typu \texttt{char[]}, opakowanych w struktury zawierające
+rozmiar i pojemność tablicy. Dostęp takich zmiennych odbywa się poprzez specjalne funkcje,
+zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut potrzebny żeby
+zachować bezpieczeństwo języka i uchronić programistę przed błedami, takimi jak przepełnienie bufora.
+Z tego względu została podjęta decyzja o nie powielaniu istniejącej implementacji i wykorzystaniu
+tej już istniejącej.
+\subsection{Wartości logiczne}
+Jak zostało to opisane w rozdziale \hyperref[sec:c_types_implementation]{Implementacja typów NianioLanga w C}, dotychczasowa implementacja wartości logicznych opierała się na dwuwartościowych
+języka NianioLang. Z uwagi na to, że warianty są dość wysokopoziomowym mechanizmem, bez
+bezpośredniego odzwierciedlenia w języku C, kod wynikowy generowany dla wartości logicznych nie był
+efektywny.
+
+W wyniku przeprowadzonych zmian wartości logiczne są kompilowane do zmiennych typu \texttt{bool},
+zdefiniowanego w pliku \texttt{stdbool.h} biblioteki standardowej języka C.
+Podobnie, jak w przypadku liczb całkowitych zapewnia to dobrą wydajność operacji logicznych
+ze względu na bezpośrednie wsparcie procesora i kompilatora \texttt{gcc}.
+
+\subsection{Ograniczenia kompilacji typów prostych}
+Z uwagi na leżące u podstaw języka założenie o opcjonalności typów, nie było możliwe
+zagwarantowanie efektywnej kompilacji typów prostych w każdych warunkach.
+Na przykład, poniższy kod zostanie skompilowany do ciągu operacji na mniej efektywnym typie
+\texttt{ImmT}. Spowodowane jest to zmianą typu zmiennej \texttt{x} w trakcie działania programu,
+przez co nie można jej przypisać żadnego z typów prostych.
+\begin{lstlisting}[caption={Kod kompilowany do typu \texttt{ImmT}}]
+var x;
+x = 'a';
+x = 1;
+x++;
+\end{lstlisting}
+
+
 \section{Tablice}
 \section{Rekordy}
 \section{Typy wariantowe}
