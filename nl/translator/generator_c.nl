@@ -840,14 +840,12 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t, defined_ty
 	} case :get_val(var get) {
 		var r;
 		match (get->src->access_type) case :value {
-			r = get_value_from_im(get->dest->type,
-				get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]));
+			r = get_fun_lib('hash_get_value_dec', [get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
 		} case :reference {
 			if (get->src->type is :rec) {
 				r = get_reg(ref state, get->src) . '->' . get_field_name(get->key);
 			} elsif (get->src->type is :im){
-				r = get_value_from_im(get->dest->type,
-					get_fun_lib('hash_get_value_dec', ['*' . get_reg(ref state, get->src), get_const_sim(ref state, get->key)]));
+				r = get_fun_lib('hash_get_value_dec', ['*' . get_reg(ref state, get->src), get_const_sim(ref state, get->key)]);
 			} else {
 				die;
 			}
@@ -877,19 +875,15 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t, defined_ty
 				var type_name = get_type_name(mk->dest->type as :variant);
 				var val;
 				var size;
-				var own_arg;
 				match (mk->src) case :arg(var a) {
 					val = get_reg_ref(ref state, a);
 					size = 'sizeof(' . get_type_name(mk->inner_type) . ')';
-					own_arg = !(a->type is :im || a->type is :string);
 				} case :emp {
 					val = 'NULL';
 					size = 0;
-					own_arg = false;
 				}
 				print(ref state, get_variant_make_fun_name(type_name, state->mod_name) . '(' .
-					get_reg_ref(ref state, mk->dest) . ', ' . mk->label_no . ', ' . val . ', ' . size .
-					', ' . (own_arg ? 'true' : 'false') .  ')');
+					get_reg_ref(ref state, mk->dest) . ', ' . mk->label_no . ', ' . val . ', ' . size .  ')');
 			}
 		}
 	} case :prt_lbl(var l) {
@@ -1142,8 +1136,9 @@ def print_hash_declaration(ref state : @generator_c::state_t, hash_decl : @nlasm
 	if (hash_decl->dest->type is :im) {
 		var args = [array::len(hash_decl->src)];
 		fora var el (hash_decl->src) {
+			die unless el->val->type is :im;
 			array::push(ref args, get_const_sim(ref state, el->key));
-			array::push(ref args, get_im_from_reg(ref state, el->val));
+			array::push(ref args, get_reg_value(ref state, el->val));
 		}
 		var r = get_fun_lib('hash_mk', args);
 		print(ref state, get_assign(ref state, hash_decl->dest, r));
@@ -1189,7 +1184,7 @@ def print_use_index(ref state : @generator_c::state_t, use_index : @nlasm::use_i
 		print(ref state, ret);
 	} elsif (use_index->old_owner->type is :im) {
 		print(ref state, get_fun_lib('move', [get_reg_ref(ref state, use_index->new_owner), 
-			get_fun_lib('get_ref_arr', [get_reg(ref state, use_index->old_owner), get_reg_value(ref state, use_index->index)])
+			get_fun_lib('array_get', [get_reg(ref state, use_index->old_owner), get_reg_value(ref state, use_index->index)])
 		]));
 	} else {
 		die;
@@ -1209,7 +1204,6 @@ def print_use_hash_index(ref state : @generator_c::state_t, use_hash_index : @nl
 		ret .=  (use_hash_index->create_if_not_exist ? 'true' : 'false') . ')';
 		print(ref state, ret);
 	} elsif (use_hash_index->old_owner->type is :im) {
-		#TODO
 	} else {
 		die;
 	}
@@ -1317,7 +1311,7 @@ def generate_call(ref state : @generator_c::state_t, call : @nlasm::call_t) : pt
 	}
 	ret .= ')';
 	if (nlasm::is_empty(call->dest)) {
-		print(ref state, ret);
+		print(ref state, get_assign(ref state, call->dest, ret));
 	} else {
 		print(ref state, get_assign(ref state, call->dest, ret));
 	}
@@ -1392,7 +1386,7 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	} case :tct_ref(var ref_name) {
 		return anon_naming::func_ref_to_struct_name(ref_name);
 	} case :tct_void {
-		return 'void ';
+		return im_t();
 	} case :tct_sim {
 		return im_t();
 	} case :tct_int {
@@ -1538,7 +1532,7 @@ def get_empty_value(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_ref(var ref_name) {
 		return 'NULL';
 	} case :tct_void {
-		return '';
+		return 'NULL';
 	} case :tct_sim {
 		return 'NULL';
 	} case :tct_int {
@@ -1602,13 +1596,13 @@ def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_
 		ret .= get_array_get_fun_def(type_name, arr_type, state->mod_name) . string::lf();
 		ret .= get_array_len_fun_def(type_name, state->mod_name) . string::lf();
 		ret .= get_array_clean_fun_def(type_name, arr_type, state->mod_name, defined_types) . string::lf();
-		ret .= get_array_free_fun_def(type_name, arr_type, state->mod_name) . string::lf();
+		ret .= get_array_free_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_hash(var hash_type) {
 	} case :tct_own_hash(var hash_type) {
 		ret .= get_hash_get_fun_def(type_name, hash_type, state->mod_name) . string::lf();
 		ret .= get_hash_next_iter_fun_def(type_name, state->mod_name) . string::lf();
 		ret .= get_hash_clean_fun_def(type_name, hash_type, state->mod_name, defined_types) . string::lf();
-		ret .= get_hash_free_fun_def(type_name, hash_type, state->mod_name) . string::lf();
+		ret .= get_hash_free_fun_def(type_name, state->mod_name) . string::lf();
 	} case :tct_rec(var records) {
 	} case :tct_own_rec(var records) {
 		ret .= get_rec_clean_fun_def(type_name, records, state->mod_name, defined_types) . string::lf();
@@ -1805,25 +1799,20 @@ def get_variant_make_fun_header(variant_type_name : ptd::sim(), mod_name : ptd::
 	ret .= variant_type_name . ' *var, ';
 	ret .= 'int label, ';
 	ret .= 'void *value, ';
-	ret .= int_t() . ' size, bool own_arg)';
+	ret .= int_t() . ' size)';
 	return ret;
 }
 
 def get_variant_make_fun_def(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
 	var ret = get_variant_make_fun_header(variant_type_name, mod_name) . ' {
-		'var->label = label;
 		'if (var->value.internal != NULL) {
-		'//TODO clean
+		'' .  get_variant_clean_fun_name(variant_type_name, mod_name) . '(*var);
 		'var->value.internal = NULL;
 		'}
+		'var->label = label;
 		'if (value != NULL) {
 		'var->value.internal = alloc_mem(size);
-		'if (own_arg) {
 		'memcpy(var->value.internal, value, size);
-		'} else {
-		'*((ImmT*)var->value.internal) = NULL;
-		'' . get_lib_fun('copy') . '(var->value.internal, *((ImmT*)value));
-		'}
 		'}
 		'var->size = size;
 		'}';
@@ -2018,23 +2007,32 @@ def get_free_fun_call_exact(type : @tct::meta_type, type_name : ptd::sim(), mod_
 	} case :tct_own_var(var var_types) {
 		ret = get_variant_free_fun_name(type_name, mod_name) . '(' . var_name . ')';
 	} case :tct_im {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_rec(var rec_types) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_hash(var hash_type) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_arr(var arr_type) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_var(var var_types) {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_int {
+		ret = 'free_mem(' . var_name . ', sizeof(INT))';
 	} case :tct_ref(var ref_type) {
 		return get_free_fun_call_exact(defined_types{ref_type}, get_type_name(type), get_type_module_name(ref_type), var_name, defined_types);
 	} case :tct_string {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_sim {
-		ret = 'c_rt_lib0clear(' . var_name . ')';
+		ret = get_fun_lib('clear', [var_name]) . ';
+			'free_mem(var.value.internal, sizeof(ImmT))';
 	} case :tct_bool {
+		ret = 'free_mem(' . var_name . ', sizeof(bool))';
 	} case :tct_void {
 	} case :tct_empty {
 	}
@@ -2058,7 +2056,7 @@ def get_rec_free_fun_def(rec_type_name : ptd::sim(), mod_name : ptd::sim())
 		: ptd::sim() {
 	return get_rec_free_fun_header(rec_type_name, mod_name) . ' {
 		''	. get_rec_clean_fun_name(rec_type_name, mod_name) . '(*rec);
-		'free_mem(rec, sizeof(rec));
+		'free_mem(rec, sizeof(*rec));
 		'}';
 }
 
@@ -2075,11 +2073,11 @@ def get_hash_free_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim())
 	return ret;
 }
 
-def get_hash_free_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) 
+def get_hash_free_fun_def(hash_type_name : ptd::sim(), mod_name : ptd::sim())
 		: ptd::sim() {
 	return get_hash_free_fun_header(hash_type_name, mod_name) . ' {
 		'' . get_hash_clean_fun_name(hash_type_name, mod_name) . '(*hash);
-		'free_mem(hash, sizeof(hash));
+		'free_mem(hash, sizeof(*hash));
 		'}';
 }
 
@@ -2095,11 +2093,11 @@ def get_array_free_fun_header(array_type_name : ptd::sim(), mod_name : ptd::sim(
 	return ret;
 }
 
-def get_array_free_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) 
+def get_array_free_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim())
 		: ptd::sim() {
 	return get_array_free_fun_header(array_type_name, mod_name) . ' {
 		'' . get_array_clean_fun_name(array_type_name, mod_name) . '(*arr);
-		'free_mem(arr, sizeof(arr));
+		'free_mem(arr, sizeof(*arr));
 		'}';
 }
 
@@ -2119,7 +2117,7 @@ def get_variant_free_fun_def(variant_type_name : ptd::sim(),
 		mod_name : ptd::sim()) : ptd::sim() {
 	return get_variant_free_fun_header(variant_type_name, mod_name) . '{
 		'' .  get_variant_clean_fun_name(variant_type_name, mod_name) . '(*var);
-		'free_mem(var, var->size);
+		'free_mem(var, sizeof(*var));
 		'}';
 }
 

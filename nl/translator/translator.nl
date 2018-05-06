@@ -143,7 +143,19 @@ def print_hash_declaration(hash : ptd::arr(@nast::hash_elem_t), destination : @n
 	@translator::state_t) {
 	var elems_array = [];
 	fora var elem (hash) {
-		array::push(ref elems_array, {key => elem->key->value as :hash_key, val => calc_val(elem->val, ref state)});
+		var inner_type = :im;
+		var key = elem->key->value as :hash_key;
+		if (destination->type is :hash) {
+			var unwrapped_inner = unwrap_ref(destination->type as :hash, state->logic->defined_types) as :tct_own_hash;
+			unwrapped_inner = unwrap_ref(unwrapped_inner, state->logic->defined_types);
+			inner_type = var_type_to_reg_type(unwrapped_inner, state->logic->defined_types);
+		} elsif (destination->type is :rec) {
+			var unwrapped_inner = unwrap_ref(destination->type as :rec, state->logic->defined_types) as :tct_own_rec;
+			unwrapped_inner = unwrap_ref(unwrapped_inner{key}, state->logic->defined_types);
+			inner_type = var_type_to_reg_type(unwrapped_inner, state->logic->defined_types);
+		}
+		var elem_reg = get_cast(calc_val(elem->val, ref state), inner_type, ref state);
+		array::push(ref elems_array, {key => key, val => elem_reg});
 	}
 	print(ref state, :hash_decl({dest => destination, src => elems_array}));
 }
@@ -665,7 +677,9 @@ def print_fora(as_fora : @nast::fora_t, ref state : @translator::state_t) {
 	}
 	var loop_label = save_loop_break(ref state, after_fora_instruction_no, increment_instruction_no);
 	print_cmd(as_fora->cmd, ref state);
-	release_index(new_owner, index_register, ref state);
+	if (arg->type is :im) {
+		undef_reg(iter_reg, ref state);
+	}
 	print_sim_label(increment_instruction_no, ref state);
 	start_new_instruction(translator::last_debug_char(fora_debug), ref state) unless as_fora->short;
 	print(ref state, :bin_op({dest => index_register, left => index_register, right => one_register, op => '+'}));
@@ -969,7 +983,7 @@ def print_get_from_index(destination : @nlasm::reg_t, src : @nlasm::reg_t, index
 	move(destination, tmp_destination, ref state) if dest_cast_needed;
 }
 
-def print_set_at_index(label : @nlasm::reg_t, index : @nlasm::reg_t, value : @nlasm::reg_t, ref state : 
+def print_set_at_index(label : @nlasm::reg_t, index : @nlasm::reg_t, value : @nlasm::reg_t, ref state :
 	@translator::state_t) {
 	var real_index = get_cast(index, :int, ref state);
 	print(ref state, :set_at_idx({src => label, idx => real_index, val => value}));
@@ -983,9 +997,23 @@ def print_array_push(dest : @nlasm::reg_t, value : @nlasm::reg_t, ref state : @t
 	print(ref state, :array_push({dest => dest, val => real_value}));
 }
 
-def print_get_value(destination : @nlasm::reg_t, label : @nlasm::reg_t, key : ptd::sim(), ref state : 
+def print_get_value(destination : @nlasm::reg_t, src : @nlasm::reg_t, key : ptd::sim(), ref state : 
 	@translator::state_t) {
-	print(ref state, :get_val({dest => destination, src => label, key => key}));
+	var type_from_src;
+	if (src->type is :im) {
+		type_from_src = :im;
+	} elsif (src->type is :hash) {
+		var unwrapped_inner = unwrap_ref(src->type as :hash, state->logic->defined_types) as :tct_own_hash;
+		unwrapped_inner = unwrap_ref(unwrapped_inner, state->logic->defined_types);
+		type_from_src = var_type_to_reg_type(unwrapped_inner, state->logic->defined_types);
+	} else {
+		die;
+	}
+	var dest_cast_needed = !nlasm::eq_reg_type(type_from_src, destination->type);
+	var tmp_destination = destination;
+	tmp_destination = new_register(ref state, type_from_src) if dest_cast_needed;
+	print(ref state, :get_val({dest => tmp_destination, src => src, key => key}));
+	move(destination, tmp_destination, ref state) if dest_cast_needed;
 }
 
 def print_set_value(label : @nlasm::reg_t, key : ptd::sim(), value : @nlasm::reg_t, ref state : @translator::state_t) {
