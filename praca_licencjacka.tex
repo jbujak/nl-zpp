@@ -17,6 +17,7 @@
 \documentclass[licencjacka]{pracamgr}
 
 \usepackage{hyperref}
+\usepackage{graphicx}
 
 % Dane magistrantów:
 \autori{Michał Borkowski}{370727}
@@ -158,7 +159,7 @@ Podstawowymi założeniami systemu typów w NianioLangu są: niemutowalność st
 
 W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
 a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
-W rozdziale \textit{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
+W rozdziale \hyperref[sec:compiler]{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
 Celem projektu była modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz skomplikowanych
@@ -176,13 +177,63 @@ uzyskujemy prostszy kod wynikowy w C, który jest łatwiejszy do optymalizacji p
 Skutkiem zmian jakie musiały zostać wprowadzone by osiągnąć cel projektu było utracenie możliwości
 kompilacji NianioLanga do języków innych niż C do czasu implementacji nowych typów w pozostałych językach.
 To zadanie pozostaje jednak poza zakresem niniejszej pracy.
+
 \section{Podstawowe pojęcia}
+
 \chapter{Metodyka pracy}
+Prace nad kodem prowadzone były regularnie od połowy października do maja,
+z wyłączeniem sesji na przełomie lutego i stycznia. Na rysunku \ref{img:commits_over_time}
+przedstawiony został wykres zmian, które wpływały na główną gałąź repozytorium kodu.
+Co tydzień zespół prezentował
+swoje poczynania opiekunowi, co było stałym motywatorem aby coś robić.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\textwidth]{commits_over_time}
+  \caption{Liczba commitów na głównej gałęzi repozytorium w czasie trwania projektu.}
+  \label{img:commits_over_time}
+\end{figure}
+
 \section{Korzystanie z systemu kontroli wersji}
+Podczas pracy zespołowej niezmiernie istotna jest wymiana i zarządzanie kawałkami kodu,
+jakie piszą poszczególni członkowie zespołu. Ponieważ każdy w zespole pracował już
+wcześniej z systemem kontroli wersji Git, to został on użyty w tym projekcie.
+Dodatkowym atutem tego systemu kontroli wersji jest szeroka dostępność darmowych
+publicznych repozytoriów kodu online. Kod projektu umieszczony został na portalu
+GitHub, który jest największym serwisem pozwalającym na hostowanie kodu online.
+
+Początkowo każdy w zespole miał swoją gałąź w repozytorium, oznaczoną jego imieniem,
+na której wprowadzał swoje zmiany. Jednak w trakcie pracy wyszło, że praktyczniejszym
+podejściem jest tworzenie osobnych gałęzi kodu dla każdego zadania.
+GitHub oprócz repozytorium kodu, udostępnia również narzędzia do zarządzania zadaniami
+w projekcie, co zostało wykorzystane.
+
 \section{Zgłaszanie zmian i code review}
+Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. Pull Request,
+czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszczone
+w głównej gałęzi projektu, musiały być zatwierdzone przez conajmniej jednego członka
+zespołu, innego niż ten który zgłosił PR. GitHub udostępnia widok naniesionych zmian
+wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
+był dialog między recenzentem kodu, a jego twórcą, tak aby ostatecznie zatwierdzone
+zmiany spełniały oczekiwania obu stron.
+
 \section{Techniki komunikacji w zespole}
+Większość komunikacji w zespole odbywała się online przez portal społecznościowy Facebook.
+Na konwersacji grupowej na tym portalu zespół dogadywał większość detali implementacyjnych
+przed rozpoczęciem ich kodowania, a w początkowej fazie projektu, głównym tematem była
+specyfika języka NianioLang, z którym większość członków zespołu miała po raz pierwszy
+styczność.
+
+Drugim kanałem komunikacji były zadania i PRy na GitHubie. Zadania w prosty sposób
+opisywały co i kto ma zrobić, a opisy PRów określały co zostało przez daną osobę zrobione.
+Tej komunikacji w projekcie było najmniej.
+
+Ostatnim sposobem komunikacji były cotygodniowe spotkania podczas zajęć z Zespołowego
+Projektu Programistycznego, po których zespół spędzał 10-20 minut na dogadywaniu się,
+kto wybiera, które zadanie, a w przypadku pytań lub problemów, na ich rozwiązaniu.
 
 \chapter{Kompilator NianioLanga}
+\label{sec:compiler}
 \section{Budowanie drzewa AST}
 Pierwszym etapem kompilacji jest parsowanie programu wejściowego do drzewa AST. Takie drzewo jest strukturą przechowującą informacje o składniowej roli wyrażeń, które przetwarzać można na dalszych etapach kompilacji. Celem jest przetworzenie tekstu programu do postaci przypominającej derywację gramatyki języka. Chociaż książkowa definicja drzewa AST mówi wyłącznie o składni, kompilator NianioLanga już na tym etapie dokonuje pewnej podstawowej analizy semantycznej, gdyż wydzielenie tych czynności spowodowałoby dużą duplikację kodu związanego z czynnością obchodzenia drzewa.
 
