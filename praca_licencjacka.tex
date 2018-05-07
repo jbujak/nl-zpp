@@ -121,9 +121,9 @@ W pracy opisujemy...
 
 \chapter*{Wprowadzenie}
   \addcontentsline{toc}{chapter}{Wprowadzenie}
-  NianioLang jest językiem programowania ogólnego przeznaczenia, którego twórcą jest
-  założyciel firmy Atinea -- Andrzej Gąsienica-Samek. Poniższa praca realizowana jest
-  na zlecenie firmy Atinea, która wykorzystuje NianioLang.
+  NianioLang jest językiem programowania ogólnego przeznaczenia. Jego twórcą jest
+  założyciel firmy Atinea, na zlecenie której realizowana jest poniższa
+  praca -- Andrzej Gąsienica-Samek.
   Istniejący kompilator umożliwia translację NianioLanga do kilku języków,
   między innymi do Javy, JavaScriptu i C.
   Ze względu na chęć uproszczenia kompilacji NianioLanga
@@ -205,8 +205,8 @@ To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 Prace nad kodem prowadzone były regularnie od połowy października do maja,
 z wyłączeniem sesji na przełomie lutego i stycznia. Na rysunku \ref{img:commits_over_time}
 przedstawiony został wykres zmian, które wpływały na główną gałąź repozytorium kodu.
-Co tydzień zespół prezentował
-swoje poczynania opiekunowi, co było stałym motywatorem aby coś robić.
+Co tydzień zespół prezentował swoje poczynania opiekunowi, co dostarczało stałej motywacji
+do implementacji kolejnych elementów projektu.
 
 \begin{figure}[h]
   \centering
@@ -216,7 +216,7 @@ swoje poczynania opiekunowi, co było stałym motywatorem aby coś robić.
 \end{figure}
 
 \section{Korzystanie z systemu kontroli wersji}
-Podczas pracy zespołowej niezmiernie istotna jest wymiana i zarządzanie kawałkami kodu,
+Podczas pracy zespołowej niezmiernie istotna jest wymiana i zarządzanie fragmentami kodu,
 jakie piszą poszczególni członkowie zespołu. Ponieważ każdy w zespole pracował już
 wcześniej z systemem kontroli wersji Git, to został on użyty w tym projekcie.
 Dodatkowym atutem tego systemu kontroli wersji jest szeroka dostępność darmowych
@@ -224,10 +224,17 @@ publicznych repozytoriów kodu online. Kod projektu umieszczony został na porta
 GitHub, który jest największym serwisem pozwalającym na hostowanie kodu online.
 
 Początkowo każdy w zespole miał swoją gałąź w repozytorium, oznaczoną jego imieniem,
-na której wprowadzał swoje zmiany. Jednak w trakcie pracy wyszło, że praktyczniejszym
-podejściem jest tworzenie osobnych gałęzi kodu dla każdego zadania.
+na której wprowadzał swoje zmiany. Jednak w trakcie pracy za praktyczniejsze podejście
+zostało uznane tworzenie osobnych gałęzi kodu dla każdego zadania.
+Umożliwiło to pracę nad kilkoma niezależnymi zadaniami jednocześnie i ułatwiło
+przeglądy kodu poprzez tematyczny podział zmian.
+
 GitHub oprócz repozytorium kodu, udostępnia również narzędzia do zarządzania zadaniami
-w projekcie, co zostało wykorzystane.
+w projekcie, co zostało wykorzystane. Każde duże i średnie zadanie było zapisywane
+w systemie zgłoszeń. Po ustaleniu osoby wykonującej zadanie było ono przypisywane
+na tę osobę, a po wgraniu zmian na główną gałąz zadanie było zamykane.
+Dzięki temu w dowolnej chwili możliwe było określenie nad czym pracuje dany członek
+zespołu i jakie otwarte zadania pozostały do przydzielenia.
 
 \section{Zgłaszanie zmian i code review}
 Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. Pull Request,
@@ -240,18 +247,20 @@ zmiany spełniały oczekiwania obu stron.
 
 \section{Techniki komunikacji w zespole}
 Większość komunikacji w zespole odbywała się online przez portal społecznościowy Facebook.
-Na konwersacji grupowej na tym portalu zespół dogadywał większość detali implementacyjnych
-przed rozpoczęciem ich kodowania, a w początkowej fazie projektu, głównym tematem była
-specyfika języka NianioLang, z którym większość członków zespołu miała po raz pierwszy
-styczność.
+W początkowej fazie projektu, głównym tematem dyskusji była specyfika języka NianioLang,
+z którym większość członków zespołu miała po raz pierwszy styczność.
+Na dalszym etapie projektu, na konwersacji grupowej na tym portalu zespół
+dogadywał większość detali implementacyjnych przed rozpoczęciem ich kodowania.
+Ten środek komunikacji był najchętniej wykorzystywany ze względu na najkrótszy czas
+reakcji członków zespołu.
 
 Drugim kanałem komunikacji były zadania i PRy na GitHubie. Zadania w prosty sposób
 opisywały co i kto ma zrobić, a opisy PRów określały co zostało przez daną osobę zrobione.
-Tej komunikacji w projekcie było najmniej.
+Ta forma komunikacji w projekcie była najmniej używana.
 
 Ostatnim sposobem komunikacji były cotygodniowe spotkania podczas zajęć z Zespołowego
 Projektu Programistycznego, po których zespół spędzał 10-20 minut na dogadywaniu się,
-kto wybiera, które zadanie, a w przypadku pytań lub problemów, na ich rozwiązaniu.
+kto wybiera które zadanie, a w przypadku pytań lub problemów, na ich rozwiązaniu.
 
 \chapter{Kompilator NianioLanga}
 \label{sec:compiler}
@@ -343,10 +352,10 @@ ze względu na bezpośrednie wsparcie procesora i kompilatora \texttt{gcc}.
 \subsection{Ograniczenia kompilacji typów prostych}
 Z uwagi na leżące u podstaw języka założenie o opcjonalności typów, nie było możliwe
 zagwarantowanie efektywnej kompilacji typów prostych w każdych warunkach.
-Na przykład, poniższy kod zostanie skompilowany do ciągu operacji na mniej efektywnym typie
+Na przykład, kod przedstawiony na listingu \ref{lst:immt_variable} zostanie skompilowany do ciągu operacji na mniej efektywnym typie
 \texttt{ImmT}. Spowodowane jest to zmianą typu zmiennej \texttt{x} w trakcie działania programu,
 przez co nie można jej przypisać żadnego z typów prostych.
-\begin{lstlisting}[caption={Kod kompilowany do typu \texttt{ImmT}}]
+\begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable}]
 var x;
 x = 'a';
 x = 1;
@@ -360,17 +369,19 @@ i korzystającego z typów \texttt{own}, w kodzie wynikowym w C generowane są 
 typu oraz funkcji na nim operujących. Jest to główna różnica w stosunku do typów z przestrzeni
 \texttt{ptd}, dla których zdefiniowany był jeden polimorficzny typ \texttt{ImmT}.
 Takie podejście umożliwia bardziej efektywną alokację pamięci przez kompilator (ponieważ rozmiar
-wielu strujktur jest z góry znany) oraz zapewnia statyczną kontrolę typów także przez kompilator
+wielu struktur jest z góry znany) oraz zapewnia statyczną kontrolę typów także przez kompilator
 \texttt{gcc}, pozwalając wykrywać wiele błędów w kodzie generowanym przez kompilator
 NianioLanga już na etapie kompilacji.
 \subsection{Tablice}
 Definicje typów \texttt{own::arr} kompilowane są do struktury zawierającej rozmiar tablicy, jej
-maksymalną pojemność tablicy i wskaźnik na jej pierwszy element. Dodawane są również funkcje,
+maksymalną pojemność i wskaźnik na jej pierwszy element. Do programu wynikowego
+dodawane są również funkcje,
 pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
 o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
-została zaimplmentowana w sposób opisany w \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
-tablica zostaje powiększona dwukrotnie. Dzięki temu operacja ta działa w zamortyzowanym czasie
-stałym.
+została zaimplmentowana w sposób opisany na przykład w książce
+\textit{Wprowadzenie do algorytmów} \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
+tablica zostaje powiększona dwukrotnie. Dzięki takiej implmementacji operacja
+ta działa w zamortyzowanym czasie stałym.
 
 Dla każdego typu tablicowego zostaje także wygenerowana funkcja zwalniająca pamięć zajmowaną
 przez tablicę. Wywołuje ona odpowiednią funkcję zwalniającą pamięć dla każdego elementu,
