@@ -353,10 +353,31 @@ x = 1;
 x++;
 \end{lstlisting}
 
+\section{Typy złożone}
+Dla każdego typu złożonego z przestrzeni \texttt{ptd} został utworzony odpowiadający mu typ
+w przestrzeni \texttt{own}. Dla każdego konkretnego typu, zdefiniowanego przez użytkownika
+i korzystającego z typów \texttt{own}, w kodzie wynikowym w C generowane są oddzielne definicje
+typu oraz funkcji na nim operujących. Jest to główna różnica w stosunku do typów z przestrzeni
+\texttt{ptd}, dla których zdefiniowany był jeden polimorficzny typ \texttt{ImmT}.
+Takie podejście umożliwia bardziej efektywną alokację pamięci przez kompilator (ponieważ rozmiar
+wielu strujktur jest z góry znany) oraz zapewnia statyczną kontrolę typów także przez kompilator
+\texttt{gcc}, pozwalając wykrywać wiele błędów w kodzie generowanym przez kompilator
+NianioLanga już na etapie kompilacji.
+\subsection{Tablice}
+Definicje typów \texttt{own::arr} kompilowane są do struktury zawierającej rozmiar tablicy, jej
+maksymalną pojemność tablicy i wskaźnik na jej pierwszy element. Dodawane są również funkcje,
+pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
+o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
+została zaimplmentowana w sposób opisany w \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
+tablica zostaje powiększona dwukrotnie. Dzięki temu operacja ta działa w zamortyzowanym czasie
+stałym.
 
-\section{Tablice}
-\section{Rekordy}
-\section{Typy wariantowe}
+Dla każdego typu tablicowego zostaje także wygenerowana funkcja zwalniająca pamięć zajmowaną
+przez tablicę. Wywołuje ona odpowiednią funkcję zwalniającą pamięć dla każdego elementu,
+a następnie zwalnia pamięć, w której znajdowały się elementy tablicy.
+\subsection{Rekordy}
+\subsection{Typy wariantowe}
+\subsection{Hashe}
 \section{Konwersja own $\rightarrow$ im}
 \label{sec:own_to_im}
 Konwersja typów \texttt{own} na typ \texttt{ptd::im}, który jest uniwersalną reprezentacją typów z przestrzeni \texttt{ptd},
@@ -425,6 +446,8 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
 
 \bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} - 2006}.
 \bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler - GitHub}
+\bibitem{cormen} Thomas H. Cormen, Charles E. Leiserson, Ron Rivest, Clifford Stein \textit{Wprowadzenie do algorytmów}, Wydawnictwo Naukowe PWN (2013)
+
 
 \end{thebibliography}
 
