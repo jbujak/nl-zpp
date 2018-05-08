@@ -249,8 +249,8 @@ zmiany spełniały oczekiwania obu stron.
 Większość komunikacji w zespole odbywała się online przez portal społecznościowy Facebook.
 W początkowej fazie projektu, głównym tematem dyskusji była specyfika języka NianioLang,
 z którym większość członków zespołu miała po raz pierwszy styczność.
-Na dalszym etapie projektu, na konwersacji grupowej na tym portalu zespół
-dogadywał większość detali implementacyjnych przed rozpoczęciem ich kodowania.
+Na dalszym etapie projektu, na konwersacji grupowej na tym portalu, zespół
+ustalał większość detali implementacyjnych przed rozpoczęciem ich wdrażania.
 Ten środek komunikacji był najchętniej wykorzystywany ze względu na najkrótszy czas
 reakcji członków zespołu.
 
@@ -326,7 +326,7 @@ co przełożyło się na wydajniejszy kod wynikowy.
 \subsection{Liczby całkowite}
 Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
 do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji artytmetycznych,
-które na obecnych procesorach wykonują się w czasie jednego cyklu procesora. Użycie typu języka C
+które na obecnych procesorach wykonują się w niewielkiej liczbie cykli. Użycie typu języka C
 dedykowanego dla liczb całkowitych umożliwia też kompilatorowi \texttt{gcc} lepszą optymalizację
 na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
 \subsection{Łańcuchów znaków}
@@ -336,7 +336,7 @@ są kompilowane to tablic typu \texttt{char[]}, opakowanych w struktury zawieraj
 rozmiar i pojemność tablicy. Dostęp takich zmiennych odbywa się poprzez specjalne funkcje,
 zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut potrzebny żeby
 zachować bezpieczeństwo języka i uchronić programistę przed błedami, takimi jak przepełnienie bufora.
-Z tego względu została podjęta decyzja o nie powielaniu istniejącej implementacji i wykorzystaniu
+Z tego względu została podjęta decyzja o niepowielaniu istniejącej implementacji i wykorzystaniu
 tej już istniejącej.
 \subsection{Wartości logiczne}
 Jak zostało to opisane w rozdziale \hyperref[sec:c_types_implementation]{Implementacja typów NianioLanga w C}, dotychczasowa implementacja wartości logicznych opierała się na dwuwartościowych
@@ -350,9 +350,9 @@ Podobnie, jak w przypadku liczb całkowitych zapewnia to dobrą wydajność oper
 ze względu na bezpośrednie wsparcie procesora i kompilatora \texttt{gcc}.
 
 \subsection{Ograniczenia kompilacji typów prostych}
-Z uwagi na leżące u podstaw języka założenie o opcjonalności typów, nie było możliwe
+Z uwagi na leżące u podstaw języka założenie o opcjonalności typów nie było możliwe
 zagwarantowanie efektywnej kompilacji typów prostych w każdych warunkach.
-Na przykład, kod przedstawiony na listingu \ref{lst:immt_variable} zostanie skompilowany do ciągu operacji na mniej efektywnym typie
+Na przykład kod przedstawiony na listingu \ref{lst:immt_variable} zostanie skompilowany do ciągu operacji na mniej efektywnym typie
 \texttt{ImmT}. Spowodowane jest to zmianą typu zmiennej \texttt{x} w trakcie działania programu,
 przez co nie można jej przypisać żadnego z typów prostych.
 \begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable}]
