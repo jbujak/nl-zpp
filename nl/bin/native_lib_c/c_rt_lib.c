@@ -17,6 +17,7 @@
 #include </usr/include/signal.h>
 #include <sys/prctl.h>
 #include <sys/time.h>
+#include <stdbool.h>
 
 #include "c_rt_lib.h"
 #include "c_global_const.h"
@@ -607,12 +608,12 @@ ImmT c_rt_lib0hash_delete(ImmT *___ref___hashI, ImmT ___nl__keyI) {
 	else	nl_die_internal("Hash expected %s;", NAME(hash));
 	return NULL;
 }
-ImmT c_rt_lib0hash_has_key(ImmT ___nl__hashI, ImmT ___nl__keyI) {
+bool c_rt_lib0hash_has_key(ImmT ___nl__hashI, ImmT ___nl__keyI) {
 	ImmT ret = NULL;
 	if(IS_ARRHASH(___nl__hashI))	ret = get_from_arr_hash((NlArrHash*) ___nl__hashI, ___nl__keyI);
 	else if(IS_HASH(___nl__hashI))	ret = get_from_hash((NlHash*) ___nl__hashI, ___nl__keyI);
 	else	nl_die_internal("Hash expected %s;", NAME(___nl__hashI));
-	return ret == NULL ? c_rt_lib0get_false() : c_rt_lib0get_true();
+	return ret != NULL;
 }
 ImmT c_rt_lib0hash_get_value(ImmT ___nl__hashI, ImmT ___nl__keyI) {
 	ImmT ret = NULL;
@@ -650,8 +651,8 @@ ImmT c_rt_lib0hash_set_value(ImmT *___ref___hashI, ImmT ___nl__keyI, ImmT ___nl_
 	c_rt_lib0clear(&prev);
 	return NULL;
 }
-ImmT c_rt_lib0hash_size(ImmT ___nl__hashI) {
-	return c_rt_lib0int_new(((NlArrHash *)___nl__hashI)->size);
+int c_rt_lib0hash_size(ImmT ___nl__hashI) {
+	return ((NlArrHash *)___nl__hashI)->size;
 }
 
 ImmT c_rt_lib0init_iter(ImmT ___nl__hashI) {
@@ -706,14 +707,14 @@ ImmT c_rt_lib0next_iter(ImmT ___nl__iter) {
 	inc_ref(___nl__iter);
 	return ___nl__iter;
 }
-ImmT c_rt_lib0is_end_hash(ImmT ___nl__iter) {
+bool c_rt_lib0is_end_hash(ImmT ___nl__iter) {
 	NlArray *arr = (NlArray *)___nl__iter;
 	ImmT hashI = arr->arr[0];
 	INT it = ((NlInt *)arr->arr[1])->i;
 	if(IS_ARRHASH(hashI)){
-		return priv_to_nl_native(it >= ((NlArrHash *)hashI)->size);
+		return it >= ((NlArrHash *)hashI)->size;
 	} else if(IS_HASH(hashI)){
-		return priv_to_nl_native(it >= ((NlHash *)hashI)->capacity);
+		return it >= ((NlHash *)hashI)->capacity;
 	} else nl_die();
 	return NULL;
 }
@@ -754,10 +755,10 @@ ImmT c_rt_lib0mk_ov(const char * var, ImmT val){
 }
 
 
-ImmT c_rt_lib0ov_is(ImmT ___nl__variant, ImmT ___nl__is_val) {
+bool c_rt_lib0ov_is(ImmT ___nl__variant, ImmT ___nl__is_val) {
 	if(!IS_OV(___nl__variant) && !IS_OV_NONE(___nl__variant))
 		nl_die_internal("expected variant: %s", NAME(___nl__variant));
-	return priv_to_nl_native(nl_compare_internal(((NlOvNone *)___nl__variant)->name, ___nl__is_val));
+	return nl_compare_internal(((NlOvNone *)___nl__variant)->name, ___nl__is_val);
 }
 ImmT c_rt_lib0ov_as(ImmT ___nl__variant, ImmT ___nl__as_val) {
 	if (!IS_OV(___nl__variant)) {
@@ -770,8 +771,8 @@ ImmT c_rt_lib0ov_as(ImmT ___nl__variant, ImmT ___nl__as_val) {
 	inc_ref(val->value);
 	return val->value;
 }
-ImmT c_rt_lib0priv_is(ImmT ___nl__variant, ImmT ___nl__is_val) {
-	ImmT r = c_rt_lib0ov_is(___nl__variant, ___nl__is_val);
+bool c_rt_lib0priv_is(ImmT ___nl__variant, ImmT ___nl__is_val) {
+	bool r = c_rt_lib0ov_is(___nl__variant, ___nl__is_val);
 	dec_ref(___nl__is_val);
 	return r;
 }
@@ -1047,9 +1048,9 @@ ImmT c_rt_lib0array_new() {
 	return _array;
 }
 
-ImmT c_rt_lib0array_len(ImmT ___nl__arrI) {
+INT c_rt_lib0array_len(ImmT ___nl__arrI) {
 	if(!IS_ARR(___nl__arrI)) nl_die_internal("Array expected %s;", NAME(___nl__arrI));
-	return c_rt_lib0int_new(((NlArray *)___nl__arrI)->size);
+	return((NlArray *)___nl__arrI)->size;
 }
 
 NlArray* nl_array_internal_copy(ImmT ___nl__arrI) {
@@ -1111,6 +1112,7 @@ ImmT c_rt_lib0array_pop(ImmT *___ref___arrI) {
 	return NULL;
 }
 
+/* TODO remove */
 ImmT c_rt_lib0int_new(INT i) {
 	if(i==0){
 		inc_ref(_int_0);
@@ -1123,6 +1125,11 @@ ImmT c_rt_lib0int_new(INT i) {
 	NlInt *ret = (NlInt *)alloc_mem(sizeof(NlInt));
 	nl_data_init(ret, ___TYPE_INT);
 	ret->i = i;
+	return ret;
+}
+
+INT* c_rt_lib0int_new_zpp(INT i) {
+	INT* ret = (INT *)alloc_mem(sizeof(INT));
 	return ret;
 }
 
@@ -1152,9 +1159,9 @@ ImmT c_rt_lib0float_round(ImmT f) {
 	return c_rt_lib0float_new(number);
 }
 
-ImmT c_rt_lib0array_get(ImmT ___nl__arrI, ImmT ___nl__indexI) {
+ImmT c_rt_lib0array_get(ImmT ___nl__arrI, INT ___nl__indexI) {
 	NlArray *arr = (NlArray *)___nl__arrI;
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	ImmT ret = arr->arr[index];
@@ -1162,10 +1169,10 @@ ImmT c_rt_lib0array_get(ImmT ___nl__arrI, ImmT ___nl__indexI) {
 	return ret;
 }
 
-ImmT c_rt_lib0array_set(ImmT *___ref___arrI, ImmT ___nl__indexI, ImmT ___nl__el) {
+ImmT c_rt_lib0array_set(ImmT *___ref___arrI, INT ___nl__indexI, ImmT ___nl__el) {
 	if(!IS_ARR(*___ref___arrI)) nl_die_internal("Array expected %s;", NAME(*___ref___arrI));
 	NlArray *arr = priv_arr_to_change(___ref___arrI);
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	dec_ref(arr->arr[index]);
@@ -1196,29 +1203,29 @@ ImmT c_rt_lib0array_mk_dec(int nargs, ...) {
 	va_end(a);
 	return arr;
 }
-ImmT c_rt_lib0is_array(ImmT ___nl__imm) {
+bool c_rt_lib0is_array(ImmT ___nl__imm) {
 	NlData *d =  (NlData *)___nl__imm;
 	if (IS_ARR(d))
-		return c_rt_lib0get_true();
-	return c_rt_lib0get_false();
+		return true;
+	return false;
 }
-ImmT c_rt_lib0is_hash(ImmT ___nl__imm) {
+bool c_rt_lib0is_hash(ImmT ___nl__imm) {
 	NlData *d =  (NlData *)___nl__imm;
 	if (IS_ARRHASH(d) || IS_HASH(d))
-		return c_rt_lib0get_true();
-	return c_rt_lib0get_false();
+		return true;
+	return false;
 }
-ImmT c_rt_lib0is_sim(ImmT ___nl__imm) {
+bool c_rt_lib0is_sim(ImmT ___nl__imm) {
 	NlData *d =  (NlData *)___nl__imm;
 	if (IS_STRING(d) || IS_INT(d) || IS_FLOAT(d) || IS_FUNC(d))
-		return c_rt_lib0get_true();
-	return c_rt_lib0get_false();
+		return true;
+	return false;
 }
-ImmT c_rt_lib0is_variant(ImmT ___nl__imm) {
+bool c_rt_lib0is_variant(ImmT ___nl__imm) {
 	NlData *d =  (NlData *)___nl__imm;
 	if (IS_OV(d) || IS_OV_NONE(d))
-		return c_rt_lib0get_true();
-	return c_rt_lib0get_false();
+		return true;
+	return false;
 }
 #define BIN_OP_NUM_TO_BOOL(OP)	\
 	return priv_to_nl_native(getFloatFromImm(___nl__left) OP getFloatFromImm(___nl__right));
@@ -1333,23 +1340,79 @@ ImmT c_rt_lib0num_ne(ImmT ___nl__left, ImmT ___nl__right) {
 	BIN_OP_NUM_TO_BOOL(!=);
 }
 
-ImmT c_rt_lib0eq(ImmT ___nl__left, ImmT ___nl__right) {
+bool c_rt_lib0eq(ImmT ___nl__left, ImmT ___nl__right) {
 	NlString *ls = toStringIfSim(___nl__left);
 	NlString *rs = toStringIfSim(___nl__right);
-	ImmT ret = priv_to_nl_native(nl_compare_internal(ls, rs));
+	bool ret = nl_compare_internal(ls, rs);
 	dec_ref(ls);
 	dec_ref(rs);
 	return ret;
 }
 
-ImmT c_rt_lib0ne(ImmT ___nl__left, ImmT ___nl__right) {
+bool c_rt_lib0ne(ImmT ___nl__left, ImmT ___nl__right) {
 	NlString *ls = toStringIfSim(___nl__left);
 	NlString *rs = toStringIfSim(___nl__right);
-	ImmT ret = priv_to_nl_native(!nl_compare_internal(ls, rs));
+	bool ret = !nl_compare_internal(ls, rs);
 	dec_ref(ls);
 	dec_ref(rs);
 	return ret;
 }
+
+INT c_rt_lib0int_add(INT left, INT right){
+	return left + right;
+}
+
+INT c_rt_lib0int_sub(INT left, INT right){
+	return left - right;
+}
+
+INT c_rt_lib0int_mul(INT left, INT right){
+	return left * right;
+}
+
+
+INT c_rt_lib0int_div(INT left, INT right){
+	return left / right;
+}
+
+
+INT c_rt_lib0int_mod(INT left, INT right){
+	return left % right;
+}
+
+ImmT c_rt_lib0int_le(INT left, INT right){
+	return priv_to_nl_native(left < right);
+}
+
+ImmT c_rt_lib0int_lt(INT left, INT right){
+	return priv_to_nl_native(left <= right);
+}
+
+ImmT c_rt_lib0int_gt(INT left, INT right){
+	return priv_to_nl_native(left > right);
+}
+
+ImmT c_rt_lib0int_ge(INT left, INT right){
+	return priv_to_nl_native(left >= right);
+}
+
+ImmT c_rt_lib0int_num_eq(INT left, INT right){
+	return priv_to_nl_native(left == right);
+}
+
+ImmT c_rt_lib0int_num_ne(INT left, INT right){
+	return priv_to_nl_native(left != right);
+}
+
+
+INT c_rt_lib0int_unary_minus(INT arg){
+	return -arg;
+}
+
+INT c_rt_lib0int_unary_plus(INT arg){
+	return arg;
+}
+
 
 ImmT priv_to_nl_native(int arg) {
 	return arg == 0 ? c_rt_lib0get_false() : c_rt_lib0get_true();
@@ -1364,17 +1427,21 @@ ImmT c_rt_lib0get_true(){
 	return _true;
 }
 
-int c_rt_lib0check_true_native(ImmT ___nl__arg) {
-	if(___nl__arg == _true) return 1;
-	if(___nl__arg == _false) return 0;
+bool c_rt_lib0check_true_native(ImmT ___nl__arg) {
+	if(___nl__arg == _true) return true;
+	if(___nl__arg == _false) return false;
 	if (compare_string_with_cstr(((NlOv*)___nl__arg)->name, "TRUE") == 0) {
-		return 1;
+		return true;
 	} else if (compare_string_with_cstr(((NlOv*)___nl__arg)->name, "FALSE") == 0) {
-		return 0;
+		return false;
 	}
 	char *name = ((NlOv*)___nl__arg)->name->s;
 	nl_die_internal("bad variant in boolean check: %s", name);
-	return 0;
+	return false;
+}
+
+ImmT c_rt_lib0bool_to_nl_native(bool b) {
+	return priv_to_nl_native(b);
 }
 
 ImmT c_rt_lib0not(ImmT ___nl__arg) {
@@ -1418,16 +1485,16 @@ ImmT c_rt_lib0set_ref_hash(ImmT *___ref___hashI, ImmT ___nl__key, ImmT ___nl__va
 	return NULL;
 }
 
-ImmT c_rt_lib0get_ref_arr(ImmT ___nl__arrI, ImmT ___nl__indexI){
+ImmT c_rt_lib0get_ref_arr(ImmT ___nl__arrI, INT ___nl__indexI){
 	ImmT ret = c_rt_lib0array_get(___nl__arrI, ___nl__indexI);
 	if (REFS(___nl__arrI) == 1)
 		dec_ref(ret);
 	return ret;
 }
-ImmT c_rt_lib0set_ref_arr(ImmT *___ref___arrI, ImmT ___nl__indexI, ImmT ___nl__val){
+ImmT c_rt_lib0set_ref_arr(ImmT *___ref___arrI, INT ___nl__indexI, ImmT ___nl__val){
 	int many = REFS(*___ref___arrI) > 1;
 	NlArray *arr = priv_arr_to_change(___ref___arrI);
-	INT index = getIntFromImm(___nl__indexI);
+	INT index = ___nl__indexI;
 	if (index < 0 || index >= arr->size)
 		nl_die_internal("array index %d out of range, array size: %d", index, arr->size);
 	inc_ref(___nl__val);
@@ -1601,6 +1668,13 @@ void c_rt_lib0arg_val(ImmT ___nl__arg){
 ImmT c_rt_lib0gen_imm(ImmT imm){
 	((NlData*)imm)->refs--;
 	return imm;
+}
+
+ImmT c_rt_lib0int_to_string(INT n) {
+	char str[20];
+	sprintf(str, "%lld", n);
+	ImmT res = c_rt_lib0string_new(str);
+	return res;
 }
 
 void inc_ref(ImmT dI) {

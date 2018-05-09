@@ -4,9 +4,11 @@
  */
 #include "c_rt_lib.h"
 #include "c_global_const.h"
+#include </usr/include/string.h>
 #include "nl.h"
 #include "c_std_lib.h"
 #include "boolean_t.h"
+#include "ptd.h"
 #line 1 "nl.nl"
 
 static ImmT *__const__f = NULL;
@@ -16,168 +18,236 @@ ImmT nl_priv0__const__sing(int __nr);
 
 
 
-ImmT nl0is_array0ptr(int _num, ImmT *_tab){
+bool nl0is_array0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0is_array");
-return nl0is_array(_tab[0]);}
-ImmT nl0is_array(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0is_array(var0);
+}
+bool nl0is_array(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-ImmT ___nl__1 = NULL;
-#line 9
-c_rt_lib0move(&___nl__1, c_std_lib0is_array(___nl__0));
-#line 9
-if(c_rt_lib0check_true_native(___nl__1)){ goto label_4;}
-#line 9
-c_rt_lib0move(&___nl__1, c_rt_lib0get_false());
-#line 9
-goto label_6;
-#line 9
-label_4:
-#line 9
-c_rt_lib0move(&___nl__1, c_rt_lib0get_true());
-#line 9
-label_6:
-#line 9
-c_rt_lib0clear(&___nl__0);
-#line 9
-return ___nl__1;
-#line 9
-c_rt_lib0clear(&___nl__1);
-#line 9
-c_rt_lib0clear(&___nl__0);
-#line 9
+bool  ___nl__bool__1 = false;
+bool  ___nl__bool__2 = false;
+bool  ___nl__bool__3 = false;
+#line 10
+___nl__bool__3 = c_std_lib0is_array(___nl__im__0);
+#line 10
+if(___nl__bool__3){ goto label_2;}
+#line 10
+___nl__bool__2 = false;
+#line 10
+goto label_1;
+#line 10
+label_2:
+#line 10
+___nl__bool__2 = true;
+#line 10
+label_1:
+#line 10
+//clear ___nl__bool__3;
+#line 10
+___nl__bool__1 = ___nl__bool__2;
+#line 10
+c_rt_lib0clear(&___nl__im__0);
+#line 10
+//clear ___nl__bool__2;
+#line 10
+//clear ___nl__bool__3;
+#line 10
+return ___nl__bool__1;
+#line 10
+c_rt_lib0clear(&___nl__im__0);
+#line 10
+//clear ___nl__bool__1;
+#line 10
+//clear ___nl__bool__2;
+#line 10
+//clear ___nl__bool__3;
+#line 10
 return NULL;
 }
 
-ImmT nl0is_hash0ptr(int _num, ImmT *_tab){
+bool nl0is_hash0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0is_hash");
-return nl0is_hash(_tab[0]);}
-ImmT nl0is_hash(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0is_hash(var0);
+}
+bool nl0is_hash(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-ImmT ___nl__1 = NULL;
-#line 13
-c_rt_lib0move(&___nl__1, c_std_lib0is_hash(___nl__0));
-#line 13
-if(c_rt_lib0check_true_native(___nl__1)){ goto label_4;}
-#line 13
-c_rt_lib0move(&___nl__1, c_rt_lib0get_false());
-#line 13
-goto label_6;
-#line 13
-label_4:
-#line 13
-c_rt_lib0move(&___nl__1, c_rt_lib0get_true());
-#line 13
-label_6:
-#line 13
-c_rt_lib0clear(&___nl__0);
-#line 13
-return ___nl__1;
-#line 13
-c_rt_lib0clear(&___nl__1);
-#line 13
-c_rt_lib0clear(&___nl__0);
-#line 13
+bool  ___nl__bool__1 = false;
+bool  ___nl__bool__2 = false;
+bool  ___nl__bool__3 = false;
+#line 14
+___nl__bool__3 = c_std_lib0is_hash(___nl__im__0);
+#line 14
+if(___nl__bool__3){ goto label_2;}
+#line 14
+___nl__bool__2 = false;
+#line 14
+goto label_1;
+#line 14
+label_2:
+#line 14
+___nl__bool__2 = true;
+#line 14
+label_1:
+#line 14
+//clear ___nl__bool__3;
+#line 14
+___nl__bool__1 = ___nl__bool__2;
+#line 14
+c_rt_lib0clear(&___nl__im__0);
+#line 14
+//clear ___nl__bool__2;
+#line 14
+//clear ___nl__bool__3;
+#line 14
+return ___nl__bool__1;
+#line 14
+c_rt_lib0clear(&___nl__im__0);
+#line 14
+//clear ___nl__bool__1;
+#line 14
+//clear ___nl__bool__2;
+#line 14
+//clear ___nl__bool__3;
+#line 14
 return NULL;
 }
 
-ImmT nl0is_sim0ptr(int _num, ImmT *_tab){
+bool nl0is_sim0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0is_sim");
-return nl0is_sim(_tab[0]);}
-ImmT nl0is_sim(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0is_sim(var0);
+}
+bool nl0is_sim(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-ImmT ___nl__1 = NULL;
-#line 17
-c_rt_lib0move(&___nl__1, c_std_lib0is_sim(___nl__0));
-#line 17
-if(c_rt_lib0check_true_native(___nl__1)){ goto label_4;}
-#line 17
-c_rt_lib0move(&___nl__1, c_rt_lib0get_false());
-#line 17
-goto label_6;
-#line 17
-label_4:
-#line 17
-c_rt_lib0move(&___nl__1, c_rt_lib0get_true());
-#line 17
-label_6:
-#line 17
-c_rt_lib0clear(&___nl__0);
-#line 17
-return ___nl__1;
-#line 17
-c_rt_lib0clear(&___nl__1);
-#line 17
-c_rt_lib0clear(&___nl__0);
-#line 17
+bool  ___nl__bool__1 = false;
+bool  ___nl__bool__2 = false;
+bool  ___nl__bool__3 = false;
+#line 18
+___nl__bool__3 = c_std_lib0is_sim(___nl__im__0);
+#line 18
+if(___nl__bool__3){ goto label_2;}
+#line 18
+___nl__bool__2 = false;
+#line 18
+goto label_1;
+#line 18
+label_2:
+#line 18
+___nl__bool__2 = true;
+#line 18
+label_1:
+#line 18
+//clear ___nl__bool__3;
+#line 18
+___nl__bool__1 = ___nl__bool__2;
+#line 18
+c_rt_lib0clear(&___nl__im__0);
+#line 18
+//clear ___nl__bool__2;
+#line 18
+//clear ___nl__bool__3;
+#line 18
+return ___nl__bool__1;
+#line 18
+c_rt_lib0clear(&___nl__im__0);
+#line 18
+//clear ___nl__bool__1;
+#line 18
+//clear ___nl__bool__2;
+#line 18
+//clear ___nl__bool__3;
+#line 18
 return NULL;
 }
 
-ImmT nl0is_variant0ptr(int _num, ImmT *_tab){
+bool nl0is_variant0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0is_variant");
-return nl0is_variant(_tab[0]);}
-ImmT nl0is_variant(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0is_variant(var0);
+}
+bool nl0is_variant(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-ImmT ___nl__1 = NULL;
-#line 21
-c_rt_lib0move(&___nl__1, c_std_lib0is_variant(___nl__0));
-#line 21
-if(c_rt_lib0check_true_native(___nl__1)){ goto label_4;}
-#line 21
-c_rt_lib0move(&___nl__1, c_rt_lib0get_false());
-#line 21
-goto label_6;
-#line 21
-label_4:
-#line 21
-c_rt_lib0move(&___nl__1, c_rt_lib0get_true());
-#line 21
-label_6:
-#line 21
-c_rt_lib0clear(&___nl__0);
-#line 21
-return ___nl__1;
-#line 21
-c_rt_lib0clear(&___nl__1);
-#line 21
-c_rt_lib0clear(&___nl__0);
-#line 21
+bool  ___nl__bool__1 = false;
+bool  ___nl__bool__2 = false;
+bool  ___nl__bool__3 = false;
+#line 22
+___nl__bool__3 = c_std_lib0is_variant(___nl__im__0);
+#line 22
+if(___nl__bool__3){ goto label_2;}
+#line 22
+___nl__bool__2 = false;
+#line 22
+goto label_1;
+#line 22
+label_2:
+#line 22
+___nl__bool__2 = true;
+#line 22
+label_1:
+#line 22
+//clear ___nl__bool__3;
+#line 22
+___nl__bool__1 = ___nl__bool__2;
+#line 22
+c_rt_lib0clear(&___nl__im__0);
+#line 22
+//clear ___nl__bool__2;
+#line 22
+//clear ___nl__bool__3;
+#line 22
+return ___nl__bool__1;
+#line 22
+c_rt_lib0clear(&___nl__im__0);
+#line 22
+//clear ___nl__bool__1;
+#line 22
+//clear ___nl__bool__2;
+#line 22
+//clear ___nl__bool__3;
+#line 22
 return NULL;
 }
 
-ImmT nl0print0ptr(int _num, ImmT *_tab){
+ImmT  nl0print0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0print");
-return nl0print(_tab[0]);}
-ImmT nl0print(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0print(var0);
+}
+ImmT  nl0print(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-#line 25
-c_rt_lib0delete(c_std_lib0print(___nl__0));
-#line 25
-c_rt_lib0clear(&___nl__0);
-#line 25
+#line 26
+c_rt_lib0delete(c_std_lib0print(___nl__im__0));
+#line 26
+c_rt_lib0clear(&___nl__im__0);
+#line 26
 return NULL;
 }
 
-ImmT nl0debug_die0ptr(int _num, ImmT *_tab){
+ImmT  nl0debug_die0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "nl0debug_die");
-return nl0debug_die(_tab[0]);}
-ImmT nl0debug_die(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return nl0debug_die(var0);
+}
+ImmT  nl0debug_die(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 nl_priv0__const__init();
-ImmT ___nl__1 = NULL;
-#line 30
-c_rt_lib0move(&___nl__1, c_rt_lib0array_mk(0));
-#line 30
-nl_die_arg(___nl__1);
-#line 30
-c_rt_lib0clear(&___nl__1);
-#line 30
-c_rt_lib0clear(&___nl__0);
-#line 30
+ImmT  ___nl__im__1 = NULL;
+#line 31
+c_rt_lib0move(&___nl__im__1, c_rt_lib0array_mk(0));
+#line 31
+nl_die_arg(___nl__im__1);
+#line 31
+c_rt_lib0clear(&___nl__im__0);
+#line 31
+c_rt_lib0clear(&___nl__im__1);
+#line 31
 return NULL;
 }
 
