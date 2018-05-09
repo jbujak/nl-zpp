@@ -678,7 +678,7 @@ def check_modules(ref asts : ptd::hash(@nast::module_t), ref errors : @compiler:
 		array::push(ref old_warnings, warning);
 		hash::set_value(ref errors->type_warnings, warning->module, old_warnings);
 	}
-	c_fe_lib::print('Found ' . type_errors . ' errors of types. ') unless (type_errors == 0);
+	c_fe_lib::print('Found ' . ptd::int_to_string(type_errors) . ' errors of types. ') unless (type_errors == 0);
 	var imports = {};
 	forh var module, var ast (asts) {
 		var mod_import = [];
@@ -689,8 +689,8 @@ def check_modules(ref asts : ptd::hash(@nast::module_t), ref errors : @compiler:
 	}
 	errors->loop_error = module_checker::search_loops(imports);
 	if (deref is :yes) {
-		c_fe_lib::print('deleted types: ' . array::len(ret->deref->delete));
-		c_fe_lib::print('created types: ' . array::len(ret->deref->create));
+		c_fe_lib::print('deleted types: ' . ptd::int_to_string(array::len(ret->deref->delete)));
+		c_fe_lib::print('created types: ' . ptd::int_to_string(array::len(ret->deref->create)));
 		var references = reference_generator::generate(asts);
 		ensure c_fe_lib::string_to_file(deref as :yes, serialize_deref(ret->deref, references));
 	}

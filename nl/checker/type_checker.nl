@@ -960,6 +960,10 @@ def get_special_functions() : @tc_types::special_functions {
 			r => tct::tct_im(),
 			a => [{mod => :none, type => tct::tct_im(), name => ''}, {mod => :none, type => tct::tct_im(), name => ''}]
 		});
+	hash::set_value(ref f, 'ptd::int_to_string', {
+			r => tct::string(),
+			a => [{mod => :none, type => tct::int(), name => ''}]
+		});
 	hash::set_value(ref f, 'array::push', {
 			r => tct::void(),
 			a => [
@@ -1211,6 +1215,27 @@ def get_special_functions() : @tc_types::special_functions {
 		});
 	hash::set_value(ref f, 'c_rt_lib::is_end_hash', {
 			r => tct::bool(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::get_ref_arr', {
+			r => tct::tct_im(),
+			a => [
+				{mod => :none, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::set_ref_arr', {
+			r => tct::tct_im(),
+			a => [
+				{mod => :ref, type => tct::tct_im(), name => ''},
+				{mod => :none, type => tct::int(), name => ''},
+				{mod => :none, type => tct::tct_im(), name => ''},
+			]
+		});
+	hash::set_value(ref f, 'c_rt_lib::array_len', {
+			r => tct::int(),
 			a => [
 				{mod => :none, type => tct::tct_im(), name => ''},
 			]
@@ -1634,12 +1659,14 @@ def get_type_from_bin_op_and_check(bin_op : @nast::bin_op_t, ref modules : @tc_t
 	}
 	var op_def2 = tc_types::get_bin_op_def(op);
 	if (!ptd_system::is_accepted(left_type2, op_def2->arg1, ref modules, ref errors)) {
-		add_error(ref errors, 'incorrect type of the first argument operator ''' . op . '''');
+		add_error(ref errors, 'incorrect type of the first argument operator ''' . op . ''': ' .
+			get_print_tct_type_name(left_type2->type));
 	} elsif(bin_op->left->value is :var) {
 		vars{bin_op->left->value as :var}->type = op_def2->arg1;
 	}
 	if (!ptd_system::is_accepted(right_type, op_def2->arg2, ref modules, ref errors)) {
-		add_error(ref errors, 'incorrect type of the second argument operator ''' . op . '''');
+		add_error(ref errors, 'incorrect type of the second argument operator ''' . op . ''': ' . 
+			get_print_tct_type_name(right_type->type));
 	} elsif(bin_op->right->value is :var) {
 		vars{bin_op->right->value as :var}->type = op_def2->arg2;
 	}
@@ -2056,6 +2083,10 @@ def fill_value_types_in_for(ref as_for : @nast::for_t, vars : @tc_types::vars_t,
 		} case :none {
 			die;
 		}
+		var var_decl_value = var_decl->value as :value;
+		fill_value_types(ref var_decl_value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		var_decl->value = :value(var_decl_value);
+		as_for->start = :var_decl(var_decl);
 	} case :value(var value) {
 		fill_value_types(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
 		as_for->start = :value(value);
@@ -2248,7 +2279,7 @@ def fill_unary_op_type(ref unary_op_val : @nast::value_t, vars : @tc_types::vars
 
 def fill_binary_op_type(ref binary_op_val : @nast::value_t, vars : @tc_types::vars_t, modules : @tc_types::modules_t,
 		ref errors : @tc_types::errors_t, known_types : ptd::hash(@tct::meta_type), ref anon_own_conv : ptd::hash(@tct::meta_type),
-	curr_module_name : ptd::sim()) {
+		curr_module_name : ptd::sim()) {
 	var binary_op = binary_op_val->value as :bin_op;
 
 	fill_value_types(ref binary_op->left, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
@@ -2305,7 +2336,7 @@ def fill_fun_val_type(ref fun_val : @nast::value_t, vars : @tc_types::vars_t, mo
 		rep var i (array::len(as_fun->args)) {
 			as_fun->args[i]->expected_type = fun_def->a[i]->type;
 		}
-	} elsif (as_fun->module eq 'c_std_lib' || as_fun->module eq 'c_rt_lib') {
+	} elsif (as_fun->module eq 'c_std_lib' || as_fun->module eq 'c_rt_lib' || as_fun->module eq 'c_fe_lib') {
 		#TODO dodać brakujące definicje funkcji
 		fun_val->type = :tct_im;
 	} elsif (as_fun->module eq 'own' && as_fun->name eq 'to_im') {
@@ -2356,6 +2387,7 @@ def fill_try_ensure_type(ref try_ensure : @nast::try_ensure_t, vars : @tc_types:
 				vars{decl->name} = {overwrited => :no, type => type, referenced_by => :none};
 			}
 			fill_value_types(ref value, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+			decl->value = :value(value);
 		} case :none {
 		}
 		match (decl->tct_type) case :type(var type) {
@@ -2363,10 +2395,14 @@ def fill_try_ensure_type(ref try_ensure : @nast::try_ensure_t, vars : @tc_types:
 		} case :none {
 			ret{decl->name} = {overwrited => :no, type => :tct_im, referenced_by => :none};
 		}
+		try_ensure = :decl(decl);
 	} case :lval(var lval) {
-		#TODO
+		fill_value_types(ref lval->left, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		fill_value_types(ref lval->right, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		try_ensure = :lval(lval);
 	} case :expr(var expr) {
-		#TODO
+		fill_value_types(ref expr, vars, modules, ref errors, known_types, ref anon_own_conv, curr_module_name);
+		try_ensure = :expr(expr);
 	}
 	return ret;
 }

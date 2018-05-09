@@ -366,4 +366,6 @@ def reconstruct(value, type, f, args : ptd::arr(ptd::ptd_im())) : ptd::var({
 	}
 }
 
-
+def ptd::int_to_string(i) {
+	return i;
+}

@@ -26,21 +26,21 @@ def test_ensure::rekord(){
 }
 def test_ensure::fun_arg_t(){
 	return ptd::var({
-		a => ptd::sim(), 
-		b => ptd::rec({a => ptd::sim(), c => ptd::sim()}), 
+		a => ptd::string(), 
+		b => ptd::rec({a => ptd::string(), c => ptd::string()}), 
 		d => @test_ensure::rekord
 	});
 }
 
 def test_ensure::fun_ret_t(){
 	return ptd::var({
-		ok => ptd::hash(ptd::sim()),
-		err => ptd::sim(),
+		ok => ptd::hash(ptd::string()),
+		err => ptd::string(),
 	});
 }
 def ret_err_arr() : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::arr(ptd::sim()),
+		ok => ptd::string(),
+		err => ptd::arr(ptd::string()),
 	}) {
 	return :err([]);
 }

@@ -7,6 +7,11 @@ use c_std_lib;
 use array;
 use boolean_t;
 use ptd;
+use own;
+
+def string::type() {
+	return own::arr(ptd::int());
+}
 
 def string::lf() {
 	return string::chr(10);

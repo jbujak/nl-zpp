@@ -2,6 +2,7 @@
 # (c) Atinea Sp. z o.o.
 ###
 
+use nl;
 use string;
 use boolean_t;
 use ptd;
@@ -21,19 +22,21 @@ def string_utils::is_alpha(char) {
 	return ((int > 64 && int < 91) || (int > 96 && int < 123));
 }
 
-def string_utils::get_integer(str) : ptd::var({ok => ptd::sim(), err => ptd::sim()}) {
+def string_utils::get_integer(str) : ptd::var({ok => ptd::int(), err => ptd::string()}) {
 	return :err('') if str eq '' || str eq '-';
 	var split_res = string::split('', str);
-	var ret = '';
+	var ret = 0;
+	var sign = 1;
 	if (split_res[0] eq '-') {
 		split_res = array::subarray(split_res, 1, array::len(split_res) - 1);
-		ret = '-';
+		sign = -1;
 	}
 	fora var char (split_res) {
 		return :err('') unless string_utils::is_int(char);
-		ret .= char;
+		ret *= 10;
+		ret += string::ord(char) - string::ord('0');
 	}
-	return :ok(ret);
+	return :ok(sign * ret);
 }
 
 def string_utils::is_integer(obj : ptd::sim()) : @boolean_t::type {
@@ -287,23 +290,6 @@ def string_utils::hex2char(a, b) {
 		die;
 	}
 	return string::chr(ret);
-}
-
-def string_utils::float2str(float, prec) : ptd::sim() {
-	var pot = 1.0;
-	rep var i (prec) {
-		pot *= 10.0;
-	}
-	float = c_rt_lib::float_round(float * pot);
-	var min = '';
-	if (float < 0) {
-		min = '-';
-		float = -float;
-	}
-	var str = string_utils::int2str_leading_digits(float, prec + 1);
-	var len = string::length(str);
-	return min . string::substr(str, 0, len) if prec == 0;
-	return min . string::substr(str, 0, len - prec) . '.' . string::substr(str, len - prec, prec);
 }
 
 def string_utils::int2str_leading_digits(int, digits) {

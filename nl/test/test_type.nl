@@ -39,33 +39,33 @@ def cos() : @test_type::typ2 {
 	return '';
 }
 
-def f(a : @test_type::rekord) : ptd::rec({g => ptd::sim(), h => @test_type::typ2}) {
+def f(a : @test_type::rekord) : ptd::rec({g => ptd::string(), h => @test_type::typ2}) {
 	var b = a;
 	b->h = cos();
 	return b;
 }
 
 def test_type::typ1() {
-	return ptd::var({g => @test_type::typ2, h => ptd::sim()});
+	return ptd::var({g => @test_type::typ2, h => ptd::string()});
 }
 
 def test_type::typ2() {
-	return ptd::sim();
+	return ptd::string();
 }
 
 def test_type::typ3() {
-	return ptd::sim();
+	return ptd::string();
 }
 
 def test_type::rekord() {
-	return ptd::rec({g => ptd::sim(), h => ptd::sim()});
+	return ptd::rec({g => ptd::string(), h => ptd::string()});
 }
 
 def test_is(arg) : @boolean_t::type {
 	return arg is :h;
 }
 
-def funkcja(a : ptd::var({a => ptd::sim(), b => ptd::rec({a => ptd::sim(), c => ptd::sim()}), d => @test_type::rekord})) 
+def funkcja(a : ptd::var({a => ptd::string(), b => ptd::rec({a => ptd::string(), c => ptd::string()}), d => @test_type::rekord})) 
 	: @test_type::typ2 {
 	var ret = '';
 	var emp : @test_type::rekord;

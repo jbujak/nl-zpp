@@ -25,7 +25,7 @@ def ptd::int() : @ptd::meta_type {
 }
 
 def ptd::string() : @ptd::meta_type {
-	return :ptd_string;
+	return :ptd_sim;
 }
 
 def ptd::bool() : @ptd::meta_type {
@@ -364,4 +364,8 @@ def reconstruct(value, type, f, args : ptd::arr(ptd::ptd_im())) : ptd::var({
 			return reconstruct(value, exec(type, []), f, args);
 		}
 	}
+}
+
+def ptd::int_to_string(i) {
+	return i;
 }
