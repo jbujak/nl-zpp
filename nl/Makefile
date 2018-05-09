@@ -14,11 +14,10 @@ CACHETEST=cache_test
 CFLAGS=-std=c99 -O0 -ggdb
 LINKS=-lm
 
-NLDIR=ast checker compiler compiler_nianio_lib parser pretty_printer translator compiler_base
-COMPILER_NATIVE=compiler_native_lib_c
+NLDIR=ast checker compiler nianio_lib parser pretty_printer translator compiler_base
 NATIVE=native_lib_c
 
-CDIR=${CACHEDIR} ${COMPILER_NATIVE}
+CDIR=${CACHEDIR} ${NATIVE}
 ICDIR=$(patsubst %,-I%,${CDIR})
 SRC_C:=$(shell find ${CDIR} -maxdepth 1  -name '*.c' -type f 2> /dev/null)
 SRC_O:=${SRC_C:%.c=${OBJDIR}/%.o}
@@ -50,7 +49,7 @@ compiler_nl:
 	${BINEXEC} --strict --o ${CACHEDIR} ${NLDIR} --O2
 
 compiler_gcc:
-	gcc ${CFLAGS} -o mk_cache.exe mk_cache.c ${CACHEDIR}/*.c ${COMPILER_NATIVE}/*.c -I${CACHEDIR} -I${COMPILER_NATIVE} ${LINKS}
+	gcc ${CFLAGS} -o mk_cache.exe mk_cache.c ${CACHEDIR}/*.c ${NATIVE}/*.c -I${CACHEDIR} -I${NATIVE} ${LINKS}
 
 tester_nl:
 	./${OUT} nianio_lib test --deref --strict --o ${CACHETEST} --c --O2 --profile
