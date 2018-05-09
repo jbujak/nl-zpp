@@ -7,21 +7,16 @@ use c_std_lib;
 use array;
 use boolean_t;
 use ptd;
-use own;
-
-def string::type() {
-	return own::arr(ptd::int());
-}
 
 def string::lf() {
 	return string::chr(10);
 }
 
-def string::tab() : ptd::sim() {
+def string::tab() : ptd::string() {
 	return string::chr(9);
 }
 
-def string::r() : ptd::sim() {
+def string::r() : ptd::string() {
 	return string::chr(13);
 }
 
@@ -33,7 +28,7 @@ def string::non_breaking_space() {
 	return [string::chr(194), string::chr(160)];
 }
 
-def string::char_times(char, time) : ptd::sim() {
+def string::char_times(char, time) : ptd::string() {
 	var ret = '';
 	ret .= char rep var i (time);
 	return ret;
@@ -83,11 +78,11 @@ def string::get_char_code(string, position) {
 	return c_std_lib::string_get_char_code(string, position);
 }
 
-def string::substr(s, offset, length) : ptd::sim() {
+def string::substr(s, offset, length) : ptd::string() {
 	return c_std_lib::string_sub(s, offset, length) . '';
 }
 
-def string::substr2(s, offset) : ptd::sim() {
+def string::substr2(s, offset) : ptd::string() {
 	return c_std_lib::string_sub(s, offset, string::length(s) - offset) . '';
 }
 
@@ -190,4 +185,3 @@ def string::le(string_1, string_2) {
 def string::ge(string_1, string_2) {
 	return string::compare(string_1, string_2) >= 0;
 }
-

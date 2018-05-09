@@ -2,6 +2,7 @@
 # (c) Atinea Sp. z o.o.
 ###
 
+use dfile;
 use ptd;
 use nlasm;
 use string;
@@ -16,19 +17,19 @@ use tct;
 use generator_c_struct_dependence_sort;
 use anon_naming;
 
-def get_bin_ops() : ptd::hash(ptd::sim()) {
+def get_bin_ops() : ptd::hash(ptd::string()) {
 	return singleton::sigleton_do_not_use_without_approval(gen_bin_ops());
 }
 
-def get_bin_ops_mod() : ptd::hash(ptd::sim()) {
+def get_bin_ops_mod() : ptd::hash(ptd::string()) {
 	return singleton::sigleton_do_not_use_without_approval(gen_bin_ops_mod());
 }
 
-def get_unary_ops() : ptd::hash(ptd::sim()) {
+def get_unary_ops() : ptd::hash(ptd::string()) {
 	return singleton::sigleton_do_not_use_without_approval(gen_unary_ops());
 }
 
-def gen_unary_ops() : ptd::hash(ptd::sim()) {
+def gen_unary_ops() : ptd::hash(ptd::string()) {
 	var ret = {};
 	hash::set_value(ref ret, '!', 'not');
 	hash::set_value(ref ret, '-', 'unary_minus');
@@ -36,7 +37,7 @@ def gen_unary_ops() : ptd::hash(ptd::sim()) {
 	return ret;
 }
 
-def gen_bin_ops() : ptd::hash(ptd::sim()) {
+def gen_bin_ops() : ptd::hash(ptd::string()) {
 	var ret = {};
 	hash::set_value(ref ret, 'eq', 'eq');
 	hash::set_value(ref ret, 'ne', 'ne');
@@ -55,7 +56,7 @@ def gen_bin_ops() : ptd::hash(ptd::sim()) {
 	return ret;
 }
 
-def gen_bin_ops_mod() : ptd::hash(ptd::sim()) {
+def gen_bin_ops_mod() : ptd::hash(ptd::string()) {
 	var ret = {};
 	hash::set_value(ref ret, '+', 'add_mod');
 	hash::set_value(ref ret, '-', 'sub_mod');
@@ -67,7 +68,7 @@ def gen_bin_ops_mod() : ptd::hash(ptd::sim()) {
 }
 
 def generator_c::const_dict() {
-	return ptd::rec({arr => ptd::arr(ptd::sim()), hash => ptd::hash(ptd::sim())});
+	return ptd::rec({arr => ptd::arr(ptd::string()), hash => ptd::hash(ptd::string())});
 }
 
 def generator_c::fun_args_t() {
@@ -75,31 +76,31 @@ def generator_c::fun_args_t() {
 }
 
 def generator_c::const_t() {
-	return ptd::rec({arr => ptd::arr(ptd::sim()), hash => ptd::hash(ptd::sim())});
+	return ptd::rec({arr => ptd::arr(ptd::string()), hash => ptd::hash(ptd::int())});
 }
 
 def generator_c::global_const_t() {
 	return ptd::rec({
-			arr => ptd::arr(ptd::rec({key => ptd::sim(), uses => ptd::sim()})),
-			hash => ptd::hash(ptd::sim()),
-			holes => ptd::arr(ptd::sim()),
-			module_consts => ptd::hash(ptd::hash(ptd::sim()))
+			arr => ptd::arr(ptd::rec({key => ptd::string(), uses => ptd::int()})),
+			hash => ptd::hash(ptd::int()),
+			holes => ptd::arr(ptd::int()),
+			module_consts => ptd::hash(ptd::hash(ptd::string()))
 		});
 }
 
 def generator_c::state_t() {
 	return ptd::rec({
 			global_const => @generator_c::global_const_t,
-			header => ptd::sim(),
-			ret => ptd::sim(),
+			header => ptd::string(),
+			ret => ptd::string(),
 			additional_imports => ptd::hash(@boolean_t::type),
-			mod_name => ptd::sim(),
+			mod_name => ptd::string(),
 			fun_args => @generator_c::fun_args_t,
 			ret_type => @tct::meta_type,
 			const => ptd::rec({
 					sim => @generator_c::const_t,
 					singleton => @generator_c::const_t,
-					dynamic_nr => ptd::sim()
+					dynamic_nr => ptd::int()
 				}),
 		});
 }
@@ -117,36 +118,36 @@ def generator_c::get_empty_state() : @generator_c::state_t {
 		};
 }
 
-def print(ref state : @generator_c::state_t, s : ptd::sim()) : ptd::void() {
+def print(ref state : @generator_c::state_t, s : ptd::string()) : ptd::void() {
 	state->ret .= s;
 }
 
-def print_to_header(ref state : @generator_c::state_t, s : ptd::sim()) {
+def print_to_header(ref state : @generator_c::state_t, s : ptd::string()) {
 	state->header .= s;
 }
 
-def println_to_header(ref state : @generator_c::state_t, s : ptd::sim()) {
+def println_to_header(ref state : @generator_c::state_t, s : ptd::string()) {
 	state->header .= s . string::lf();
 }
 
-def im_t() : ptd::sim() {
+def im_t() : ptd::string() {
 	return 'ImmT ';
 }
 
-def int_t() : ptd::sim() {
+def int_t() : ptd::string() {
 	return 'INT ';
 }
 
-def bool_t() : ptd::sim() {
+def bool_t() : ptd::string() {
 	return 'bool ';
 }
 
-def println(ref state : @generator_c::state_t, s : ptd::sim()) {
+def println(ref state : @generator_c::state_t, s : ptd::string()) {
 	state->ret .= s;
 	state->ret .= string::lf();
 }
 
-def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::string() {
 	match (reg->access_type) case :value {
 		return get_reg(ref state, reg);
 	} case :reference {
@@ -154,7 +155,7 @@ def get_reg_value(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd:
 	}
 }
 
-def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::string() {
 	var args = state->fun_args;
 	var reg_no = reg->reg_no;
 	if (array::len(args) > reg_no && args[reg_no]->by is :ref) {
@@ -164,7 +165,7 @@ def get_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim()
 	}
 }
 
-def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::string() {
 	var args = state->fun_args;
 	var reg_no = reg->reg_no;
 	match (reg->access_type) case :value {
@@ -182,12 +183,12 @@ def get_reg_ref(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::s
 	}
 }
 
-def get_string(s : ptd::sim()) : ptd::sim() {
+def get_string(s : ptd::string()) : ptd::string() {
 	return '"' . s . '"';
 }
 
 def generator_c::module_out_t() {
-	return ptd::rec({c => ptd::sim(), h => ptd::sim()});
+	return ptd::rec({c => ptd::string(), h => ptd::string()});
 }
 
 def generator_c::out_t() {
@@ -254,14 +255,14 @@ def generate_global_const_files(ref state : @generator_c::state_t) : @generator_
 		'if(___global_const_init__) {
 		'___global_const_init__ = 0;
 		'___global_const_offset = c_rt_lib0get_global_const_offset();
-		'___global_const__ = alloc_mem(' . const_len . ' * ___global_const_offset);
+		'___global_const__ = alloc_mem(' . ptd::int_to_string(const_len) . ' * ___global_const_offset);
 		'');
 	rep var i (const_len) {
-		println(ref state, create_sim_to_memory(sim[i]->key, '___global_const__ + ___global_const_offset * ' . i) . ';');
+		println(ref state, create_sim_to_memory(sim[i]->key, '___global_const__ + ___global_const_offset * ' . ptd::int_to_string(i)) . ';');
 	}
 	println(ref state, '
 		'' . get_lib_fun('register_global_const') . '((' . im_t() . ')___global_const__,(' . im_t() . 
-		')___global_const__ + ' . const_len . ' * ___global_const_offset);
+		')___global_const__ + ' . ptd::int_to_string(const_len) . ' * ___global_const_offset);
 		'}}');
 	println(ref state, im_t() . '___get_global_const(int __nr) {
 		'' . im_t() . 'ret = NULL;
@@ -271,15 +272,15 @@ def generate_global_const_files(ref state : @generator_c::state_t) : @generator_
 	return {c => state->ret, h => state->header};
 }
 
-def get_include(import : ptd::sim()) : ptd::sim() {
+def get_include(import : ptd::string()) : ptd::string() {
 	return '#include "' . import . '.h"';
 }
 
-def get_system_include(import : ptd::sim()) : ptd::sim() {
+def get_system_include(import : ptd::string()) : ptd::string() {
 	return '#include <' . import . '.h>';
 }
 
-def get_cr() : ptd::sim() {
+def get_cr() : ptd::string() {
 	return '
 		'/* (c) Atinea Sp z o. o.
 		' *  Stamp: nianio lang
@@ -287,7 +288,7 @@ def get_cr() : ptd::sim() {
 		'';
 }
 
-def get_function_name(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
+def get_function_name(func : @nlasm::function_t, mod_name : ptd::string()) : ptd::string() {
 	var nmode;
 	match (func->access) case :pub {
 		nmode = mod_name;
@@ -297,7 +298,7 @@ def get_function_name(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::s
 	return get_fun_name(nmode, func->name, mod_name);
 }
 
-def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
+def get_function_header(func : @nlasm::function_t, mod_name : ptd::string()) : ptd::string() {
 	var fun_header = '';
 	var fun_name = get_function_name(func, mod_name);
 	fun_header .= get_type_name(func->ret_type) . ' ' . fun_name . '(';
@@ -315,8 +316,8 @@ def get_function_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd:
 	return fun_header;
 }
 
-def get_const(ref type : @generator_c::const_t, key : ptd::sim()) : ptd::sim() {
-	var nr = -1;
+def get_const(ref type : @generator_c::const_t, key : ptd::string()) : ptd::int() {
+	var nr : ptd::int() = -1;
 	if (!hash::has_key(type->hash, key)) {
 		nr = array::len(type->arr);
 		array::push(ref type->arr, key);
@@ -327,13 +328,13 @@ def get_const(ref type : @generator_c::const_t, key : ptd::sim()) : ptd::sim() {
 	return nr;
 }
 
-def insert_const_to_modules_hash(ref global_const : @generator_c::global_const_t, key : ptd::sim(), module : ptd::sim()) {
+def insert_const_to_modules_hash(ref global_const : @generator_c::global_const_t, key : ptd::string(), module : ptd::string()) {
 	var hash = hash::get_value(global_const->module_consts, module);
 	hash::set_value(ref hash, key, '');
 	hash::set_value(ref global_const->module_consts, module, hash);
 }
 
-def get_global_const(ref global_const : @generator_c::global_const_t, key : ptd::sim(), module : ptd::sim()) : ptd::sim() {
+def get_global_const(ref global_const : @generator_c::global_const_t, key : ptd::string(), module : ptd::string()) : ptd::int() {
 	var nr = -1;
 	if (!hash::has_key(global_const->hash, key)) {
 		if (array::len(global_const->holes) > 0) {
@@ -357,7 +358,7 @@ def get_global_const(ref global_const : @generator_c::global_const_t, key : ptd:
 	return nr;
 }
 
-def generator_c::clear_module_from_state(ref state : @generator_c::state_t, module : ptd::sim()) {
+def generator_c::clear_module_from_state(ref state : @generator_c::state_t, module : ptd::string()) {
 	if (hash::has_key(state->global_const->module_consts, module)) {
 		var consts = hash::get_value(state->global_const->module_consts, module);
 		forh var key, var none (consts) {
@@ -372,17 +373,17 @@ def generator_c::clear_module_from_state(ref state : @generator_c::state_t, modu
 	}
 }
 
-def get_const_sim(ref state : @generator_c::state_t, sim : ptd::sim()) : ptd::sim() {
+def get_const_sim(ref state : @generator_c::state_t, sim : ptd::string()) : ptd::string() {
 	var nr = get_global_const(ref state->global_const, sim, state->mod_name);
-	return '___get_global_const(' . nr . ')';
+	return '___get_global_const(' . ptd::int_to_string(nr) . ')';
 }
 
-def get_const_singleton(ref state : @generator_c::state_t, sim : ptd::sim()) : ptd::sim() {
+def get_const_singleton(ref state : @generator_c::state_t, sim : ptd::string()) : ptd::string() {
 	var nr = get_const(ref state->const->singleton, sim);
-	return get_fun_name('', '__const__sing', state->mod_name) . '(' . nr . ')';
+	return get_fun_name('', '__const__sing', state->mod_name) . '(' . ptd::int_to_string(nr) . ')';
 }
 
-def get_func_ptr_header(func : @nlasm::function_t, mod_name : ptd::sim()) : ptd::sim() {
+def get_func_ptr_header(func : @nlasm::function_t, mod_name : ptd::string()) : ptd::string() {
 	return get_type_name(func->ret_type) . ' ' . get_function_name(func, mod_name) . '0ptr(int _num, ImmT *_tab)';
 }
 
@@ -408,7 +409,7 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t, defined
 	println(ref state, im_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr);');
 	println(ref state, im_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr);' . string::lf());
 	var struct_order = generator_c_struct_dependence_sort::sort(asm->functions, state->mod_name);
-	var hash_typedef_funs : ptd::hash(ptd::sim()) = {};
+	var hash_typedef_funs : ptd::hash(ptd::string()) = {};
 	fora var f (asm->functions) {
 		match (f->access) case :pub {
 			match (f->defines_type) case :yes(var type) {
@@ -452,11 +453,11 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t, defined
 			var fun_name = get_function_name(func, state->mod_name);
 			println(ref state, get_func_ptr_header(func, state->mod_name) . '{');
 			var number = array::len(func->args_type);
-			println(ref state, get_fun_lib('func_num_args', ['_num', number, get_string(fun_name)]) . ';');
+			println(ref state, get_fun_lib('func_num_args', ['_num', ptd::int_to_string(number), get_string(fun_name)]) . ';');
 			rep var arg_id (number) {
 				var type = get_type_to_c(func->args_type[arg_id]->type as :type, '');
-				var value = get_value_from_im(func->args_type[arg_id]->register->type, '(_tab[' . arg_id . '])');
-				print(ref state, type . ' var' . arg_id . ' = ' . value . ';' . string::lf());
+				var value = get_value_from_im(func->args_type[arg_id]->register->type, '(_tab[' . ptd::int_to_string(arg_id) . '])');
+				print(ref state, type . ' var' . ptd::int_to_string(arg_id) . ' = ' . value . ';' . string::lf());
 			}
 			print(ref state, 'return ' . fun_name . '(');
 			rep var arg_id (number) {
@@ -467,7 +468,7 @@ def print_mod(ref state : @generator_c::state_t, asm : @nlasm::result_t, defined
 				} case :val {
 					ref_mark = '';
 				}
-				print (ref state, ref_mark . 'var' . arg_id);
+				print (ref state, ref_mark . 'var' . ptd::int_to_string(arg_id));
 			}
 			println(ref state, ');');
 			println(ref state, '}');
@@ -498,19 +499,19 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 	var dyna_len = state->const->dynamic_nr;
 	var const_len = sim_len + sing_len + dyna_len;
 	println(ref state, '
-		'static ' . im_t() . '___const__[' . (1 + const_len) . '];
+		'static ' . im_t() . '___const__[' . ptd::int_to_string(1 + const_len) . '];
 		'static int ___const_init__ = 1;');
 	println(ref state, 'void ' . get_fun_name('', '__const__init', state->mod_name) . '(){
 		'if(___const_init__) {
 		'___const_init__ = 0;
-		'__const__f = &___const__[' . (sim_len + sing_len) . '];
+		'__const__f = &___const__[' . ptd::int_to_string(sim_len + sing_len) . '];
 		'');
 	rep var i (sim_len) {
-		println(ref state, '___const__[' . i . '] = ' . create_sim(sim[i]) . ';');
+		println(ref state, '___const__[' . ptd::int_to_string(i) . '] = ' . create_sim(sim[i]) . ';');
 	}
 	println(ref state, '
-		'for(int i=' . sim_len . ';i<' . const_len . ';++i) ___const__[i] = NULL;
-		'' . get_lib_fun('register_const') . '(___const__, ' . const_len . ');
+		'for(int i=' . ptd::int_to_string(sim_len) . ';i<' . ptd::int_to_string(const_len) . ';++i) ___const__[i] = NULL;
+		'' . get_lib_fun('register_const') . '(___const__, ' . ptd::int_to_string(const_len) . ');
 		'}}');
 	println(ref state, im_t() . get_fun_name('', '__const__sim', state->mod_name) . '(int __nr) {
 		'' . im_t() . 'ret = NULL;
@@ -518,18 +519,18 @@ def print_init_const(ref state : @generator_c::state_t) : ptd::void() {
 		'return ret;
 		'}');
 	println(ref state, im_t() . get_fun_name('', '__const__sing', state->mod_name) . '(int __nr) {
-		'if(___const__[__nr+' . sim_len . ']==NULL) {
+		'if(___const__[__nr+' . ptd::int_to_string(sim_len) . ']==NULL) {
 		'switch(__nr){');
 	rep var i (array::len(singleton)) {
-		println(ref state, 'case ' . i . ':');
-		println(ref state, '	___const__[' . (i + sim_len) . '] = ' . singleton[i] . '0cal();');
+		println(ref state, 'case ' . ptd::int_to_string(i) . ':');
+		println(ref state, '	___const__[' . ptd::int_to_string(i + sim_len) . '] = ' . singleton[i] . '0cal();');
 		println(ref state, '	break;');
 	}
 	println(ref state, 'default:
 		'	nl_die();
 		'}}
 		'' . im_t() . 'ret = NULL;
-		'' . get_fun_lib('copy', ['&ret', '___const__[__nr+' . sim_len . ']']) . ';
+		'' . get_fun_lib('copy', ['&ret', '___const__[__nr+' . ptd::int_to_string(sim_len) . ']']) . ';
 		'return ret;
 		'}');
 }
@@ -561,16 +562,16 @@ def print_function_block(ref state : @generator_c::state_t, func : @nlasm::funct
 				continue;
 			} else {
 				var nr = state->const->dynamic_nr;
-				println(ref state, 'if(__const__f[' . nr . '] == NULL) {');
+				println(ref state, 'if(__const__f[' . ptd::int_to_string(nr) . '] == NULL) {');
 				print_cmd(ref state, cmd, defined_types);
 				fora var reg (tab) {
-					println(ref state, get_fun_lib('copy', ['&__const__f[' . nr . ']', get_reg(ref state, reg)]) . ';');
+					println(ref state, get_fun_lib('copy', ['&__const__f[' . ptd::int_to_string(nr) . ']', get_reg(ref state, reg)]) . ';');
 					nr++;
 				}
 				println(ref state, '}');
 				nr -= len;
 				fora var reg (tab) {
-					println(ref state, get_fun_lib('copy', [get_reg_ref(ref state, reg), '__const__f[' . nr . ']']) . 
+					println(ref state, get_fun_lib('copy', [get_reg_ref(ref state, reg), '__const__f[' . ptd::int_to_string(nr) . ']']) . 
 						';');
 					nr++;
 				}
@@ -629,7 +630,7 @@ def move_register_to_ref_args(ref state : @generator_c::state_t) {
 #	}
 }
 
-def get_fun_lib(fun_name : ptd::sim(), args : ptd::arr(ptd::sim())) : ptd::sim() {
+def get_fun_lib(fun_name : ptd::string(), args : ptd::arr(ptd::string())) : ptd::string() {
 	var ret = get_lib_fun(fun_name) . '(';
 	var i = 0;
 	fora var arg (args) {
@@ -640,22 +641,22 @@ def get_fun_lib(fun_name : ptd::sim(), args : ptd::arr(ptd::sim())) : ptd::sim()
 	return ret . ')';
 }
 
-def get_module_name(mod : ptd::sim()) : ptd::sim() {
+def get_module_name(mod : ptd::string()) : ptd::string() {
 	return string::replace(mod, '0', '00');
 }
 
-def get_fun_name(mod : ptd::sim(), fun_name : ptd::sim(), mod_name : ptd::sim()) : ptd::sim() {
+def get_fun_name(mod : ptd::string(), fun_name : ptd::string(), mod_name : ptd::string()) : ptd::string() {
 	mod = mod_name . '_priv' if mod eq '';
 	return get_module_name(mod) . '0' . string::replace(fun_name, '0', '00');
 }
 
-def get_lib_fun(fun_name : ptd::sim()) : ptd::sim() {
+def get_lib_fun(fun_name : ptd::string()) : ptd::string() {
 	return get_fun_name('c_rt_lib', fun_name, '');
 }
 
 def generate_imm(ref state : @generator_c::state_t, obj) : ptd::void() {
 	if (nl::is_hash(obj)) {
-		print(ref state, get_lib_fun('hash_mk_dec') . '(' . hash::size(obj));
+		print(ref state, get_lib_fun('hash_mk_dec') . '(' . ptd::int_to_string(hash::size(obj)));
 		forh var key, var value (obj) {
 			print(ref state, ', ');
 			print(ref state, get_const_sim(ref state, key));
@@ -664,7 +665,7 @@ def generate_imm(ref state : @generator_c::state_t, obj) : ptd::void() {
 		}
 		print(ref state, ')');
 	} elsif (nl::is_array(obj)) {
-		print(ref state, get_lib_fun('array_mk_dec') . '(' . array::len(obj));
+		print(ref state, get_lib_fun('array_mk_dec') . '(' . ptd::int_to_string(array::len(obj)));
 		fora var el (obj) {
 			print(ref state, ', ');
 			generate_imm(ref state, el);
@@ -672,14 +673,14 @@ def generate_imm(ref state : @generator_c::state_t, obj) : ptd::void() {
 		print(ref state, ')');
 	} elsif (nl::is_variant(obj)) {
 
-		var variant_label = get_const_sim(ref state, ptd::ensure(ptd::sim(), ov::get_element(obj)));
+		var variant_label = get_const_sim(ref state, ptd::ensure(ptd::string(), ov::get_element(obj)));
 		if (ov::has_value(obj)) {
 			print(ref state, get_lib_fun('ov_mk_arg_dec') . '(' . variant_label . ', ');
 
 			var obj_val = ov::get_value(obj);
 			if ((obj is :ref) && nl::is_hash(obj_val) && (hash::size(obj_val) == 2) && hash::has_key(obj_val, 'name') && hash::has_key(obj_val, 'module')) {
 				if (nl::is_sim(obj_val->name) && nl::is_sim(obj_val->module)) {
-					print(ref state, get_func_pointer(ref state, ptd::ensure(ptd::sim(), obj_val->module), ptd::ensure(ptd::sim(), obj_val->name)));
+					print(ref state, get_func_pointer(ref state, ptd::ensure(ptd::string(), obj_val->module), ptd::ensure(ptd::string(), obj_val->name)));
 				} else {
 					generate_imm(ref state, obj_val);	
 				}
@@ -692,14 +693,14 @@ def generate_imm(ref state : @generator_c::state_t, obj) : ptd::void() {
 			print(ref state, get_lib_fun('ov_mk_none') . '(' . variant_label . ')');
 		}
 	} elsif (nl::is_sim(obj)) {
-		print(ref state, get_const_sim(ref state, ptd::ensure(ptd::sim(), obj)));
+		print(ref state, get_const_sim(ref state, ptd::ensure(ptd::string(), obj)));
 	} else {
 		die;
 	}
 }
 
 
-def get_func_pointer(ref state : @generator_c::state_t, module_name : ptd::sim(), fun_name : ptd::sim()) : ptd::sim() {
+def get_func_pointer(ref state : @generator_c::state_t, module_name : ptd::string(), fun_name : ptd::string()) : ptd::string() {
 	state->additional_imports{module_name} = true;
 	return get_fun_lib('func_new', [
 		get_fun_name(module_name, fun_name, state->mod_name) . '0ptr',
@@ -709,10 +710,10 @@ def get_func_pointer(ref state : @generator_c::state_t, module_name : ptd::sim()
 }
 
 def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t, defined_types : ptd::hash(@tct::meta_type)) : ptd::void() {
-	print(ref state, '#line ' . asm->debug->nast_debug->begin->line . string::lf());
+	print(ref state, '#line ' . ptd::int_to_string(asm->debug->nast_debug->begin->line) . string::lf());
 	var is_nop = false;
 	match (asm->cmd) case :arr_decl(var decl) {
-		var args = [array::len(decl->src)];
+		var args = [ptd::int_to_string(array::len(decl->src))];
 		array::push(ref args, get_reg(ref state, el)) fora var el (decl->src);
 		var r = get_fun_lib('array_mk', args);
 		print(ref state, get_assign(ref state, decl->dest, r));
@@ -742,7 +743,7 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t, defined_ty
 			print(ref state, get_assign(ref state, ov_is->dest, r));
 		} elsif (ov_is->src->type is :variant) {
 			print(ref state, get_reg_value(ref state, ov_is->dest) . ' = (' .
-				get_reg_value(ref state, ov_is->src) . '.label' . ' == ' . ov_is->label_no . ')');
+				get_reg_value(ref state, ov_is->src) . '.label' . ' == ' . ptd::int_to_string(ov_is->label_no) . ')');
 		} else {
 			die;
 		}
@@ -892,22 +893,23 @@ def print_cmd(ref state : @generator_c::state_t, asm : @nlasm::cmd_t, defined_ty
 					size = 'sizeof(' . get_type_name(mk->inner_type) . ')';
 				} case :emp {
 					val = 'NULL';
-					size = 0;
+					size = '0';
 				}
 				print(ref state, get_variant_make_fun_name(type_name, state->mod_name) . '(' .
-					get_reg_ref(ref state, mk->dest) . ', ' . mk->label_no . ', ' . val . ', ' . size .  ')');
+					get_reg_ref(ref state, mk->dest) . ', ' . ptd::int_to_string(mk->label_no) . ', ' .
+					val . ', ' . size .  ')');
 			}
 		}
 	} case :prt_lbl(var l) {
-		print(ref state, 'label_' . l . ':' . string::lf());
+		print(ref state, 'label_' . ptd::int_to_string(l) . ':' . string::lf());
 		return;
 	} case :if_goto(var ifgoto) {
 		print(ref state, 'if(');
 		print(ref state, get_reg(ref state, ifgoto->src));
-		print(ref state, '){ goto label_' . ifgoto->dest . ';}' . string::lf());
+		print(ref state, '){ goto label_' . ptd::int_to_string(ifgoto->dest) . ';}' . string::lf());
 		return;
 	} case :goto(var goto) {
-		print(ref state, 'goto label_' . goto);
+		print(ref state, 'goto label_' . ptd::int_to_string(goto));
 	} case :clear(var reg) {
 		match (reg->type) case :im {
 			print(ref state, get_fun_lib('clear', [get_reg_ref(ref state, reg)]));
@@ -1077,7 +1079,7 @@ def print_move_to_im(ref state : @generator_c::state_t, src : @nlasm::reg_t, des
 	}
 }
 
-def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::sim() {
+def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : ptd::string() {
 	match (reg->type) case :im {
 		return get_reg_value(ref state, reg);
 	} case :int {
@@ -1097,7 +1099,7 @@ def get_im_from_reg(ref state : @generator_c::state_t, reg : @nlasm::reg_t) : pt
 	}
 }
 
-def get_value_from_im(type : @nlasm::reg_type, im : ptd::sim()) : ptd::sim() {
+def get_value_from_im(type : @nlasm::reg_type, im : ptd::string()) : ptd::string() {
 	match (type) case :im {
 		return im;
 	} case :int {
@@ -1125,19 +1127,19 @@ def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : p
 	var r;
 	if (bin_op->op eq 'eq') {
 		if(bin_op->left->type is :im || bin_op->left->type is :string) {
-			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+			r = get_fun_lib(op, [get_reg_value(ref state, bin_op->left), get_reg_value(ref state, bin_op->right)]);		
 		} else {
 			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, '==');			
 		}
 	} elsif (bin_op->op eq 'ne') {
 		if(bin_op->left->type is :im || bin_op->left->type is :string) {
-			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+			r = get_fun_lib(op, [get_reg_value(ref state, bin_op->left), get_reg_value(ref state, bin_op->right)]);		
 		} else {
 			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, '!=');			
 		}
 	} else {
 		if(bin_op->left->type is :im || bin_op->left->type is :string) {
-			r = get_fun_lib(op, [get_reg(ref state, bin_op->left), get_reg(ref state, bin_op->right)]);		
+			r = get_fun_lib(op, [get_reg_value(ref state, bin_op->left), get_reg_value(ref state, bin_op->right)]);		
 		} else {
 			r = get_inline_bin_op(ref state, bin_op->left, bin_op->right, bin_op->op);			
 		}
@@ -1147,7 +1149,7 @@ def print_bin_op(ref state : @generator_c::state_t, bin_op : @nlasm::bin_op) : p
 
 def print_hash_declaration(ref state : @generator_c::state_t, hash_decl : @nlasm::hash_decl_t) : ptd::void() {
 	if (hash_decl->dest->type is :im) {
-		var args = [array::len(hash_decl->src)];
+		var args = [ptd::int_to_string(array::len(hash_decl->src))];
 		fora var el (hash_decl->src) {
 			die unless el->val->type is :im;
 			array::push(ref args, get_const_sim(ref state, el->key));
@@ -1230,7 +1232,7 @@ def print_use_hash_index(ref state : @generator_c::state_t, use_hash_index : @nl
 
 def print_use_variant(ref state : @generator_c::state_t, use_variant : @nlasm::use_variant_t) : ptd::void() {
 	var access_op = get_access_op(use_variant->old_owner);
-	var ret = 'if (' . get_reg(ref state, use_variant->old_owner) . access_op . 'label != ' . use_variant->label_no . ') nl_die();' . string::lf();
+	var ret = 'if (' . get_reg(ref state, use_variant->old_owner) . access_op . 'label != ' . ptd::int_to_string(use_variant->label_no) . ') nl_die();' . string::lf();
 	ret .= get_reg(ref state, use_variant->new_owner) . ' = ' . get_reg(ref state, use_variant->old_owner) . access_op;
 	ret .= 'value.' . get_case_name(use_variant->label);
 	print(ref state, ret);
@@ -1312,7 +1314,7 @@ def print_get_val(ref state : @generator_c::state_t, src : @nlasm::reg_t, dest :
 	print(ref state, get_assign(ref state, dest, r));
 }
 
-def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::sim()) : ptd::sim() {
+def get_assign(ref state : @generator_c::state_t, reg : @nlasm::reg_t, right : ptd::string()) : ptd::string() {
 	if (nlasm::is_empty(reg)) {
 		return get_fun_lib('delete', [right]);
 	} else {
@@ -1354,7 +1356,7 @@ def generate_call(ref state : @generator_c::state_t, call : @nlasm::call_t) : pt
 	}
 }
 
-def create_sim(obj : ptd::sim()) : ptd::sim() {
+def create_sim(obj : ptd::string()) : ptd::string() {
 	if (string_utils::is_integer(obj)) {
 		return get_lib_fun('int_new') . '(' . obj . ')';
 	} elsif (string_utils::is_float(obj)) {
@@ -1371,7 +1373,7 @@ def create_sim(obj : ptd::sim()) : ptd::sim() {
 	}
 }
 
-def create_sim_to_memory(obj : ptd::sim(), memory : ptd::sim()) : ptd::sim() {
+def create_sim_to_memory(obj : ptd::string(), memory : ptd::string()) : ptd::string() {
 	if (string_utils::is_integer(obj)) {
 		return get_lib_fun('int_new_to_memory') . '(' . obj . ',' . memory . ')';
 	} elsif (string_utils::is_float(obj)) {
@@ -1389,7 +1391,7 @@ def create_sim_to_memory(obj : ptd::sim(), memory : ptd::sim()) : ptd::sim() {
 	}
 }
 
-def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
+def get_type_to_c(type : @tct::meta_type, name : ptd::string()) : ptd::string() {
 	match (type) case :tct_im {
 		return im_t();
 	} case :tct_arr(var arr_type) {
@@ -1454,15 +1456,15 @@ def get_type_to_c(type : @tct::meta_type, name : ptd::sim()) : ptd::sim() {
 	}
 }
 
-def get_field_name(field : ptd::sim()) : ptd::sim() {
+def get_field_name(field : ptd::string()) : ptd::string() {
 	return field . '0field';
 }
 
-def get_case_name(field : ptd::sim()) : ptd::sim() {
+def get_case_name(field : ptd::string()) : ptd::string() {
 	return field . '0case';
 }
 
-def get_type_name(type : @tct::meta_type) : ptd::sim() {
+def get_type_name(type : @tct::meta_type) : ptd::string() {
 	if (type is :tct_own_rec || type is :tct_own_arr || type is :tct_own_var || type is :tct_own_hash) {
 		return anon_naming::get_anon_name(type);
 	} else {
@@ -1470,8 +1472,8 @@ def get_type_name(type : @tct::meta_type) : ptd::sim() {
 	}
 }
 
-def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::sim(), type : @tct::meta_type,
-		mod_name : ptd::sim(), anon : @boolean_t::type, defined_types : ptd::hash(@tct::meta_type)) {
+def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::string(), type : @tct::meta_type,
+		mod_name : ptd::string(), anon : @boolean_t::type, defined_types : ptd::hash(@tct::meta_type)) {
 	var c_def = '';
 	if (anon) {
 		c_def .= '#ifndef ANON_TYPE_DECL' . name . string::lf();
@@ -1496,8 +1498,8 @@ def print_func_type_struct_decl(ref state : @generator_c::state_t, name : ptd::s
 	print(ref state, get_additional_type_functions_def(c_name, type, state, defined_types));
 }
 
-def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::sim(), type : @tct::meta_type,
-		mod_name : ptd::sim(), anon : @boolean_t::type) {
+def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::string(), type : @tct::meta_type,
+		mod_name : ptd::string(), anon : @boolean_t::type) {
 	if (!generator_c_struct_dependence_sort::is_divisible(type)) {
 		return;
 	}
@@ -1520,11 +1522,11 @@ def print_func_type_struct_def(ref state : @generator_c::state_t, name : ptd::si
 	print_to_header(ref state, c_def . string::lf());
 }
 
-def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::sim()) : ptd::sim(){
+def get_inline_bin_op(ref state : @generator_c::state_t, left : @nlasm::reg_t, right : @nlasm::reg_t, op : ptd::string()) : ptd::string(){
 	return get_reg_value(ref state, left) . ' ' . op . ' ' . get_reg_value(ref state, right);
 }
 
-def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
+def reg_suffix(reg : @nlasm::reg_t) : ptd::string() {
 	var ret;
 	match (reg->type) case :im {
 		ret = 'im';
@@ -1547,11 +1549,11 @@ def reg_suffix(reg : @nlasm::reg_t) : ptd::sim() {
 	} case :reference {
 		ret .= '_ptr';
 	}
-	ret .= '__' . reg->reg_no;
+	ret .= '__' . ptd::int_to_string(reg->reg_no);
 	return ret;
 }
 
-def get_empty_value(type : @tct::meta_type) : ptd::sim() {
+def get_empty_value(type : @tct::meta_type) : ptd::string() {
 	match (type) case :tct_im {
 		return 'NULL';
 	} case :tct_arr(var arr_type) {
@@ -1573,7 +1575,7 @@ def get_empty_value(type : @tct::meta_type) : ptd::sim() {
 	} case :tct_sim {
 		return 'NULL';
 	} case :tct_int {
-		return 0;
+		return '0';
 	} case :tct_string {
 		return 'NULL';
 	} case :tct_bool {
@@ -1587,7 +1589,7 @@ def get_empty_value(type : @tct::meta_type) : ptd::sim() {
 	}
 }
 
-def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta_type, state : @generator_c::state_t) : ptd::sim() {
+def get_additional_type_functions_decl(type_name : ptd::string(), type : @tct::meta_type, state : @generator_c::state_t) : ptd::string() {
 	var ret = '';
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
@@ -1623,8 +1625,8 @@ def get_additional_type_functions_decl(type_name : ptd::sim(), type : @tct::meta
 	return ret;
 }
 
-def get_additional_type_functions_def(type_name : ptd::sim(), type : @tct::meta_type, state : @generator_c::state_t,
-		defined_types : ptd::hash(@tct::meta_type)) : ptd::sim() {
+def get_additional_type_functions_def(type_name : ptd::string(), type : @tct::meta_type, state : @generator_c::state_t,
+		defined_types : ptd::hash(@tct::meta_type)) : ptd::string() {
 	var ret = '';
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
@@ -1668,7 +1670,7 @@ def get_array_push_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim())
 	return get_spec_fun_name(array_type_name, mod_name, 'push');
 }
 
-def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_array_push_fun_header(array_type_name : ptd::string(), array_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
 	ret .= 'void ' . get_array_push_fun_name(array_type_name, mod_name) . '(';
 	ret .= array_type_name . ' *arr, ';
@@ -1676,9 +1678,9 @@ def get_array_push_fun_header(array_type_name : ptd::sim(), array_type : @tct::m
 	return ret;
 }
 
-def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_array_push_fun_def(array_type_name : ptd::string(), array_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
-	var default_size = 16;
+	var default_size = '16';
 	var sizeof = 'sizeof(' . get_type_name(array_type) . ')';
 	ret .= get_array_push_fun_header(array_type_name, array_type, mod_name) . ' {
 		'if (arr->value == NULL) {
@@ -1695,11 +1697,11 @@ def get_array_push_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta
 	return ret;
 }
 
-def get_array_get_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_array_get_fun_name(array_type_name : ptd::string(), mod_name : ptd::string()) {
 	return get_spec_fun_name(array_type_name, mod_name, 'get_ptr');
 }
 
-def get_array_get_fun_header(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_array_get_fun_header(array_type_name : ptd::string(), array_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
 	ret .= get_type_name(array_type) . ' *' . get_array_get_fun_name(array_type_name, mod_name) . '(';
 	ret .= array_type_name . ' *arr, ';
@@ -1707,7 +1709,7 @@ def get_array_get_fun_header(array_type_name : ptd::sim(), array_type : @tct::me
 	return ret;
 }
 
-def get_array_get_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_array_get_fun_def(array_type_name : ptd::string(), array_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
 	ret .= get_array_get_fun_header(array_type_name, array_type, mod_name) . ' {
 		'if (index < 0 || index >= arr->size) {
@@ -1718,18 +1720,18 @@ def get_array_get_fun_def(array_type_name : ptd::sim(), array_type : @tct::meta_
 	return ret;
 }
 
-def get_array_len_fun_name(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_array_len_fun_name(array_type_name : ptd::string(), mod_name : ptd::string()) {
 	return get_spec_fun_name(array_type_name, mod_name, 'len');
 }
 
-def get_array_len_fun_header(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_array_len_fun_header(array_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = '';
 	ret .= int_t() . get_array_len_fun_name(array_type_name, mod_name) . '(';
 	ret .= array_type_name . ' *arr)';
 	return ret;
 }
 
-def get_array_len_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_array_len_fun_def(array_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = '';
 	ret .= get_array_len_fun_header(array_type_name, mod_name) . ' {
 		'return arr->size;
@@ -1737,11 +1739,11 @@ def get_array_len_fun_def(array_type_name : ptd::sim(), mod_name : ptd::sim()) {
 	return ret;
 }
 
-def get_hash_get_fun_name(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_hash_get_fun_name(hash_type_name : ptd::string(), mod_name : ptd::string()) {
 	return get_spec_fun_name(hash_type_name, mod_name, 'get_ptr');
 }
 
-def get_hash_get_fun_header(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_hash_get_fun_header(hash_type_name : ptd::string(), hash_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
 	ret .= get_type_name(hash_type) . ' *' . get_hash_get_fun_name(hash_type_name, mod_name) . '(';
 	ret .= hash_type_name . ' *hash, ';
@@ -1750,9 +1752,9 @@ def get_hash_get_fun_header(hash_type_name : ptd::sim(), hash_type : @tct::meta_
 	return ret;
 }
 
-def get_hash_get_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_type, mod_name : ptd::sim()) {
+def get_hash_get_fun_def(hash_type_name : ptd::string(), hash_type : @tct::meta_type, mod_name : ptd::string()) {
 	var ret = '';
-	var default_size = 16;
+	var default_size = '16';
 	var type = get_type_name(hash_type);
 	var sizeof = 'sizeof(' . type . ')';
 	ret .= get_hash_get_fun_header(hash_type_name, hash_type, mod_name) . ' {
@@ -1802,11 +1804,11 @@ def get_hash_get_fun_def(hash_type_name : ptd::sim(), hash_type : @tct::meta_typ
 	return ret;
 }
 
-def get_hash_next_iter_fun_name(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_hash_next_iter_fun_name(hash_type_name : ptd::string(), mod_name : ptd::string()) {
 	return get_spec_fun_name(hash_type_name, mod_name, 'next_iter');
 }
 
-def get_hash_next_iter_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_hash_next_iter_fun_header(hash_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = '';
 	ret .= 'INT ' . get_hash_next_iter_fun_name(hash_type_name, mod_name) . '(';
 	ret .= hash_type_name . ' *hash, ';
@@ -1814,7 +1816,7 @@ def get_hash_next_iter_fun_header(hash_type_name : ptd::sim(), mod_name : ptd::s
 	return ret;
 }
 
-def get_hash_next_iter_fun_def(hash_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_hash_next_iter_fun_def(hash_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = get_hash_next_iter_fun_header(hash_type_name, mod_name) . '{
 	'	INT iter = last_iter + 1;
 	'	while (iter + 1 < hash->capacity && hash->keys[iter] == NULL) {
@@ -1826,11 +1828,11 @@ def get_hash_next_iter_fun_def(hash_type_name : ptd::sim(), mod_name : ptd::sim(
 	return ret;
 }
 
-def get_variant_make_fun_name(variant_type_name : ptd::sim(), mod_name : ptd::sim()) : ptd::sim() {
+def get_variant_make_fun_name(variant_type_name : ptd::string(), mod_name : ptd::string()) : ptd::string() {
 	return get_spec_fun_name(variant_type_name, mod_name, 'ov_mk');
 }
 
-def get_variant_make_fun_header(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_variant_make_fun_header(variant_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = '';
 	ret .= 'void ' . get_variant_make_fun_name(variant_type_name, mod_name) . '(';
 	ret .= variant_type_name . ' *var, ';
@@ -1840,7 +1842,7 @@ def get_variant_make_fun_header(variant_type_name : ptd::sim(), mod_name : ptd::
 	return ret;
 }
 
-def get_variant_make_fun_def(variant_type_name : ptd::sim(), mod_name : ptd::sim()) {
+def get_variant_make_fun_def(variant_type_name : ptd::string(), mod_name : ptd::string()) {
 	var ret = get_variant_make_fun_header(variant_type_name, mod_name) . ' {
 		'if (var->value.internal != NULL) {
 		'' .  get_variant_clean_fun_name(variant_type_name, mod_name) . '(*var);
@@ -1863,7 +1865,7 @@ def takes_own_arg(function : @nlasm::function_t) : @boolean_t::type {
 	return false;
 }
 
-def get_access_op(reg : @nlasm::reg_t) : ptd::sim() {
+def get_access_op(reg : @nlasm::reg_t) : ptd::string() {
 	match (reg->access_type) case :value {
 		return '.';
 	} case :reference {
@@ -2014,7 +2016,7 @@ def get_variant_clean_fun_def(variant_type_name : ptd::sim(),
 	forh var key, var value (variant_type) {
 		match (value) case :no_param {
 		} case :with_param(var param_type) {
-			ret .= 'case ' . i . ':
+			ret .= 'case ' . ptd::int_to_string(i) . ':
 				'' . get_free_fun_call(param_type, mod_name, 'var.value.' . get_case_name(key), defined_types) . ';
 				'break;' . string::lf();
 		}

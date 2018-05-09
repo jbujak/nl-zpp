@@ -33,26 +33,26 @@ use string_utils;
 use reference_generator;
 use tct;
 
-def get_dir_cache_name() : ptd::sim() {
+def get_dir_cache_name() : ptd::string() {
 	return 'cache_nl';
 }
 
-def get_dir_pretty_name() : ptd::sim() {
+def get_dir_pretty_name() : ptd::string() {
 	return 'pretty_nl';
 }
 
-def get_default_deref_file() : ptd::sim() {
+def get_default_deref_file() : ptd::string() {
 	return 'deref.gr';
 }
 
-def get_default_math_file() : ptd::sim() {
+def get_default_math_file() : ptd::string() {
 	return 'math_fun.gr';
 }
 
 def compiler::parse_check_t() {
 	return ptd::rec({
 			asts => ptd::hash(@nast::module_t),
-			errors => ptd::arr(ptd::sim()),
+			errors => ptd::arr(ptd::string()),
 			deref_type => @tc_types::deref_types
 		});
 }
@@ -78,7 +78,7 @@ def compiler::language_t() {
 			c => ptd::none(),
 			nl => ptd::none(),
 			ast => ptd::none(),
-			js => ptd::rec({namespace => ptd::sim()}),
+			js => ptd::rec({namespace => ptd::string()}),
 			java => ptd::none(),
 			call_graph => ptd::none(),
 		});
@@ -86,34 +86,34 @@ def compiler::language_t() {
 
 def compiler::destination_t() {
 	return ptd::var({
-			pm => ptd::sim(),
-			nla => ptd::sim(),
-			c => ptd::rec({c => ptd::sim(), h => ptd::sim()}),
-			nl => ptd::sim(),
-			ast => ptd::sim(),
-			js => ptd::sim(),
-			java => ptd::sim(),
+			pm => ptd::string(),
+			nla => ptd::string(),
+			c => ptd::rec({c => ptd::string(), h => ptd::string()}),
+			nl => ptd::string(),
+			ast => ptd::string(),
+			js => ptd::string(),
+			java => ptd::string(),
 			none => ptd::none(),
 			call_graph => ptd::none(),
 		});
 }
 
 def compiler::module_t() {
-	return ptd::hash(ptd::rec({src => ptd::sim(), dst => @compiler::destination_t}));
+	return ptd::hash(ptd::rec({src => ptd::string(), dst => @compiler::destination_t}));
 }
 
 def compiler::deref_t() {
-	return ptd::var({yes => ptd::sim(), no => ptd::none()});
+	return ptd::var({yes => ptd::string(), no => ptd::none()});
 }
 
 def compiler::try_t() {
-	return ptd::var({err => ptd::sim(), ok => ptd::sim()});
+	return ptd::var({err => ptd::string(), ok => ptd::string()});
 }
 
 def compiler::input_type() {
 	return ptd::rec({
-			input_path => ptd::arr(ptd::sim()),
-			cache_path => ptd::sim(),
+			input_path => ptd::arr(ptd::string()),
+			cache_path => ptd::string(),
 			deref => @compiler::deref_t,
 			optimization => ptd::var({
 					o0 => ptd::none(),
@@ -122,8 +122,8 @@ def compiler::input_type() {
 					o3 => ptd::none(),
 					o4 => ptd::none()
 				}),
-			math_fun => ptd::sim(),
-			mode => ptd::var({strict => ptd::none(), exec => ptd::none(), ide => ptd::none(), idex => ptd::sim()}),
+			math_fun => ptd::string(),
+			mode => ptd::var({strict => ptd::none(), exec => ptd::none(), ide => ptd::none(), idex => ptd::string()}),
 			language => @compiler::language_t,
 			alarm => ptd::var({norm => ptd::none(), wall => ptd::none()}),
 			check_public_fun => @boolean_t::type,
@@ -132,13 +132,13 @@ def compiler::input_type() {
 }
 
 def compiler::file_t() {
-	return ptd::var({ok => ptd::sim(), err => ptd::sim()});
+	return ptd::var({ok => ptd::string(), err => ptd::string()});
 }
 
-def compiler::compile(cmd_args : ptd::arr(ptd::sim())) : ptd::sim() {
+def compiler::compile(cmd_args : ptd::arr(ptd::string())) : ptd::int() {
 	var opt_cli = parse_command_line_args(cmd_args);
 	c_fe_lib::mk_path(opt_cli->cache_path);
-	var ret = 0;
+	var ret : ptd::int() = 0;
 	if (opt_cli->mode is :strict) {
 		c_fe_lib::print('strict mode processing...');
 		ret = compile_strict_file(opt_cli);
@@ -174,11 +174,11 @@ def get_profile_file_name(dir) {
 
 def get_known_func() : ptd::hash(@interpreter::known_exec_func_t) {
 	var ret = {};
-	hash::set_value(ref ret, 'nl::print', {func => @nl::print, type => :sequential, args => [ptd::sim()], return => :no});
+	hash::set_value(ref ret, 'nl::print', {func => @nl::print, type => :sequential, args => [ptd::string()], return => :no});
 	return ret;
 }
 
-def exec_interpreter(input : @compiler::input_type) : ptd::sim() {
+def exec_interpreter(input : @compiler::input_type) : ptd::int() {
 	var asts = {};
 	var errors : @compiler::errors_group_t = {
 			module_errors => {},
@@ -222,7 +222,7 @@ def exec_interpreter(input : @compiler::input_type) : ptd::sim() {
 	return 0;
 }
 
-def get_module_name(path : ptd::sim()) : ptd::sim() {
+def get_module_name(path : ptd::string()) : ptd::string() {
 	var pos = string::length(path) - 1;
 	while (pos >= 0 && string::substr(path, pos, 1) ne '/' && string::substr(path, pos, 1) ne '\') {
 		if (string::substr(path, pos, 1) eq '.') {
@@ -239,7 +239,7 @@ def get_module_name(path : ptd::sim()) : ptd::sim() {
 	return ret;
 }
 
-def has_extension(path : ptd::sim(), exten : ptd::sim()) : @boolean_t::type {
+def has_extension(path : ptd::string(), exten : ptd::string()) : @boolean_t::type {
 	var len = string::length(exten);
 	return false if string::length(path) <= len;
 	len = string::substr(path, string::length(path) - len, len);
@@ -251,7 +251,7 @@ def get_generator_state(language : @compiler::language_t) : @generator_c::state_
 	return generator_c::get_empty_state();
 }
 
-def get_out_ext(language : @compiler::language_t) : ptd::sim() {
+def get_out_ext(language : @compiler::language_t) : ptd::string() {
 	match (language) case :pm {
 		return '.pm';
 	} case :nla {
@@ -271,14 +271,14 @@ def get_out_ext(language : @compiler::language_t) : ptd::sim() {
 	}
 }
 
-def mk_path(cache_path : ptd::sim(), path : ptd::sim()) {
+def mk_path(cache_path : ptd::string(), path : ptd::string()) {
 	return if (path eq '.');
 	mk_path(cache_path, get_dir(path));
 	c_fe_lib::mk_path(cache_path . path);
 }
 
-def mk_path_module(file : ptd::rec({dir => ptd::sim(), file => ptd::sim()}), module : ptd::sim(), input : 
-	@compiler::input_type) : ptd::rec({src => ptd::sim(), dst => @compiler::destination_t}) {
+def mk_path_module(file : ptd::rec({dir => ptd::string(), file => ptd::string()}), module : ptd::string(), input : 
+	@compiler::input_type) : ptd::rec({src => ptd::string(), dst => @compiler::destination_t}) {
 	var dst = input->cache_path . module;
 	var src = file->file;
 	match (input->language) case :pm {
@@ -306,9 +306,9 @@ def mk_path_module(file : ptd::rec({dir => ptd::sim(), file => ptd::sim()}), mod
 	}
 }
 
-def get_all_nianio_file(path : ptd::sim()) : ptd::arr(ptd::sim()) {
+def get_all_nianio_file(path : ptd::string()) : ptd::arr(ptd::string()) {
 	var ret = [];
-	var module_files = ptd::ensure(ptd::arr(ptd::sim()), c_fe_lib::get_module_files_rec(path));
+	var module_files = ptd::ensure(ptd::arr(ptd::string()), c_fe_lib::get_module_files_rec(path));
 	fora var file (module_files) {
 		array::push(ref ret, file) if (has_extension(file, '.nl'));
 	}
@@ -317,7 +317,7 @@ def get_all_nianio_file(path : ptd::sim()) : ptd::arr(ptd::sim()) {
 
 def get_files_to_parse(input : @compiler::input_type) : @compiler::module_t {
 	var cache_path = input->cache_path;
-	var files_to_parse : ptd::arr(ptd::rec({dir => ptd::sim(), file => ptd::sim()})) = [];
+	var files_to_parse : ptd::arr(ptd::rec({dir => ptd::string(), file => ptd::string()})) = [];
 	fora var path (input->input_path) {
 		if (has_extension(path, '.nl')) {
 			array::push(ref files_to_parse, {dir => get_dir(path), file => path});
@@ -330,7 +330,7 @@ def get_files_to_parse(input : @compiler::input_type) : @compiler::module_t {
 	var out_ext = get_out_ext(input->language);
 	var file_in_cache = {};
 	match (c_fe_lib::get_module_files(cache_path)) case :ok(var ok) {
-		fora var file (ptd::ensure(ptd::arr(ptd::sim()), ok)) {
+		fora var file (ptd::ensure(ptd::arr(ptd::string()), ok)) {
 			continue unless (has_extension(file, out_ext));
 			hash::set_value(ref file_in_cache, get_module_name(file), file);
 		}
@@ -346,12 +346,12 @@ def get_files_to_parse(input : @compiler::input_type) : @compiler::module_t {
 	return parse_file;
 }
 
-def parse_module(module : ptd::sim(), src : ptd::sim(), ref errors : @compiler::errors_group_t) : ptd::var({
-		err => ptd::sim(),
+def parse_module(module : ptd::string(), src : ptd::string(), ref errors : @compiler::errors_group_t) : ptd::var({
+		err => ptd::string(),
 		ok => @nast::module_t
 	}) {
 	c_fe_lib::print('processing ' . module . '...');
-	try var file = ptd::ensure(ptd::var({ok => ptd::sim(), err => ptd::sim()}), c_fe_lib::file_to_string(src));
+	try var file = ptd::ensure(ptd::var({ok => ptd::string(), err => ptd::string()}), c_fe_lib::file_to_string(src));
 	var retpar = nparser::sparse(file, module);
 	match (retpar) case :ok(var ast) {
 		var r = {};
@@ -367,7 +367,7 @@ def parse_module(module : ptd::sim(), src : ptd::sim(), ref errors : @compiler::
 	}
 }
 
-def get_mathematical_func(opt_cli : @compiler::input_type) : ptd::hash(ptd::sim()) {
+def get_mathematical_func(opt_cli : @compiler::input_type) : ptd::hash(ptd::int()) {
 	var hash = {};
 	match (c_fe_lib::file_to_string(opt_cli->math_fun)) case :ok(var file) {
 		c_fe_lib::print('list of mathematical functions loaded');
@@ -453,7 +453,7 @@ def compile_ide(opt_cli : @compiler::input_type) : ptd::void() {
 		to_parse = new_to_parse;
 		if (hash::size(to_parse) > 0) {
 			show_and_count_errors(errors, opt_cli, nianio_files);
-			c_fe_lib::print(string::lf() . 'ERROR: while parsing ' . hash::size(to_parse) . ' modules');
+			c_fe_lib::print(string::lf() . 'ERROR: while parsing ' . ptd::int_to_string(hash::size(to_parse)) . ' modules');
 			c_fe_lib::print('############################################################');
 			continue;
 		}
@@ -487,7 +487,7 @@ def compile_ide(opt_cli : @compiler::input_type) : ptd::void() {
 			to_save = new_to_save;
 		}
 		if (hash::size(to_save) > 0) {
-			var msg = 'Can not save ' . hash::size(to_save) . ' files. ';
+			var msg = 'Can not save ' . ptd::int_to_string(hash::size(to_save)) . ' files. ';
 			c_fe_lib::print(string::lf() . 'ERROR: ' . msg);
 		} else {
 			c_fe_lib::exec_cmd(opt_cli->mode as :idex) if opt_cli->mode is :idex;
@@ -497,7 +497,7 @@ def compile_ide(opt_cli : @compiler::input_type) : ptd::void() {
 	}
 }
 
-def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
+def compile_strict_file(opt_cli : @compiler::input_type) : ptd::int() {
 	var asts = {};
 	var errors : @compiler::errors_group_t = {
 			module_errors => {},
@@ -563,18 +563,19 @@ def compile_strict_file(opt_cli : @compiler::input_type) : ptd::sim() {
 	return 0;
 }
 
-def construct_error_message(error : @compiler_lib::error_t, path_dict) : ptd::sim() {
+def construct_error_message(error : @compiler_lib::error_t, path_dict) : ptd::string() {
 	var msg = '';
 	msg .= ' mod: ' . (hash::has_key(path_dict, error->module)
 		? hash::get_value(path_dict, error->module)->src
 		: error->module)
 			unless (string::length(error->module) == 0);
-	msg .= ' line: ' . error->line unless (string::length(error->line) == 0);
+	msg .= ' line: ' . ptd::int_to_string(error->line)
+			unless (error->line == -1);
 	msg .= string::lf() . '     ' . error->message;
 	return msg;
 }
 
-def show_and_count_errors(all_errors : @compiler::errors_group_t, opt_cli : @compiler::input_type, nianio_files) : ptd::sim() {
+def show_and_count_errors(all_errors : @compiler::errors_group_t, opt_cli : @compiler::input_type, nianio_files) : ptd::int() {
 	var num_warnings = 0;
 	var num_errors = 0;
 	forh var module, var module_warnings (all_errors->module_warnings) {
@@ -618,7 +619,8 @@ def show_and_count_errors(all_errors : @compiler::errors_group_t, opt_cli : @com
 		num_errors += num_warnings;
 		num_warnings = 0;
 	}
-	c_fe_lib::print('ERR: ' . num_errors . ' WAR: ' . num_warnings);
+	c_fe_lib::print('ERR: ' . ptd::int_to_string(num_errors) .
+		' WAR: ' . ptd::int_to_string(num_warnings));
 	return num_errors;
 }
 
@@ -649,7 +651,7 @@ def check_modules(ref asts : ptd::hash(@nast::module_t), ref errors : @compiler:
 		var used_functions = {};
 		match (c_fe_lib::file_to_string('public_functions.df')) case :ok(var ok) {
 			used_functions = dfile::sload(ok);
-			used_functions = ptd::ensure(ptd::hash(ptd::sim()), used_functions);
+			used_functions = ptd::ensure(ptd::hash(ptd::int()), used_functions);
 		} case :err(var err) {
 		}
 		var functions = {};
@@ -696,7 +698,7 @@ def check_modules(ref asts : ptd::hash(@nast::module_t), ref errors : @compiler:
 	}
 }
 
-def serialize_deref(deref : @tc_types::deref_types, references : @reference_generator::refs) : ptd::sim() {	
+def serialize_deref(deref : @tc_types::deref_types, references : @reference_generator::refs) : ptd::string() {	
 	var ret = [];
 	array::append(ref ret, process_deref(deref));
 	array::append(ref ret, references);
@@ -716,7 +718,7 @@ def process_deref(deref : @tc_types::deref_types) : @reference_generator::refs {
 	return ret;
 }
 
-def try_save_file(file : ptd::sim(), path : ptd::sim(), ref error) {
+def try_save_file(file : ptd::string(), path : ptd::string(), ref error) {
 	match (c_fe_lib::string_to_file(path, file)) case :ok(var ok) {
 	} case :err(var as_error) {
 		c_fe_lib::print('ERROR: ' . as_error);
@@ -725,9 +727,9 @@ def try_save_file(file : ptd::sim(), path : ptd::sim(), ref error) {
 }
 
 def generate_modules_to_files(modules : ptd::hash(@nlasm::result_t), nianio_files : @compiler::module_t, cache_path : 
-		ptd::sim(), ref generator_state : @generator_c::state_t, language : @compiler::language_t) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::hash(ptd::sim())
+		ptd::string(), ref generator_state : @generator_c::state_t, language : @compiler::language_t) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::hash(ptd::string())
 	}) {
 	var error_modules = {};
 	match (language) case :nla {
@@ -821,7 +823,7 @@ def save_module_to_file(ast : @nast::module_t, mod_dst : @compiler::destination_
 	}
 }
 
-def get_dir(path : ptd::sim()) : ptd::sim() {
+def get_dir(path : ptd::string()) : ptd::string() {
 	var pos = string::length(path) - 1;
 	--pos if (string::substr(path, pos, 1) eq '/' || string::substr(path, pos, 1) eq '\');
 	--pos while (pos >= 0 && string::substr(path, pos, 1) ne '/' && string::substr(path, pos, 1) ne '\');
@@ -829,7 +831,7 @@ def get_dir(path : ptd::sim()) : ptd::sim() {
 	return string::substr(path, 0, pos);
 }
 
-def parse_command_line_args(args : ptd::arr(ptd::sim())) : @compiler::input_type {
+def parse_command_line_args(args : ptd::arr(ptd::string())) : @compiler::input_type {
 	var ret : @compiler::input_type = {
 			language => :c,
 			mode => :strict,

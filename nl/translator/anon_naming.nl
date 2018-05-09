@@ -6,7 +6,7 @@ use ptd;
 use tct;
 use string;
 
-def anon_naming::get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
+def anon_naming::get_anon_name_loop(type : @tct::meta_type) : ptd::string() {
 	match (type) case :tct_im {
 		return '0im';
 	} case :tct_arr(var arr_type) {
@@ -56,11 +56,11 @@ def anon_naming::get_anon_name_loop(type : @tct::meta_type) : ptd::sim() {
 	}
 }
 
-def anon_naming::get_anon_name(type : @tct::meta_type) : ptd::sim() {
+def anon_naming::get_anon_name(type : @tct::meta_type) : ptd::string() {
 	return 'anon_type0' . anon_naming::get_anon_name_loop(type);
 }
 
-def anon_naming::func_ref_to_struct_name(f : ptd::sim()) : ptd::sim() {
+def anon_naming::func_ref_to_struct_name(f : ptd::string()) : ptd::string() {
 	if(f eq 'boolean_t::type') { #TODO drop when all code is rewritten to support ptd::bool()
 		return 'bool';
 	}

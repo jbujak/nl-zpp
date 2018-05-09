@@ -11,9 +11,10 @@ use interpreter;
 use hash;
 use flow_graph;
 use post_processing_t;
+use string_utils;
 
 
-def const_evaluator::evaluate_const_in_modules(ref state : @post_processing_t::state_t, changed_functions : ptd::hash(ptd::sim()), ref 
+def const_evaluator::evaluate_const_in_modules(ref state : @post_processing_t::state_t, changed_functions : ptd::hash(ptd::string()), ref 
 	new_modules_results : ptd::hash(@nlasm::result_t), math_fs : @post_processing_t::math_funs_t) {
 	var nlasms_arr = [];
 	forh var module, var nlasm (state->nl_asm) {
@@ -38,7 +39,7 @@ def const_evaluator::evaluate_const_in_modules(ref state : @post_processing_t::s
 	}
 }
 
-def evaluate_const_in_function(func : @nlasm::function_t, module : ptd::sim(), math_fs : @post_processing_t::math_funs_t, 
+def evaluate_const_in_function(func : @nlasm::function_t, module : ptd::string(), math_fs : @post_processing_t::math_funs_t, 
 	interpreter_state : @interpreter::state_t) : ptd::arr(@nlasm::cmd_t) {
 	var blocks : @flow_graph::blocks_t = flow_graph::make_blocks(func->commands, func->args_type);
 	evaluate_const_in_blocks(ref blocks, math_fs, func, module, interpreter_state);
@@ -46,7 +47,7 @@ def evaluate_const_in_function(func : @nlasm::function_t, module : ptd::sim(), m
 }
 
 def evaluate_const_in_blocks(ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, func : 
-	@nlasm::function_t, module : ptd::sim(), interpreter_state : @interpreter::state_t) {
+	@nlasm::function_t, module : ptd::string(), interpreter_state : @interpreter::state_t) {
 	var regs = [];
 	rep var i (array::len(func->registers)) {
 		array::push(ref regs, :no);
@@ -68,7 +69,7 @@ def check_sub_val(ref const : @post_processing_t::reg_val_const, reg : @post_pro
 	}
 }
 
-def evaluate_const(func : @nlasm::function_t, module : ptd::sim(), ins_nr : ptd::sim(), ref const : 
+def evaluate_const(func : @nlasm::function_t, module : ptd::string(), ins_nr : ptd::int(), ref const : 
 	@post_processing_t::reg_val_const, ref registers : ptd::arr(@post_processing_t::reg_val_const), state : 
 	@interpreter::state_t, const_dest : ptd::arr(@nlasm::reg_t)) : ptd::void() {
 	if (const is :no) {
@@ -113,10 +114,10 @@ def push_load_const(ref cmds : ptd::arr(@nlasm::cmd_t), const : @post_processing
 		});
 }
 
-def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref new_blocks : @flow_graph::blocks_t, 
+def set_const_block_val(number : ptd::int(), blocks : @flow_graph::blocks_t, ref new_blocks : @flow_graph::blocks_t, 
 	math_fs : @post_processing_t::math_funs_t, ref state : @post_processing_t::const_reg_val_t, interpreter_state : 
 	@interpreter::state_t, regs : ptd::arr(@post_processing_t::reg_val_const), func : @nlasm::function_t, module : 
-		ptd::sim()) {
+		ptd::string()) {
 	var block = blocks[number];
 	if (state[number]->was > 0) {
 		var diff = false;
@@ -288,7 +289,8 @@ def set_const_block_val(number : ptd::sim(), blocks : @flow_graph::blocks_t, ref
 	}
 	new_blocks[number]->cmds = new_cmds;
 	fora var n (block->next) {
-		set_const_block_val(n, blocks, ref new_blocks, math_fs, ref state, interpreter_state, regs, func, module);
+		ensure var num = string_utils::get_integer(n);
+		set_const_block_val(num, blocks, ref new_blocks, math_fs, ref state, interpreter_state, regs, func, module);
 	}
 }
 

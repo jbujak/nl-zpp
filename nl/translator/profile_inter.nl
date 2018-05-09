@@ -10,23 +10,23 @@ use string;
 
 def profile_inter::row_t() {
 	return ptd::rec({
-			time => ptd::arr(ptd::sim()),
-			key => ptd::sim(),
+			time => ptd::arr(ptd::int()),
+			key => ptd::string(),
 			type => ptd::var({begin => ptd::none(), end => ptd::none()})
 		});
 }
 
-def profile_inter::begin(ref state : ptd::arr(@profile_inter::row_t), key : ptd::sim()) {
-	var time = ptd::ensure(ptd::arr(ptd::sim()), nsystem::time_microsec());
+def profile_inter::begin(ref state : ptd::arr(@profile_inter::row_t), key : ptd::string()) {
+	var time = ptd::ensure(ptd::arr(ptd::int()), nsystem::time_microsec());
 	array::push(ref state, {key => key, time => time, type => :begin});
 }
 
-def profile_inter::end(ref state : ptd::arr(@profile_inter::row_t), key : ptd::sim()) {
-	var time = ptd::ensure(ptd::arr(ptd::sim()), nsystem::time_microsec());
+def profile_inter::end(ref state : ptd::arr(@profile_inter::row_t), key : ptd::string()) {
+	var time = ptd::ensure(ptd::arr(ptd::int()), nsystem::time_microsec());
 	array::push(ref state, {key => key, time => time, type => :end});
 }
 
-def profile_inter::minus(a : ptd::arr(ptd::sim()), b : ptd::arr(ptd::sim())) : ptd::arr(ptd::sim()) {
+def profile_inter::minus(a : ptd::arr(ptd::int()), b : ptd::arr(ptd::int())) : ptd::arr(ptd::int()) {
 	a[0] -= b[0];
 	if (a[1] < b[1]) {
 		--a[0];
@@ -37,7 +37,7 @@ def profile_inter::minus(a : ptd::arr(ptd::sim()), b : ptd::arr(ptd::sim())) : p
 	return a;
 }
 
-def profile_inter::plus(a : ptd::arr(ptd::sim()), b : ptd::arr(ptd::sim())) : ptd::arr(ptd::sim()) {
+def profile_inter::plus(a : ptd::arr(ptd::int()), b : ptd::arr(ptd::int())) : ptd::arr(ptd::int()) {
 	a[0] += b[0];
 	a[1] += b[1];
 	if (a[1] > 1000 * 1000) {
@@ -47,7 +47,7 @@ def profile_inter::plus(a : ptd::arr(ptd::sim()), b : ptd::arr(ptd::sim())) : pt
 	return a;
 }
 
-def profile_inter::save_profile_js(data : ptd::arr(@profile_inter::row_t)) : ptd::sim() {
+def profile_inter::save_profile_js(data : ptd::arr(@profile_inter::row_t)) : ptd::string() {
 	var file = '';
 	var stack = [];
 	fora var row (data) {
@@ -93,6 +93,6 @@ def diff_time(a, b) {
 		sec -= 1;
 		usec += 1000000;
 	}
-	return sec * 1000.0 + usec / 1000.0;
+	return sec * 1000+ usec / 1000;
 }
 

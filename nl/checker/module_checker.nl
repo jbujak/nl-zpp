@@ -14,23 +14,23 @@ use boolean_t;
 use ptd_parser;
 
 def module_checker::stack_t() {
-	return ptd::arr(ptd::sim());
+	return ptd::arr(ptd::string());
 }
 
 def module_checker::stack_hash_t() {
-	return ptd::hash(ptd::sim());
+	return ptd::hash(ptd::int());
 }
 
 def module_checker::ret_t() {
-	return ptd::var({loop => ptd::arr(ptd::sim()), ok => ptd::none()});
+	return ptd::var({loop => ptd::arr(ptd::string()), ok => ptd::none()});
 }
 
 def module_checker::modules_t() {
-	return ptd::hash(ptd::arr(ptd::sim()));
+	return ptd::hash(ptd::arr(ptd::string()));
 }
 
 def module_checker::search_loops(modules : @module_checker::modules_t) : @module_checker::ret_t {
-	var checked : ptd::hash(ptd::sim()) = {};
+	var checked : ptd::hash(ptd::int()) = {};
 	forh var module_name, var import_list (modules) {
 		if (!hash::has_key(checked, module_name)) {
 			var stack : @module_checker::stack_t = [];
@@ -44,8 +44,8 @@ def module_checker::search_loops(modules : @module_checker::modules_t) : @module
 	return :ok;
 }
 
-def check_module(module_name : ptd::sim(), modules : @module_checker::modules_t, ref stack : @module_checker::stack_t, 
-	ref stack_hash : @module_checker::stack_hash_t, ref checked : ptd::hash(ptd::sim())) : @module_checker::ret_t {
+def check_module(module_name : ptd::string(), modules : @module_checker::modules_t, ref stack : @module_checker::stack_t, 
+	ref stack_hash : @module_checker::stack_hash_t, ref checked : ptd::hash(ptd::int())) : @module_checker::ret_t {
 	hash::set_value(ref checked, module_name, 1);
 	hash::set_value(ref stack_hash, module_name, 1);
 	array::push(ref stack, module_name);
@@ -64,7 +64,7 @@ def check_module(module_name : ptd::sim(), modules : @module_checker::modules_t,
 	return :ok;
 }
 
-def get_loop_from_stack(last_elem : ptd::sim(), stack : @module_checker::stack_t) : ptd::arr(ptd::sim()) {
+def get_loop_from_stack(last_elem : ptd::string(), stack : @module_checker::stack_t) : ptd::arr(ptd::string()) {
 	var ret = [];
 	fora var el (stack) {
 		ret = [] if (el eq last_elem);
@@ -99,8 +99,8 @@ def module_checker::state_t() {
 			return => ptd::rec({was => @boolean_t::type, arg => @module_checker::return_t}),
 			vars => ptd::hash(@module_checker::var_t),
 			errors => @tc_types::errors_t,
-			called => ptd::rec({func => ptd::hash(ptd::sim()), module => ptd::hash(ptd::sim())}),
-			current_module => ptd::sim()
+			called => ptd::rec({func => ptd::hash(ptd::int()), module => ptd::hash(ptd::int())}),
+			current_module => ptd::string()
 		});
 }
 
@@ -115,17 +115,17 @@ def module_checker::init_checker_t() {
 	});
 }
 
-def add_error(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
+def add_error(ref errors : @tc_types::errors_t, msg : ptd::string()) : ptd::void() {
 	array::push(ref errors->errors, 
 		{message => msg, line => errors->current_line, module => errors->module, type => :error, column => -1});
 }
 
-def add_warning(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
+def add_warning(ref errors : @tc_types::errors_t, msg : ptd::string()) : ptd::void() {
 	array::push(ref errors->warnings, 
 		{message => msg, line => errors->current_line, module => errors->module, type => :warning, column => -1});
 }
 
-def set_used_function(fun_key : ptd::sim(), func, ref func_used : ptd::hash(ptd::sim())) {
+def set_used_function(fun_key : ptd::string(), func, ref func_used : ptd::hash(ptd::int())) {
 	hash::set_value(ref func_used, fun_key, 0);
 	forh var name, var line (hash::get_value(func, fun_key)) {
 		continue unless hash::has_key(func, name);
@@ -202,7 +202,7 @@ def module_checker::check_module(module : @nast::module_t, check_public_fun, ref
 	return state->errors;
 }
 
-def module_checker::check_used_functions(used_functions : ptd::hash(ptd::sim()), functions,  modules : ptd::arr(@nast::module_t), ref errors : @tc_types::return_t) {
+def module_checker::check_used_functions(used_functions : ptd::hash(ptd::int()), functions,  modules : ptd::arr(@nast::module_t), ref errors : @tc_types::return_t) {
 	var copy = used_functions;
 	forh var fun_key, var none (copy) {
 		if (!hash::has_key(functions, fun_key)) {
@@ -265,12 +265,12 @@ def check_types_imported(type : @tct::meta_type, ref state : @module_checker::st
 	}
 }
 
-def get_fun_key(module : ptd::sim(), name : ptd::sim(), cur_mod : ptd::sim()) : ptd::sim() {
+def get_fun_key(module : ptd::string(), name : ptd::string(), cur_mod : ptd::string()) : ptd::string() {
 	return module . '::' . name unless module eq '';
 	return 'priv:' . cur_mod . '::' . name;
 }
 
-def add_fun_used(module : ptd::sim(), name : ptd::sim(), ref state : @module_checker::state_t) : ptd::void() {
+def add_fun_used(module : ptd::string(), name : ptd::string(), ref state : @module_checker::state_t) : ptd::void() {
 	var fun_key = get_fun_key(module, name, state->current_module);
 	return if hash::has_key(state->called->func, fun_key);
 	hash::set_value(ref state->called->func, fun_key, state->errors->current_line);
@@ -309,7 +309,7 @@ def check_type(type : @nast::variable_type_t, ref state : @module_checker::state
 	}
 }
 
-def add_var(name : ptd::sim(), is_const : @boolean_t::type, is_required : @boolean_t::type, initialized :
+def add_var(name : ptd::string(), is_const : @boolean_t::type, is_required : @boolean_t::type, initialized :
 	@boolean_t::type, ref state : @module_checker::state_t) : ptd::void() {
 	if (hash::has_key(state->vars, name)) {
 		add_error(ref state->errors, 'redeclaration variable: ' . name);
@@ -319,7 +319,7 @@ def add_var(name : ptd::sim(), is_const : @boolean_t::type, is_required : @boole
 	hash::set_value(ref state->vars, name, val);
 }
 
-def use_var(name : ptd::sim(), mode : ptd::var({mod => ptd::none(), set => ptd::none(), get => ptd::none()}), ref state 
+def use_var(name : ptd::string(), mode : ptd::var({mod => ptd::none(), set => ptd::none(), get => ptd::none()}), ref state 
 	: @module_checker::state_t) : ptd::void() {
 	if (!hash::has_key(state->vars, name)) {
 		add_error(ref state->errors, 'unknown variable: ' . name);

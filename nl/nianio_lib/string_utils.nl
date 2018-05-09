@@ -2,12 +2,10 @@
 # (c) Atinea Sp. z o.o.
 ###
 
-use nl;
 use string;
 use boolean_t;
 use ptd;
 use array;
-use c_rt_lib;
 
 def string_utils::is_int(char) {
 	return (string::ord(char) > 47 && string::ord(char) < 58);
@@ -39,7 +37,7 @@ def string_utils::get_integer(str) : ptd::var({ok => ptd::int(), err => ptd::str
 	return :ok(sign * ret);
 }
 
-def string_utils::is_integer(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_integer(obj : ptd::string()) : @boolean_t::type {
 	obj = obj . '';
 	return false unless string_utils::is_integer_possibly_leading_zeros(obj);
 	return true if obj eq '0';
@@ -49,7 +47,7 @@ def string_utils::is_integer(obj : ptd::sim()) : @boolean_t::type {
 	return true;
 }
 
-def string_utils::is_integer_possibly_leading_zeros(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_integer_possibly_leading_zeros(obj : ptd::string()) : @boolean_t::type {
 	var string = obj . '';
 	var len = string::length(string);
 	var i = 0;
@@ -61,7 +59,7 @@ def string_utils::is_integer_possibly_leading_zeros(obj : ptd::sim()) : @boolean
 	return true;
 }
 
-def string_utils::is_float(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_float(obj : ptd::string()) : @boolean_t::type {
 	var string = obj . '';
 	var len = string::length(string);
 	return false if len < 3;
@@ -79,7 +77,7 @@ def string_utils::is_float(obj : ptd::sim()) : @boolean_t::type {
 }
 
 def string_utils::is_number(string) : @boolean_t::type {
-	var sim : ptd::sim() = string . '';
+	var sim : ptd::string() = string . '';
 	return string_utils::is_integer(sim) || string_utils::is_float(sim);
 }
 
@@ -205,8 +203,8 @@ def string_utils::eval_number(string) {
 }
 
 def string_utils::get_date(string, char) : ptd::var({
-		ok => ptd::rec({first => ptd::sim(), second => ptd::sim(), third => ptd::sim()}),
-		err => ptd::sim()
+		ok => ptd::rec({first => ptd::string(), second => ptd::string(), third => ptd::string()}),
+		err => ptd::string()
 	}) {
 	var split_result = string::split(char, string);
 	return :err('')
@@ -226,7 +224,7 @@ def string_utils::change(str, from, to) {
 	return ret;
 }
 
-def string_utils::erase_tail_whitespace(str) : ptd::sim() {
+def string_utils::erase_tail_whitespace(str) : ptd::string() {
 	return '' if str eq '';
 	var str_end_index = string::length(str) - 1;
 	while (str_end_index >= 0 && string_utils::is_whitespace(string::substr(str, str_end_index, 1))) {
@@ -235,7 +233,7 @@ def string_utils::erase_tail_whitespace(str) : ptd::sim() {
 	return string::substr(str, 0, str_end_index + 1);
 }
 
-def string_utils::erase_tail_zeroes(str : ptd::sim()) : ptd::sim() {
+def string_utils::erase_tail_zeroes(str : ptd::string()) : ptd::string() {
 	return str if str eq '';
 	var chars = string::to_array(str);
 	var str_end_index = array::len(chars) - 1;
@@ -245,7 +243,7 @@ def string_utils::erase_tail_zeroes(str : ptd::sim()) : ptd::sim() {
 	return string::substr(str, 0, str_end_index + 1);
 }
 
-def string_utils::erase_leading_zeroes(str : ptd::sim()) : ptd::sim() {
+def string_utils::erase_leading_zeroes(str : ptd::string()) : ptd::string() {
 	return str if str eq '';
 	var chars = string::to_array(str);
 	var str_start_index = 0;

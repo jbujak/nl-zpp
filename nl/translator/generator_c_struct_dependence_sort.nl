@@ -17,7 +17,7 @@ def generator_c_struct_dependence_sort::result_t() {
 
 def generator_c_struct_dependence_sort::result_element() {
 	return ptd::rec({
-			name => ptd::sim(),
+			name => ptd::string(),
 			tct_type => @tct::meta_type,
 			c_type => ptd::var({
 					definition => ptd::none(),
@@ -29,8 +29,8 @@ def generator_c_struct_dependence_sort::result_element() {
 
 def generator_c_struct_dependence_sort::graph_node() {
 	return ptd::rec({
-			pointer => ptd::arr(ptd::sim()),
-			struct => ptd::arr(ptd::sim()),
+			pointer => ptd::arr(ptd::string()),
+			struct => ptd::arr(ptd::string()),
 			is_divisible => @boolean_t::type,
 			type => @tct::meta_type
 		});
@@ -42,9 +42,9 @@ def generator_c_struct_dependence_sort::graph(){
 
 def generator_c_struct_dependence_sort::sorted_element() {
 	return ptd::var({
-			definition => ptd::sim(),
-			declaration => ptd::sim(),
-			both => ptd::sim()
+			definition => ptd::string(),
+			declaration => ptd::string(),
+			both => ptd::string()
 		});
 }
 
@@ -57,15 +57,15 @@ def generator_c_struct_dependence_sort::decl_def_type() {
 	});
 }
 
-def get_module_name(fun : ptd::sim()) : ptd::sim() {
+def get_module_name(fun : ptd::string()) : ptd::string() {
 	return (string::split('::', fun))[0];
 }
 
-def get_fun_name(fun : ptd::sim()) : ptd::sim() {
+def get_fun_name(fun : ptd::string()) : ptd::string() {
 	return (string::split('::', fun))[1];
 }
 
-def get_name(type : @tct::meta_type) : ptd::sim() {
+def get_name(type : @tct::meta_type) : ptd::string() {
 	if (type is :tct_ref) {
 		return get_fun_name(type as :tct_ref);
 	}
@@ -73,7 +73,7 @@ def get_name(type : @tct::meta_type) : ptd::sim() {
 }
 
 def get_required_types_list(type : @tct::meta_type, ref node : @generator_c_struct_dependence_sort::graph_node,
-		module : ptd::sim()) : ptd::void() {
+		module : ptd::string()) : ptd::void() {
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 	} case :tct_own_arr(var arr_type) {
@@ -134,7 +134,7 @@ def generator_c_struct_dependence_sort::is_divisible(type : @tct::meta_type) : @
 	return false;
 }
 
-def in_funs_to_graph(types : ptd::hash(@tct::meta_type), module : ptd::sim()) : @generator_c_struct_dependence_sort::graph {
+def in_funs_to_graph(types : ptd::hash(@tct::meta_type), module : ptd::string()) : @generator_c_struct_dependence_sort::graph {
 	var graph : @generator_c_struct_dependence_sort::graph = {};
 	forh var f_name, var f_type (types) {
 		var node = {pointer => [], struct => [], is_divisible =>
@@ -158,7 +158,7 @@ def in_funs_to_graph(types : ptd::hash(@tct::meta_type), module : ptd::sim()) : 
 	return graph;
 }
 
-def remove_dups(ref a : ptd::arr(ptd::sim())) {
+def remove_dups(ref a : ptd::arr(ptd::string())) {
 	array::sort(ref a);
 	var i = 0;
 	loop {
@@ -230,7 +230,7 @@ def split_type(a : @generator_c_struct_dependence_sort::decl_def_type , b : @gen
 	return a;
 }
 
-def type_to_var(name : ptd::sim(), type : @generator_c_struct_dependence_sort::decl_def_type)
+def type_to_var(name : ptd::string(), type : @generator_c_struct_dependence_sort::decl_def_type)
 		: @generator_c_struct_dependence_sort::sorted_element {
 	if (type is :both) {
 		return :both(name);
@@ -411,7 +411,7 @@ def nlasm_to_type_hash(nl_funs : ptd::arr(@nlasm::function_t)) : ptd::hash(@tct:
 	return types;
 }
 
-def generator_c_struct_dependence_sort::sort(funs : ptd::arr(@nlasm::function_t), module : ptd::sim())
+def generator_c_struct_dependence_sort::sort(funs : ptd::arr(@nlasm::function_t), module : ptd::string())
 		: @generator_c_struct_dependence_sort::result_t {
 	var in_funs : ptd::hash(@tct::meta_type)  = get_anons(funs);
 	hash::add_all(ref in_funs, nlasm_to_type_hash(funs));

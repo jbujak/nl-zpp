@@ -14,6 +14,7 @@ use interpreter;
 use const_evaluator;
 use post_processing_t;
 use register_cleaner;
+use string_utils;
 
 def get_command_for_const() : @post_processing_t::math_funs_t {
 	var ret = {};
@@ -25,7 +26,7 @@ def get_command_for_const() : @post_processing_t::math_funs_t {
 	return ret;
 }
 
-def post_processing::init(mat_fun_def : ptd::hash(ptd::sim()), o : @post_processing_t::optimization_t) : 
+def post_processing::init(mat_fun_def : ptd::hash(ptd::int()), o : @post_processing_t::optimization_t) : 
 	@post_processing_t::state_t {
 	var state = {nl_asm => {}, fun_calls => {}, math_fs => {}};
 	state->mat_fun_def = mat_fun_def;
@@ -35,7 +36,7 @@ def post_processing::init(mat_fun_def : ptd::hash(ptd::sim()), o : @post_process
 	return state;
 }
 
-def post_processing::clear_module_from_state(ref state : @post_processing_t::state_t, module : ptd::sim()) {
+def post_processing::clear_module_from_state(ref state : @post_processing_t::state_t, module : ptd::string()) {
 	hash::delete(ref state->nl_asm, module);
 	hash::delete(ref state->fun_calls, module);
 }
@@ -96,7 +97,7 @@ def post_processing::find(ref state : @post_processing_t::state_t, ref nlasms : 
 	state->math_fs = math_fs;
 }
 
-def set_const_commands_in_modules(ref state : @post_processing_t::state_t, changed_functions : ptd::hash(ptd::sim()), ref 
+def set_const_commands_in_modules(ref state : @post_processing_t::state_t, changed_functions : ptd::hash(ptd::string()), ref 
 	new_modules_results : ptd::hash(@nlasm::result_t), const_com : @post_processing_t::math_funs_t, math_fs : 
 	@post_processing_t::math_funs_t) {
 	fora var mod_n (hash::keys(state->nl_asm)) {
@@ -108,7 +109,7 @@ def set_const_commands_in_modules(ref state : @post_processing_t::state_t, chang
 			if (hash::has_key(changed_functions, f_key)) {
 				change_mod = true;
 				var blocks : @flow_graph::blocks_t = flow_graph::make_blocks(fun->commands, fun->args_type);
-				set_const_reg(ref blocks, math_fs, module->module_name, fun->reg_size);
+				set_const_reg(ref blocks, math_fs, module->module_name, array::len(fun->registers));
 				var coms = flow_graph::combine_blocks(blocks);
 				rep var j (array::len(coms)) {
 					var com = coms[j];
@@ -128,8 +129,8 @@ def set_const_commands_in_modules(ref state : @post_processing_t::state_t, chang
 	}
 }
 
-def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, 
-	ref state : @post_processing_t::const_reg_t, mod_name : ptd::sim(), regs : ptd::arr(@post_processing_t::reg_const)) {
+def set_const_block(number : ptd::int(), ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, 
+	ref state : @post_processing_t::const_reg_t, mod_name : ptd::string(), regs : ptd::arr(@post_processing_t::reg_const)) {
 	var block = blocks[number];
 	if (state[number]->was > 0) {
 		var diff = false;
@@ -296,7 +297,7 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 			die;
 		}
 		var set_len = array::len(set_c);
-		if (set_len > 0 && set_c[set_len - 1] ->reg_no eq '') {
+		if (set_len > 0 && nlasm::is_empty(set_c[set_len - 1])) {
 			array::pop(ref set_c);
 		}
 		cmds[i]->annotation = const is :yes ? :const(set_c) : :none;
@@ -304,14 +305,15 @@ def set_const_block(number : ptd::sim(), ref blocks : @flow_graph::blocks_t, mat
 	block->cmds = cmds;
 	blocks[number] = block;
 	fora var n (block->next) {
-		set_const_block(n, ref blocks, math_fs, ref state, mod_name, regs);
+		ensure var num = string_utils::get_integer(n);
+		set_const_block(num, ref blocks, math_fs, ref state, mod_name, regs);
 	}
 }
 
 
 
 def set_interpreted_changed_functions(state : @post_processing_t::state_t, math_fs : @post_processing_t::math_funs_t, ref 
-	changed_functions : ptd::hash(ptd::sim())) {
+	changed_functions : ptd::hash(ptd::string())) {
 	var fun_calls = state->fun_calls;
 	forh var mod_n, var module (state->nl_asm) {
 		fora var fun (module->functions) {
@@ -385,7 +387,7 @@ def post_processing::get_call_graph(nlasms : ptd::hash(@nlasm::result_t)) : @pos
 	return ret;
 }
 
-def get_math_fun(arch : @post_processing_t::fun_tree_t, mat_fun : ptd::hash(ptd::sim())) : @post_processing_t::math_funs_t {
+def get_math_fun(arch : @post_processing_t::fun_tree_t, mat_fun : ptd::hash(ptd::int())) : @post_processing_t::math_funs_t {
 	var math_fs : @post_processing_t::math_funs_t = {};
 	forh var name, var none (mat_fun) {
 		hash::set_value(ref math_fs, name, true);
@@ -395,7 +397,7 @@ def get_math_fun(arch : @post_processing_t::fun_tree_t, mat_fun : ptd::hash(ptd:
 			hash::set_value(ref math_fs, mod_n . fun_n, true);
 		}
 	}
-	var called_in : ptd::hash(ptd::hash(ptd::sim())) = {};
+	var called_in : ptd::hash(ptd::hash(ptd::int())) = {};
 	var unknown : @post_processing_t::math_funs_t = {};
 	forh var mod_n, var module (arch) {
 		forh var fun_n, var calls (module) {
@@ -417,8 +419,8 @@ def get_math_fun(arch : @post_processing_t::fun_tree_t, mat_fun : ptd::hash(ptd:
 	return math_fs;
 }
 
-def set_non_math_fun_rec(ref math_fs : @post_processing_t::math_funs_t, key : ptd::sim(), called_in : ptd::hash(ptd::hash(
-		ptd::sim()))) {
+def set_non_math_fun_rec(ref math_fs : @post_processing_t::math_funs_t, key : ptd::string(), called_in : ptd::hash(ptd::hash(
+		ptd::int()))) {
 	return unless hash::get_value(math_fs, key);
 	hash::set_value(ref math_fs, key, false);
 	return unless hash::has_key(called_in, key);
@@ -429,7 +431,7 @@ def set_non_math_fun_rec(ref math_fs : @post_processing_t::math_funs_t, key : pt
 }
 
 def set_mathfun_in_modules(ref state : @post_processing_t::state_t, math_fs : @post_processing_t::math_funs_t, ref 
-	changed_functions : ptd::hash(ptd::sim()), ref new_modules_results : ptd::hash(@nlasm::result_t)) {
+	changed_functions : ptd::hash(ptd::string()), ref new_modules_results : ptd::hash(@nlasm::result_t)) {
 	var switched = get_switched_func(state->math_fs, math_fs);
 	var called_switched = get_called_switched(state->fun_calls, switched);
 	fora var name (hash::keys(state->nl_asm)) {
@@ -459,7 +461,7 @@ def set_mathfun_in_modules(ref state : @post_processing_t::state_t, math_fs : @p
 	}
 }
 
-def set_const_reg(ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, mod_name : ptd::sim(), 
+def set_const_reg(ref blocks : @flow_graph::blocks_t, math_fs : @post_processing_t::math_funs_t, mod_name : ptd::string(), 
 	reg_size) {
 	var regs = [];
 	rep var i (reg_size) {
@@ -476,48 +478,51 @@ def set_const_reg(ref blocks : @flow_graph::blocks_t, math_fs : @post_processing
 
 def delete_unused_labels_com(ref commands : ptd::arr(@nlasm::cmd_t)) : ptd::void() {
 	var used = {};
-	var repeated = {};
+	var repeated : ptd::hash(@nlasm::label_t) = {};
 	var label;
-	var last_label = '';
+	var last_label = -1;
 	fora var cmd (commands) {
 		var com = cmd->cmd;
 		if (com is :prt_lbl) {
 			label = com as :prt_lbl;
-			if (last_label eq '') {
+			if (last_label == -1) {
 				last_label = label;
 			} else {
-				hash::set_value(ref repeated, label, last_label);
+				hash::set_value(ref repeated, ptd::int_to_string(label), last_label);
 			}
 		} else {
-			last_label = '';
+			last_label = -1;
 		}
 		if (com is :goto) {
 			label = com as :goto;
-			hash::set_value(ref used, label, label);
+			hash::set_value(ref used, ptd::int_to_string(label), label);
 		} elsif (com is :if_goto) {
 			label = com as :if_goto;
-			hash::set_value(ref used, label->dest, label->dest);
+			hash::set_value(ref used, ptd::int_to_string(label->dest), label->dest);
 		}
 	}
 	forh var r, var n (repeated) {
 		if (hash::has_key(used, r)) {
-			hash::set_value(ref used, n, n);
+			hash::set_value(ref used, ptd::int_to_string(n), n);
 		}
 	}
-	var ret = [];
+	var ret : ptd::arr(@nlasm::cmd_t) = [];
 	fora var cmd (commands) {
-		var com = cmd->cmd;
+		var com : @nlasm::order_t = cmd->cmd;
 		if (com is :prt_lbl) {
 			label = com as :prt_lbl;
-			continue if hash::has_key(repeated, label);
-			continue unless hash::has_key(used, label);
+			var label_str = ptd::int_to_string(label);
+			continue if hash::has_key(repeated, label_str);
+			continue unless hash::has_key(used, label_str);
 		} elsif (com is :goto) {
 			label = com as :goto;
-			label = hash::get_value(repeated, label) if hash::has_key(repeated, label);
+			var label_str = ptd::int_to_string(label);
+			label = hash::get_value(repeated, label_str) if hash::has_key(repeated, label_str);
 			com = :goto(label);
 		} elsif (com is :if_goto) {
 			label = com as :if_goto;
-			label->dest = hash::get_value(repeated, label->dest) if hash::has_key(repeated, label->dest);
+			var dest_str = ptd::int_to_string(label->dest);
+			label->dest = hash::get_value(repeated, dest_str) if hash::has_key(repeated, dest_str);
 			com = :if_goto(label);
 		}
 		var cop = cmd;
@@ -532,23 +537,23 @@ def recalculate_labels_com(ref commands : ptd::arr(@nlasm::cmd_t)) : ptd::void()
 	rep var i (array::len(commands)) {
 		var com = commands[i]->cmd;
 		if (com is :prt_lbl) {
-			hash::set_value(ref nr_label, com as :prt_lbl, i);
+			hash::set_value(ref nr_label, ptd::int_to_string(com as :prt_lbl), i);
 			commands[i]->cmd = :prt_lbl(i);
 		}
 	}
 	rep var i (array::len(commands)) {
 		var com = commands[i]->cmd;
 		if (com is :goto) {
-			commands[i]->cmd = :goto(hash::get_value(nr_label, com as :goto));
+			commands[i]->cmd = :goto(hash::get_value(nr_label, ptd::int_to_string(com as :goto)));
 		} elsif (com is :if_goto) {
 			var if_goto = com as :if_goto;
-			if_goto->dest = hash::get_value(nr_label, if_goto->dest);
+			if_goto->dest = hash::get_value(nr_label, ptd::int_to_string(if_goto->dest));
 			commands[i]->cmd = :if_goto(if_goto);
 		}
 	}
 }
 
-def check_sub(ref const : @post_processing_t::reg_const, reg : @post_processing_t::reg_const, ref sum : ptd::arr(ptd::sim())) {
+def check_sub(ref const : @post_processing_t::reg_const, reg : @post_processing_t::reg_const, ref sum : ptd::arr(ptd::int())) {
 	match (reg) case :no {
 		const = :no;
 	} case :yes(var i) {

@@ -10,10 +10,10 @@ def compiler_lib::error_type_t() {
 
 def compiler_lib::error_t() {
 	return ptd::rec({
-		line => ptd::sim(),
-		column => ptd::sim(),
-		message => ptd::sim(),
-		module => ptd::sim(),
+		line => ptd::int(),
+		column => ptd::int(),
+		message => ptd::string(),
+		module => ptd::string(),
 		type => @compiler_lib::error_type_t,
 	});
 }

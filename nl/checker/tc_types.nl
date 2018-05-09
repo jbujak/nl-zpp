@@ -11,12 +11,12 @@ use nast;
 use singleton;
 use compiler_lib;
 
-def op_def(ref elems : ptd::hash(@tc_types::bin_op_type), in : ptd::sim(), arg1 : @tct::meta_type, arg2 : 
+def op_def(ref elems : ptd::hash(@tc_types::bin_op_type), in : ptd::string(), arg1 : @tct::meta_type, arg2 : 
 	@tct::meta_type, ret : @tct::meta_type) : ptd::void() {
 	hash::set_value(ref elems, in, {arg1 => arg1, arg2 => arg2, ret => ret});
 }
 
-def tc_types::get_bin_op_def(name : ptd::sim()) : @tc_types::bin_op_type {
+def tc_types::get_bin_op_def(name : ptd::string()) : @tc_types::bin_op_type {
 	return hash::get_value(get_binary_ops(), name);
 }
 
@@ -48,8 +48,8 @@ def get_binary_ops() : ptd::hash(@tc_types::bin_op_type) {
 
 def tc_types::errors_t() {
 	return ptd::rec({
-			current_line => ptd::sim(),
-			module => ptd::sim(),
+			current_line => ptd::int(),
+			module => ptd::string(),
 			warnings => @compiler_lib::errors_t,
 			errors => @compiler_lib::errors_t
 		});
@@ -76,7 +76,7 @@ def tc_types::modules_t() {
 }
 
 def tc_types::deref_type() {
-	return ptd::rec({line => ptd::sim(), module => ptd::sim(), type_name => ptd::sim()});
+	return ptd::rec({line => ptd::int(), module => ptd::string(), type_name => ptd::string()});
 }
 
 def tc_types::deref_types() {
@@ -85,7 +85,7 @@ def tc_types::deref_types() {
 
 def tc_types::env() {
 	return ptd::rec({
-			current_module => ptd::sim(),
+			current_module => ptd::string(),
 			breaks => ptd::rec({vars => @tc_types::vars_t, is => @boolean_t::type}),
 			ret_type => @tct::meta_type,
 			deref => @tc_types::deref_types
@@ -96,13 +96,13 @@ def tc_types::var_t() {
 	return ptd::rec({
 		overwrited => ptd::var({yes => ptd::none(), no => ptd::none()}), 
 		type => @tct::meta_type,
-		referenced_by => ptd::var({none => ptd::none(), variable => ptd::sim()}),
+		referenced_by => ptd::var({none => ptd::none(), variable => ptd::string()}),
 	});
 }
 
 def tc_types::fun_arg_t() {
 	return ptd::rec({
-			name => ptd::sim(),
+			name => ptd::string(),
 			type => @tct::meta_type,
 			mod => ptd::var({none => ptd::none(), ref => ptd::none()})
 		});
@@ -112,9 +112,9 @@ def tc_types::def_fun_t() {
 	return ptd::rec({
 			cmd => @nast::cmd_t,
 			is_type => ptd::var({no => ptd::none(), yes => @tct::meta_type}),
-			ref_types => ptd::var({no => ptd::none(), yes => ptd::arr(ptd::sim())}),
-			name => ptd::sim(),
-			module => ptd::sim(),
+			ref_types => ptd::var({no => ptd::none(), yes => ptd::arr(ptd::string())}),
+			name => ptd::string(),
+			module => ptd::string(),
 			access => ptd::var({priv => ptd::none(), pub => ptd::none()}),
 			args => ptd::arr(@tc_types::fun_arg_t),
 			ret_type => @tct::meta_type
@@ -134,12 +134,12 @@ def tc_types::value_src() {
 }
 
 def tc_types::lval_path() {
-	return ptd::arr(ptd::var({var => ptd::sim(), arr => ptd::none(), rec => ptd::sim(), hashkey => ptd::none(), variant => ptd::sim()}));
+	return ptd::arr(ptd::var({var => ptd::string(), arr => ptd::none(), rec => ptd::string(), hashkey => ptd::none(), variant => ptd::string()}));
 }
 
 def tc_types::walk_arg() {
 	return ptd::rec({
-			ref_inf => ptd::hash(ptd::arr(ptd::sim())),
+			ref_inf => ptd::hash(ptd::arr(ptd::string())),
 			errors => @tc_types::errors_t,
 			modules => @tc_types::modules_t
 		});
@@ -147,9 +147,9 @@ def tc_types::walk_arg() {
 
 def tc_types::ref_t() {
 	return ptd::rec({
-			level => ptd::sim(),
-			from => ptd::hash(ptd::arr(ptd::sim())),
-			to => ptd::hash(ptd::arr(ptd::sim())),
+			level => ptd::int(),
+			from => ptd::hash(ptd::arr(ptd::int())),
+			to => ptd::hash(ptd::arr(ptd::int())),
 			check => @boolean_t::type,
 			cast => @boolean_t::type
 		});
@@ -161,10 +161,10 @@ def tc_types::stack_info_type() {
 		own_hash => ptd::none(),
 		ptd_arr => ptd::none(),
 		own_arr => ptd::none(),
-		ptd_rec => ptd::sim(),
-		own_rec => ptd::sim(),
-		ptd_var => ptd::sim(),
-		own_var => ptd::sim(),
+		ptd_rec => ptd::string(),
+		own_rec => ptd::string(),
+		ptd_var => ptd::string(),
+		own_var => ptd::string(),
 	});
 }
 

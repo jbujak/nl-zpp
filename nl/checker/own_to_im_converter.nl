@@ -10,25 +10,25 @@ use boolean_t;
 use array;
 use string;
 
-def conv_priv_prefix() : ptd::sim() {
+def conv_priv_prefix() : ptd::string() {
 	return 'conv_to_im';
 }
 
 def own_to_im_converter::res_t() {
 	return ptd::rec({
-		body => ptd::sim(),
+		body => ptd::string(),
 		required_functions => ptd::hash(@tct::meta_type),
 	});
 }
 
 def own_to_im_converter::name_t() {
 	return ptd::var({
-		name => ptd::sim(),
+		name => ptd::string(),
 		nameless => ptd::none(),
 	});
 }
 
-def own_to_im_converter::get_function_name(type : @tct::meta_type, known_types : ptd::hash(@tct::meta_type)) : ptd::sim() {
+def own_to_im_converter::get_function_name(type : @tct::meta_type, known_types : ptd::hash(@tct::meta_type)) : ptd::string() {
 	if (type is :tct_ref) {
 		if(!tct::is_own_type(type, known_types)) {
 			return '';
@@ -45,7 +45,7 @@ def own_to_im_converter::get_function_name(type : @tct::meta_type, known_types :
 	return '';
 }
 
-def own_to_im_converter::get_required_arg_type(type : @tct::meta_type, known_types : ptd::hash(@tct::meta_type)) : ptd::sim() {
+def own_to_im_converter::get_required_arg_type(type : @tct::meta_type, known_types : ptd::hash(@tct::meta_type)) : ptd::string() {
 	match (type) case :tct_rec (var p) {
 		return '';
 	} case :tct_own_rec (var p) {
@@ -81,9 +81,9 @@ def own_to_im_converter::get_required_arg_type(type : @tct::meta_type, known_typ
 	}
 }
 
-def get_type_constructor(type : @tct::meta_type, remove_owns : @boolean_t::type, known_types : ptd::hash(@tct::meta_type)) : ptd::sim() {
-	var res : ptd::sim() = '';
-	var own : ptd::sim() = 'own';
+def get_type_constructor(type : @tct::meta_type, remove_owns : @boolean_t::type, known_types : ptd::hash(@tct::meta_type)) : ptd::string() {
+	var res : ptd::string() = '';
+	var own : ptd::string() = 'own';
 	if (remove_owns) {
 		own = 'ptd';
 	}
@@ -134,7 +134,7 @@ def get_type_constructor(type : @tct::meta_type, remove_owns : @boolean_t::type,
 			res = '@' . p;
 		}
 	} case :tct_sim {
-		res = 'ptd::sim()';
+		res = 'ptd::string()';
 	} case :tct_int {
 		res = 'ptd::int()';
 	} case :tct_string {
@@ -153,14 +153,14 @@ def get_type_constructor(type : @tct::meta_type, remove_owns : @boolean_t::type,
 
 def own_to_im_converter::get_function(type : @tct::meta_type, known_types : ptd::hash(@tct::meta_type))
 	: @own_to_im_converter::res_t {
-	var ret_type : ptd::sim() = get_type_constructor(type, true, known_types);
-	var body : ptd::sim() = 'def ' . own_to_im_converter::get_function_name(type, known_types)
+	var ret_type : ptd::string() = get_type_constructor(type, true, known_types);
+	var body : ptd::string() = 'def ' . own_to_im_converter::get_function_name(type, known_types)
 		. '(ref arg : ' . get_type_constructor(type, false, known_types) . ') : ' . ret_type . ' {';
 	if (type is :tct_ref) {
 		type = known_types{type as :tct_ref};
 	}
 	var required_functions : ptd::hash(@tct::meta_type) = {};
-	var conv_fun_name : ptd::sim() = '';
+	var conv_fun_name : ptd::string() = '';
 	match (type) case :tct_rec (var p) {
 		die;
 	} case :tct_own_rec (var p) {
@@ -223,7 +223,7 @@ def own_to_im_converter::get_function(type : @tct::meta_type, known_types : ptd:
 		die;
 	}
 	body .= '}';
-	var funs_to_remove : ptd::arr(ptd::sim()) = [];
+	var funs_to_remove : ptd::arr(ptd::string()) = [];
 	forh var r_name, var r_type (required_functions) {
 		if (!tct::is_own_type(r_type, {})) {
 			array::push(ref funs_to_remove, r_name);

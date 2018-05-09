@@ -24,7 +24,7 @@ def tct::own_rec(h : ptd::hash(@tct::meta_type)) : @tct::meta_type {
 	return :tct_own_rec(h);
 }
 
-def tct::ref(name : ptd::sim()) : @tct::meta_type {
+def tct::ref(name : ptd::string()) : @tct::meta_type {
 	return :tct_ref(name);
 }
 
@@ -96,7 +96,7 @@ def tct::own_var(h) : @tct::meta_type {
 	return :tct_own_var(types);
 }
 
-def tct::try_var_as_case(variant : @tct::meta_type, str_case : ptd::sim()) : ptd::var({ok=>@tct::meta_type, err => ptd::sim()}) {
+def tct::try_var_as_case(variant : @tct::meta_type, str_case : ptd::string()) : ptd::var({ok=>@tct::meta_type, err => ptd::string()}) {
 	return :err('') unless variant is :tct_var;
 	return :err('') unless hash::has_key(variant as :tct_var, str_case);
 	var sub = hash::get_value(variant as :tct_var, str_case);
@@ -114,7 +114,7 @@ def tct::meta_type() {
 			tct_own_arr => @tct::meta_type,
 			tct_var => ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})),
 			tct_own_var => ptd::hash(ptd::var({with_param => @tct::meta_type, no_param => ptd::none()})),
-			tct_ref => ptd::sim(),
+			tct_ref => ptd::string(),
 			tct_sim => ptd::none(),
 			tct_int => ptd::none(),
 			tct_string => ptd::none(),
@@ -174,7 +174,7 @@ def tct::own_type_to_ptd(type : @tct::meta_type, defined_types : ptd::hash(@tct:
 	}
 }
 
-def get_fun_name(fun : ptd::sim()) : ptd::sim() {
+def get_fun_name(fun : ptd::string()) : ptd::string() {
 	return (string::split('::', fun))[1];
 }
 

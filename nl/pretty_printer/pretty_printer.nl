@@ -10,14 +10,14 @@ use nast;
 use wprinter;
 use boolean_t;
 
-def state_print(ref state : @wprinter::state_t, str : ptd::sim()) : ptd::void() {
+def state_print(ref state : @wprinter::state_t, str : ptd::string()) : ptd::void() {
 	state->out .= str;
 }
 
 def pretty_printer::struct_t() {
 	return ptd::rec({
-			imports => ptd::arr(ptd::sim()),
-			functions => ptd::arr(ptd::rec({name => ptd::sim(), head => ptd::sim(), body => ptd::sim()}))
+			imports => ptd::arr(ptd::string()),
+			functions => ptd::arr(ptd::rec({name => ptd::string(), head => ptd::string(), body => ptd::string()}))
 		});
 }
 
@@ -45,7 +45,7 @@ def pretty_printer::print_module_to_struct(mod : @nast::module_t) : @pretty_prin
 	return struct;
 }
 
-def pretty_printer::print_module_to_str(mod : @nast::module_t) : ptd::sim() {
+def pretty_printer::print_module_to_str(mod : @nast::module_t) : ptd::string() {
 	var state = {out => ''};
 	if (mod->stamp ne '') {
 		state_print(ref state, mod->stamp . string::lf());
@@ -53,7 +53,7 @@ def pretty_printer::print_module_to_str(mod : @nast::module_t) : ptd::sim() {
 		state_print(ref state, '###' . string::lf() . '# (c) Atinea Sp. z o.o.' . string::lf() . '###' . string::lf() . 
 			string::lf() . string::lf());
 	}
-	var imps : ptd::arr(ptd::sim()) = [];
+	var imps : ptd::arr(ptd::string()) = [];
 	fora var imp (mod->import) {
 		array::push(ref imps, 'use ' . imp->name . ';');
 	}
@@ -66,13 +66,13 @@ def pretty_printer::print_module_to_str(mod : @nast::module_t) : ptd::sim() {
 	return state->out;
 }
 
-def print_fun_def(ref state : @wprinter::state_t, function : @nast::fun_def_t, module : ptd::sim()) : ptd::void() {
+def print_fun_def(ref state : @wprinter::state_t, function : @nast::fun_def_t, module : ptd::string()) : ptd::void() {
 	print_fun_def_head(ref state, function, module);
 	print_st(ref state, function->cmd, 0);
 }
 
-def print_fun_def_head(ref state : @wprinter::state_t, function : @nast::fun_def_t, module : ptd::sim()) : ptd::void() {
-	var name : ptd::sim() = '';
+def print_fun_def_head(ref state : @wprinter::state_t, function : @nast::fun_def_t, module : ptd::string()) : ptd::void() {
+	var name : ptd::string() = '';
 	match (function->access) case :pub {
 		name .= module . '::';
 	} case :priv {
@@ -139,7 +139,7 @@ def print_var_decl(var_decl : @nast::variable_declaration_t) : @wprinter::pretty
 	return wprinter::build_pretty_l(list);
 }
 
-def pind(ind : ptd::sim()) : ptd::sim() {
+def pind(ind : ptd::int()) : ptd::string() {
 	var r = '';
 	r .= string::chr(9) rep var i (ind);
 	return r;
@@ -212,7 +212,7 @@ def print_fun_arg(arg : @nast::fun_val_arg_t) : @wprinter::pretty_t {
 	return wprinter::build_pretty_op_l(ret);
 }
 
-def count_structs(struct : ptd::arr(@nast::fun_val_arg_t)) : ptd::sim() {
+def count_structs(struct : ptd::arr(@nast::fun_val_arg_t)) : ptd::int() {
 	var ret = 0;
 	fora var el (struct) {
 		++ret if el->val->value is :arr_decl || el->val->value is :hash_decl;
@@ -220,10 +220,10 @@ def count_structs(struct : ptd::arr(@nast::fun_val_arg_t)) : ptd::sim() {
 	return ret;
 }
 
-def get_compressed_fun_val(arg : @nast::value_t, open : ptd::sim(), close : ptd::sim()) : @wprinter::pretty_t {
+def get_compressed_fun_val(arg : @nast::value_t, open : ptd::string(), close : ptd::string()) : @wprinter::pretty_t {
 	var pprint : @wprinter::pretty_arr_t = [];
-	var begin : ptd::sim() = open;
-	var end : ptd::sim() = close;
+	var begin : ptd::string() = open;
+	var end : ptd::string() = close;
 	loop {
 		if (arg->value is :arr_decl) {
 			var a_arg = arg->value as :arr_decl;
@@ -248,16 +248,16 @@ def get_compressed_fun_val(arg : @nast::value_t, open : ptd::sim(), close : ptd:
 	return wprinter::build_pretty_arr_decl(pprint, begin, end);
 }
 
-def print_st(ref state : @wprinter::state_t, cmd : @nast::cmd_t, ind : ptd::sim()) : ptd::void() {
+def print_st(ref state : @wprinter::state_t, cmd : @nast::cmd_t, ind : ptd::int()) : ptd::void() {
 	state_print(ref state, ' ');
 	print_cmd(ref state, cmd, ind);
 }
 
-def get_fun_label(fun_name : ptd::sim(), fun_module : ptd::sim()) : ptd::sim() {
+def get_fun_label(fun_name : ptd::string(), fun_module : ptd::string()) : ptd::string() {
 	return fun_module eq '' ? fun_name : (fun_module . '::' . fun_name);
 }
 
-def string_to_nl(str : ptd::sim()) : ptd::sim() {
+def string_to_nl(str : ptd::string()) : ptd::string() {
 	return string::replace(str, '''', '''''');
 }
 
@@ -286,9 +286,9 @@ def is_to_change_ov(val : @nast::value_t) : @boolean_t::type {
 
 def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 	match (val->value) case :const(var const) {
-		return wprinter::build_sim(const);
+		return wprinter::build_sim(ptd::int_to_string(const));
 	} case :string(var str_arr) {
-		var arr : ptd::arr(ptd::sim()) = [];
+		var arr : ptd::arr(ptd::string()) = [];
 		fora var el (str_arr->arr) {
 			array::push(ref arr, '''' . string_to_nl(el));
 		}
@@ -314,7 +314,7 @@ def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 				wprinter::build_pretty_op_l([wprinter::build_sim(': '), print_val(ternary_op->thrd)])
 			]);
 	} case :bin_op(var bin_op) {
-		var op : ptd::sim() = bin_op->op;
+		var op : ptd::string() = bin_op->op;
 		if (op eq 'ARRAY_INDEX') {
 			return wprinter::build_pretty_a([
 					wprinter::build_pretty_l([print_val(bin_op->left), wprinter::build_sim('[')]),
@@ -371,7 +371,7 @@ def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 	} case :unary_op(var unary_op) {
 		return wprinter::build_pretty_bind(wprinter::build_sim(unary_op->op), print_val(unary_op->val));
 	} case :fun_val(var fun_val) {
-		var fun_name : ptd::sim() = get_fun_label(fun_val->name, fun_val->module) . '(';
+		var fun_name : ptd::string() = get_fun_label(fun_val->name, fun_val->module) . '(';
 		if (array::len(fun_val->args) == 1) {
 			var arg : @nast::value_t = fun_val->args[0]->val;
 			if (arg->value is :hash_decl || arg->value is :arr_decl) {
@@ -405,8 +405,8 @@ def print_val(val : @nast::value_t) : @wprinter::pretty_t {
 	}
 }
 
-def print_cond_mod(ref state : @wprinter::state_t, header : ptd::sim(), cmd : @nast::cmd_t, arg_list : ptd::arr(
-		@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::sim()) : ptd::void() {
+def print_cond_mod(ref state : @wprinter::state_t, header : ptd::string(), cmd : @nast::cmd_t, arg_list : ptd::arr(
+		@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::int()) : ptd::void() {
 	var ret : @wprinter::pretty_arr_t = [
 			wprinter::build_sim(header),
 			wprinter::get_sep(),
@@ -424,8 +424,8 @@ def print_cond_mod(ref state : @wprinter::state_t, header : ptd::sim(), cmd : @n
 	state_print(ref state, ';');
 }
 
-def print_loop(ref state : @wprinter::state_t, header : ptd::sim(), cmd : @nast::cmd_t, arg_list : ptd::arr(
-		@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::sim()) : ptd::void() {
+def print_loop(ref state : @wprinter::state_t, header : ptd::string(), cmd : @nast::cmd_t, arg_list : ptd::arr(
+		@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::int()) : ptd::void() {
 	var pprint : @wprinter::pretty_arr_t = [wprinter::build_sim(header), wprinter::get_sep()];
 	array::append(ref pprint, join_print_var_decl(arg_list));
 	array::push(ref pprint, wprinter::build_sim(' ')) if array::len(arg_list) > 0;
@@ -441,8 +441,8 @@ def print_loop(ref state : @wprinter::state_t, header : ptd::sim(), cmd : @nast:
 	print_st(ref state, cmd, ind);
 }
 
-def print_loop_or_mod(ref state : @wprinter::state_t, short : @nast::bool_t, header : ptd::sim(), cmd : @nast::cmd_t, 
-	arg_list : ptd::arr(@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::sim()) : ptd::void() {
+def print_loop_or_mod(ref state : @wprinter::state_t, short : ptd::bool(), header : ptd::string(), cmd : @nast::cmd_t, 
+	arg_list : ptd::arr(@nast::variable_declaration_t), cond : @nast::value_t, ind : ptd::int()) : ptd::void() {
 	if (short) {
 		print_cond_mod(ref state, header, cmd, arg_list, cond, ind);
 	} else {
@@ -450,7 +450,7 @@ def print_loop_or_mod(ref state : @wprinter::state_t, short : @nast::bool_t, hea
 	}
 }
 
-def print_try_ensure(value : @nast::try_ensure_t, typ : ptd::sim()) : @wprinter::pretty_t {
+def print_try_ensure(value : @nast::try_ensure_t, typ : ptd::string()) : @wprinter::pretty_t {
 	var pprint : @wprinter::pretty_arr_t = [wprinter::build_sim(typ)];
 	match (value) case :decl(var decl) {
 		array::append(ref pprint, [wprinter::get_sep(), print_var_decl(decl)]);
@@ -524,12 +524,12 @@ def print_simple_statement(cmd : @nast::cmd_t) : @wprinter::pretty_t {
 	}
 }
 
-def flush_sim_statement(ref state : @wprinter::state_t, st : @wprinter::pretty_t, ind : ptd::sim()) : ptd::void() {
+def flush_sim_statement(ref state : @wprinter::state_t, st : @wprinter::pretty_t, ind : ptd::int()) : ptd::void() {
 	wprinter::print_t(ref state, st, ind);
 	state_print(ref state, ';');
 }
 
-def print_cmd(ref state : @wprinter::state_t, cmd : @nast::cmd_t, ind : ptd::sim()) : ptd::void() {
+def print_cmd(ref state : @wprinter::state_t, cmd : @nast::cmd_t, ind : ptd::int()) : ptd::void() {
 	match (cmd->cmd) case :if(var as_if) {
 		print_loop(ref state, 'if', as_if->if, [], as_if->cond, ind);
 		fora var elseif (as_if->elsif) {
