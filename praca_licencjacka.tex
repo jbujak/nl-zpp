@@ -301,8 +301,28 @@ Przykładowe komendy nlasma:
 \end{itemize}
 \section{Translacja drzewa AST do nlasma}
 \section{Generowanie kodu C na podstawie nlasma}
+Jak zostało to omówione w poprzednim rozdziale, \texttt{nlasm} został zaprojektowany z myślą o ułatwieniu dalszej kompilacji. Wobec tego generowanie kodu C jest bardzo proste.
+
+
+Pierwszym etapem jest wygenerowanie pewnego kodu nagłówkowego programu. Zawiera on między innymi komentarz z informacją o tym, że dany plik został wygenerowany automatycznie, instrukcje importujące nagłówki C biblioteki standardowej nianiolanga, czy też pewne instrukcje inicjujące, na przykład wartości stałych. Warto wspomnieć, że pliki \texttt{.c} i \texttt{.h} generowane są równolegle, gdyż pozwala to na przetwarzanie zgodnie z kolejnością semantyczną, to znaczy na przykład drukowanie wszelkich informacji o funkcji można oddelegować do raz wywoływanej procedury.
+
+
+Drugim etapem jest wygenerowanie kodu odpowiedzialnego za obsługę typów, czyli ich deklaracje, definicje oraz potrzebne do obsługi funkcje. Przed zmianami wytworzonymi w ramach tego projektu etap ten nie występował, gdyż kod C używał ogólnego typu \texttt{ImmT}, który obsługiwać można biblioteką standardową nianiolanga. Obecnie, ponieważ każdy typ \texttt{own} tworzy własny typ na poziomie C, a funkcje go obsługujące generowane są na poziomie nianiolanga, to podejście zostało zmienione. Ze względu na fakt, że definicje w nianiolangu nie muszą występować w określonej kolejności, lecz w C już tak, konieczne jest sortowanie topologiczne, z uwzględnieniem możliwości wyodrębnionej deklaracji typu. Jest to potrzebne do obsługi sytuacji, w której typ \texttt{A} potrzebuje do swojej definicji posługiwać się w pełni typem \texttt{B}, który to z kolei posługuje się wskaźnikiem na typ \texttt{A}.
+
+
+Trzecim i ostatnim etapem jest wygenerowanie kodu odpowiedzialnego za same funkcje nianiolanga. Komendy nlasm w bardzo prosty sposób tłumaczą się na język C, wobec czego generator na tym etapie wykonuje niewiele logiki, lecz jedynie pracę związaną z właściwie słownikowym przełożeniem instrukcji mając jedynie na uwadze pewne szczegóły techniczne. Do tych szczegółów należy, pośród innych pomniejszych zadań, utworzenie wrapperów na funkcje tak, by można było je wywoływać także mając w pamięci tablicę argumentów, obsługa wskaźników, czy też używanie funkcji zwalniających pamięć, gdy liczniki referencji spadają do zera oraz tworzenie komentarzy będących informacją, której linii oryginalnego programu odpowiada dana seria instrukcji.
+
+
+Po wykonaniu wszystkich trzech etapów pliki \texttt{.c} i \texttt{.h} danego modułu gotowe są do zapisania na dysku, a kompilator przechodzi do tłumaczenia kolejnego modułu.
 \section{Implementacja typów NianioLanga w C}
 \label{sec:c_types_implementation}
+Implementacja typów \texttt{ptd} opiera się na generycznym typie \texttt{ImmT}. Typ ten zdefiniowany jest jako \texttt{void*}, a w czasie wykonania programu wskazuje na konkretne struktury danego obiektu. Każdy obiekt na pierwszych bajtach zawiera informacje o tym, jakim jest rzeczywiście typem, oraz jaką wartość ma licznik referencji. Jest to powszechny schemat symulowania programowania obiektowego w językach, które takowego nie wspierają, a takim językiem jest przecież C.
+
+
+Operacje na danych definiowane są przez szereg funkcji dostępnych w bibliotece standardowej nianiolanga, dokompilowywanej do każdego programu, to znaczy każdy moduł nianiolanga importuje jej nagłówki. Spełniają one podstawową funkcjonalność obsługi arytmetyki, struktur danych, operacji I/O.
+
+
+Cała obsługa jest niezwykle prosta i ma charakter możliwie najbardziej generyczny, wobec czego jest niezwykle niewydajna, w szczególności w kontekście operacji na liczbach lub wartościach logicznych. Celem projektu była zmiana tej sytuacji i umożliwienie kompilatorowi C zastosowanie większej ilości optymalizacji, co opisane jest w kolejnych rozdziałach.
 
 \chapter{Zmiana systemu typów}
 \section{Rozdzielenie typu \texttt{ptd::sim}}
