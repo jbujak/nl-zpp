@@ -404,11 +404,124 @@ Cała obsługa jest dość prosta i ma charakter możliwie najbardziej generyczn
 operacji na liczbach lub wartościach logicznych. Celem projektu była zmiana tej sytuacji i umożliwienie kompilatorowi C zastosowanie większej liczby
 optymalizacji, co opisane jest w kolejnych rozdziałach.
 
+
 \chapter{Zmiana systemu typów}
+\section{Niezmienione cechy języka}
+Z powodu dużego zakresu zmian przeprowadzonych w ramach niniejszej pracy, ważnym zadaniem było wyodrębnienie
+podstawowych cech NianioLanga, które nie mogą ulec zmianie w wyniku jego rozwoju. Takimi cechami są:
+\begin{itemize}
+ \item Niezmienialność strukur -- wartość zmiennej nie może ulec zmianie pomiędzy dwiema kolejnymi jawnymi
+ modyfikacjami
+ \item Ścisła opcjonalność typów -- poprawny program po usunięciu wszystkich informacji o typach musi pozostać
+ poprawny, a jego semantyka nie może się zmienić
+\end{itemize}
+Zachowanie powyższych cech zostało uznane za priorytet i miało wpływ na wiele podjętych podczas projektowania
+decyzji.
+
 \section{Rozdzielenie typu \texttt{ptd::sim}}
+Najpoważniejszą zmianą, jaka zaszła w systemie typów w wynik niniejszego projektu było rozdzielenie
+typu \texttt{ptd::sim} na typy \texttt{ptd::int} i \texttt{ptd::string} oraz rezygnacja ze wsparcia
+języka dla liczba zmiennoprzecinkowych. Zmiana ta niesie ze sobą duże konsekwencje, przede wszystkim łamie
+ona kompatybilność wsteczną, przez co duża część dotychczas poprawnych programów nie da się skompilować nową
+wersją kompilatora. Decyzja o wprowadzeniu tej zmiany była podjęta z dwóch powodów:
+\begin{itemize}
+ \item Po pierwsze, wbrew początkowym założeniom języka, semantyka typów liczb całkowitych i łańcuchów znaków
+ okazała się zupełnie inna. Pierwszy z nich jest wykorzystywany do operacji arytmetycznych i indeksowania tablic,
+ podczas gdy drugi służy do indeksowania tablic asocjacyjnych. Obszary ich zastosowań są w dużej części rozłączne
+ i brak kontroli rzutowania pomiędzy nimi prowadzi nieraz do błędnego modelowania dziedziny, co w efekcie
+ może skutkować trudnymi do wykrycia błędami.
+ \item Po drugie, narzut związany z przechowywaniem i sprawdzaniem typu zmiennej jest bardzo duży, zwłaszcza
+ w przypadku liczb całkowitych. Rozdzielenie typu prostego na dwa typy umożliwiło generowanie bardziej
+ wyspecjalizowanego kodu, co w efekcie znacząco przyspieszyło programy wynikowe.
+\end{itemize}
+Usunięcie obsługi liczb zmiennoprzecinkowych wynikało z analizy istniejącego kodu i było wykonane niejako
+przy okacji. W trakcie analizy okazało się, że programy niemal nie korzystają w operacji na liczbach
+zmiennoprzecinkowych, a ich uwzględnienie w języku znacząco komplikuje kod kompilatora. Jednocześnie,
+z uwagi na łatwość integracji programów napisanych w NianioLangu z programami napisanymi w C, obsługa
+liczb zmiennoprzecinkowych może zostać w razie potrzeby dodana w formie biblioteki.
+
 \section{Typy \texttt{own}}
-  \emph{Jaki jest cel tych typów, ich semantyka, jakie ograniczenia na ich użycie
-    nakładamy (w stosunku do typów ptd).}
+\subsection{Powody wprowadzenie typów \texttt{own}}
+Drugą dużą zmianą wprowadzoną w systemie typów było dodanie całkiem nowej przestrzeni typów \texttt{own} obok
+istniejącej przestrzeni \texttt{ptd}. Celem nowych typów miała być możliwość efektywnej kompilacji do
+prostych konstrukcji języka C, co miało pozwolić na generowanie efektywniejszych programów wynikowych. 
+
+\begin{wrapfigure}[19]{r}{.5\textwidth}
+\begin{lstlisting}[caption={Przykład funkcji nianio},label={lst:nianio},aboveskip=-15pt]
+def nianio::state() {
+    return ptd::rec({
+        num => ptd::int(),
+        bool => ptd::bool(),
+    });
+}
+def nianio::nianio(ref state : @nianio::state, cmd) {
+    match (cmd) case :inc_num(var inc) {
+        inc_num(ref state, inc);
+    } case :neg_bool {
+         state->bool = !state->bool;
+    }
+}
+def inc_num(ref state : @nianio::state, inc) {
+    state->num += inc;
+}
+\end{lstlisting}
+\end{wrapfigure}
+Szczególnym przypadkiem użycia dla nowych typów miał być opis stanu we wzorcu nianio.
+Abstrahując od szczegółów, istotą wzorca nianio jest utrzymywanie stanu aplikacji w jednej zmiennej
+i modyfikowanie go jedynie poprzez polecenia wysyłane do funkcji nianio (przykład znajduje się
+na listingu \ref{lst:nianio}). W przypadku bardziej skompilowanych aplikacji o złożonym stanie,
+zmienna \texttt{state} może być bardzo głęboko zagnieżdzona, a ponieważ modyfikacja liści jest najczęściej
+występującą operacją we wzorcu nianio, więc czas dostępu do liści zagnieżdżonej
+struktury ma duże znaczenie.
+
+Inną często wykonywaną operacją jest przekazywanie stanu lub jego części przez wartość-wynik do innej funkcji,
+żeby uczytelnić funkcję nianio przez wydzielenie z niej szczegółów implementacji. Z tego względu zmienna
+przechowująca stan powinna móc być niskim kosztem przekazywana przez wartość-wynik. 
+
+Typy \texttt{own} powinny więc spełniać powyższe wymagania, zachowując jednocześnie podstawowe cechy NianioLanga.
+
+\subsection{Ograniczenia typów \texttt{own} wynikające z założeń NianioLanga}
+Ponieważ nie było możliwe spełnienie wymagań stawianych przed typami \texttt{own} przy zachowaniu pełni
+możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać ograniczone w następujący sposób:
+\begin{itemize}
+ \item Zakaz kopiowania zmiennych -- dla zmiennych \texttt{a,b} typu \texttt{own} przypisanie
+ \texttt{a = b} nie jest poprawną instrukcją i powinno zostać wyłapane podczas sprawdzania typów.
+ Wynika to z faktu, że głębokie kopiowanie jest bardzo kosztowną operacją, a kopiowanie leniwe wymaga
+ utrzymywania licznika referencji, którego zmienne typu \texttt{own} nie powinny mieć.
+ Jednocześnie w podstawowym przypadku użycia -- we wzorcu nianio -- nie ma potrzeby kopiowania stanu.
+ Istnieje w nim tylko jedna kopia zmiennej stanowej, przekazywana do kolejnych funkcji i modyfikowana w miejscu.
+ \item Zakaz wielokrotnego przekazywania argumentów przez \texttt{ref} -- dla zmiennej \texttt{a} typu
+ \texttt{own} wywołania \texttt{f(ref a, ref a)} oraz \texttt{f(ref a, ref a->b)} nie są poprawnymi wyrażeniami.
+ Argumenty \texttt{ref} to argumenty przekazywane przez wartość-wynik.
+ Semantyka takiego przekazywania argumentów wygląda tak, że przed wywołaniem funkcji przekazywana zmienna
+ est kopiowana do argumentu, a po zakończeniu wywołania następuje kopiowanie z powrotem.
+ Zapobiega to naruszeniu niezmienialności struktur,
+ które miałoby miejsce gdyby argumenty były przekazywane przez referencję (listing \ref{lst:ref}).
+ Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implmementacja takiej semantyki wymaga
+ faktycznego skopiowania zmiennej do argumentów, co jest zabronione w przypadku zmiennych typu \texttt{own}.
+\begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref}]
+int main() [
+	var a = 1;
+	f(&a, &a);
+}
+def f(int *a, int *b) {
+	printf("%d\n", a); // 1
+	*b++;
+	printf("%d\n", a); // 2
+}
+\end{lstlisting}
+ \item Podobnie, zabronione są wszelkie operacje, w wyniku których mogłoby dojść do uzyskania dostępu
+ do jednej wartości z dwóch różnych zmiennych jednocześnie. W sytacjach tego wymagających możliwe jest tymczasowe
+ przeniesienie własności z jednej zmiennej na drugą. Taka sytuacja występuje na przykład podczas iteracji
+ tablicy asocjacyjnej pętlą \texttt{forh} (listing \ref{lst:forh}).
+\begin{lstlisting}[caption={Odwołanie do zmiennej, która utraciła własność},label={lst:forh}]
+var h : own::hash(ptd::int());
+forh var key, ref value (h) {
+	value++; # Ok
+	h{key}++; # Error
+}
+\end{lstlisting}
+\end{itemize}
 
 
 \chapter{Rozszerzenie nlasma}
