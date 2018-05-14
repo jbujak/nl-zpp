@@ -21,6 +21,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{textcomp}
+\usepackage{wrapfig}
 
 
 \lstset{
@@ -449,17 +450,19 @@ Podobnie, jak w przypadku liczb całkowitych zapewnia to dobrą wydajność oper
 ze względu na bezpośrednie wsparcie procesora i kompilatora \texttt{gcc}.
 
 \subsection{Ograniczenia kompilacji typów prostych}
-Z uwagi na leżące u podstaw języka założenie o opcjonalności typów nie było możliwe
-zagwarantowanie efektywnej kompilacji typów prostych w każdych warunkach.
-Na przykład kod przedstawiony na listingu \ref{lst:immt_variable} zostanie skompilowany do ciągu operacji na mniej efektywnym typie
-\texttt{ImmT}. Spowodowane jest to zmianą typu zmiennej \texttt{x} w trakcie działania programu,
-przez co nie można jej przypisać żadnego z typów prostych.
-\begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable}]
+\begin{wrapfigure}[10]{r}{.4\textwidth}
+\begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable},aboveskip=-15pt]
 var x;
 x = 'a';
 x = 1;
 x++;
 \end{lstlisting}
+\end{wrapfigure}
+Z uwagi na leżące u podstaw języka założenie o opcjonalności typów nie było możliwe
+zagwarantowanie efektywnej kompilacji typów prostych w każdych warunkach.
+Na przykład kod przedstawiony na listingu \ref{lst:immt_variable} zostanie skompilowany do ciągu operacji na mniej efektywnym typie
+\texttt{ImmT}. Spowodowane jest to zmianą typu zmiennej \texttt{x} w trakcie działania programu,
+przez co nie można jej przypisać żadnego z typów prostych.
 
 \section{Typy złożone}
 Dla każdego typu złożonego z przestrzeni \texttt{ptd} został utworzony odpowiadający mu typ
@@ -477,17 +480,65 @@ maksymalną pojemność i wskaźnik na jej pierwszy element. Do programu wynikow
 dodawane są również funkcje,
 pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
 o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
-została zaimplmentowana w sposób opisany na przykład w książce
+została zaimplementowana w sposób opisany na przykład w książce
 \textit{Wprowadzenie do algorytmów} \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
-tablica zostaje powiększona dwukrotnie. Dzięki takiej implmementacji operacja
+tablica zostaje powiększona dwukrotnie. Dzięki takiej implementacji operacja
 ta działa w zamortyzowanym czasie stałym.
 
 Dla każdego typu tablicowego zostaje także wygenerowana funkcja zwalniająca pamięć zajmowaną
 przez tablicę. Wywołuje ona odpowiednią funkcję zwalniającą pamięć dla każdego elementu,
 a następnie zwalnia pamięć, w której znajdowały się elementy tablicy.
 \subsection{Rekordy}
+Rekord był typem, od którego zaczęła się idea typów \texttt{own}. Było tak, ponieważ rekordy jako jedyny
+typ złożony posiadają bezpośrednie odzwierciedlenie w typach języka C, czyli \texttt{struct}.
+Każda definicja typu rekordowego z rodziny \texttt{own} jest kompilowana do definicji typu \texttt{struct}
+w języku C. Każde pole rekordu odpowiada osobnemu polu struktury o odpowiadającym typie i nazwie.
+Istotne jest, że typy pola struktury są wartościami, a nie wskaźnikami, co pozwoliło uniknąć niepotrzebnych
+dynamicznych alokacji pamięci i umożliwiło alokację struktur w całości na stosie.
+
+Dzięki takiej reprezentacji rekordów w pamięci możliwe było skompilowanie dostępów do pól rekordu wykorzystując
+operatory \texttt{.} i \texttt{->} języka C, co jest znacznym usprawnieniem w stosunku do poprzedniej implementacji,
+używającej w tym celu tablic haszujących.
 \subsection{Typy wariantowe}
-\subsection{Hashe}
+\begin{wrapfigure}[12]{r}{.4\textwidth}
+\begin{lstlisting}[caption={Rekurencyjna definicja struktury drzewiastej},label={lst:tree},aboveskip=-15pt]
+def tree::node() {
+    return own::var({
+        node => own::rec({
+            left => @tree::node,
+            right => @tree::node,
+            value => ptd::int(),
+		}),
+        leaf => ptd::none(),
+	});
+})
+\end{lstlisting}
+\end{wrapfigure}
+Typ wariantowy, inaczej nazywany tagowaną unią (\textit{tagged union}), jako jedyny pozwala wprowadzić
+w NianioLangu typy rekurencyjne. O ile rekurencyjne rekordy są niedozwolone ze względu na niemożliwość ich
+pełnej inicjalizacji, o tyle warianty pozwalają przerwać rekurencję na pewnym poziomie, tym samym unikając
+problemu nieskończonych struktur (przykład takiej definicji znajduje się na listingu \ref{lst:tree}).
+Ta cecha wymusiła przechowywanie danych w wariancie wyłącznie jako wskaźniki na właściwe obiekty.
+W celu oszczędności pamięci przy zachowaniu sprawdzania poprawności typów przez kompilator C definicje typów
+wariantowych kompilowane są do rekordów, zawierających całkowitoliczbowe pole określające, który z wariantów
+jest przechowywany i unię wskaźników na typy poszczególnych możliwych wartości.
+Zastosowanie liczby całkowitej jako wartości określający konkretny wariant umożliwiło bardziej efektywne
+rozpoznawanie wariantu i skróciło czas wykonania instrukcji \texttt{match} (poprzednia implmementacja do
+odróżniania wariantów używała nazwy wariantu z kodu, co wymuszało kosztowne porównywanie łańcuchów znaków
+w trakcie działania programu).
+\subsection{Tablice asocjacyjne}
+Tablice asocjacyjne, nazywane w NianioLangu hashami, to struktury podobne do tablic, ale indeksowane dowolnymi
+ciągami znaków. Są one zdecydowanie bardziej wysokopoziomowe od wcześniej opisanych struktur i nie mają
+oczywistego odpowiednika w języku C, więc zysk ze skompilowania ich jako typy \texttt{own} nie jest istotny.
+Niemniej jednak zostały one uwzględnione, ponieważ ze względu na ograniczenia typów \texttt{own} nie mogą
+one być zawarte w typach \texttt{ptd}, więc dodanie typu \texttt{own::hash} było jedynym sposobem na efektywną
+kompilację struktur zawartych wewnątrz tablic asocjacyjnych.
+
+Sama implmementacja dostępów do elementów tablic asocjacyjnych nie zmieniła się znacząco w porównaniu
+do poprzedniej implementacji. Główną różnicą jest generowanie osobnej funkcji dostępu dla każdego zdefiniowanego
+typu, co zapewnia zachowanie typowania na poziomie C i umożliwia pominięcie utrzymywania licznika referencji
+tam, gdzie jest on zbędny.
+
 \section{Konwersja own $\rightarrow$ im}
 \label{sec:own_to_im}
 Konwersja typów \texttt{own} na typ \texttt{ptd::im}, który jest uniwersalną reprezentacją typów z przestrzeni \texttt{ptd},
