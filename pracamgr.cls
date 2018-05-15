@@ -68,7 +68,7 @@
 \setcounter{liczbaAutorow}{0}
 
 
-\newcommand{\autorZAlbumem}[2]{\begin{minipage}{0.45\textwidth}\centering{\Large\bfseries #1}\\[2mm]\ifmyclass@en Student no.\else Nr albumu:\fi\ #2\end{minipage}\ }
+\newcommand{\autorZAlbumem}[2]{\begin{minipage}{0.45\textwidth}\centering{\Large\bfseries #1}\\[0.4mm]\ifmyclass@en Student no.\else Nr albumu:\fi\ #2 \vspace{5mm} \end{minipage}\ }
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Wersja angielska
