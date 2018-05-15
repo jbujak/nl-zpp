@@ -359,6 +359,7 @@ Przykładowe komendy nlasma:
 \item \texttt{move} -- kopiuje wartość między dwoma rejestrami
 \end{itemize}
 \section{Translacja drzewa AST do nlasma}
+\label{sec:translation}
 \section{Generowanie kodu C na podstawie nlasma}
 Jak zostało to omówione w poprzednim rozdziale, \texttt{nlasm} został zaprojektowany z myślą o ułatwieniu dalszej kompilacji. Wobec tego generowanie
 kodu C jest bardzo proste.
@@ -526,7 +527,258 @@ forh var key, ref value (h) {
 
 \chapter{Rozszerzenie nlasma}
 \section{Przekazywanie informacji o typach z drzewa AST}
+Pierwszą zmianą, jaka została wprowadzona w nlasmie było dodanie informacji o typach do jego rejestrów.
+Było to konieczne, aby umożliwić generowanie poprawnych typów w kodzie C, ponieważ generator kodu wynikowego
+nie ma już dostępu do drzewa AST -- cała potrzebna mu informacja musi być zawarta w kodzie pośrednim.
+W związku z tym do każdego rejestru nlasma została dodana informacja o jego typie.
+W trakcie tworzenia wynikowego kodu C generator bierze pod uwagę tę informację i dobiera typ zmiennych języka C
+w zależności od typów rejestrów.
+
+Typy rejestrów zostały uproszczone w stosunku do typów obliczanych podczas etapu sprawdzania typów.
+Możliwe typy rejestrów to:
+\begin{itemize}
+ \item \texttt{im} -- dla wszystkich zmiennych typu \texttt{im}. Przed wprowadzeniem typowanych rejestrów
+ każdy rejestr był tego typu.
+ \item \texttt{int} -- dla zmiennych całkowitoliczbowych.
+ \item \texttt{string} -- dla łańcuchów znaków
+ \item \texttt{bool} -- dla wartości logicznych
+ \item \texttt{rec} -- dla rekordów typu \texttt{own}
+ \item \texttt{arr} -- dla tablic typu \texttt{own}
+ \item \texttt{variant} -- dla wariantów typu \texttt{own}
+ \item \texttt{hash} -- dla zmiennych typu \texttt{own::hash}
+\end{itemize}
+
+
+Ponieważ w wersji nlasma sprzed wprowadzenia typów \texttt{own} wszystkie rejestry były jednego typu, więc
+dodanie rejestrów typowanych wymagało zdefiniowania zachowania typów na poziomie nlasma.
+Pierwszym elementem, który należało uwzglednić była kwestia wykonywania operacji na rejestrach różnych typów.
+W celu uproszczenia semantyki nlasma została podjęta decyzja, żeby jedyną instrukcją, która może powodować
+rzutowanie pomiędzy różnymi typami była instrukcja \texttt{move}.
+Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator trafi na instrukcję z argumentem
+o niepoprawnym typie, zgłosi błąd. Drugą ważną kwestią była decyzja co do przeniesienia opcjonalności typów
+na poziom nlasma. Ponieważ w kompilatorze istnieje możliwość bezpośredniej interpretacji nlasma bez kompilacji,
+opcjonalność typów na poziomie nlasma okazała się koniecznością, którą należało uwzględnić podczas projektowania
+rozszerzenia nlasma o rejestry typowane.
+
+Przykłady poprawnego i niepoprawnego kodu nlasm znajdują się na listingach
+\ref{lst:reg_types_1} i \ref{lst:reg_types_2}.
+Polecenie \texttt{get\_frm\_idx}, które służy do dostępu do elementu tablicy pod konkretnym indeksem, oczekuje,
+że rejestr, w którym przechowywany jest indeks będzie typu \texttt{int}.
+Jeśli rejestr z indeksem jest innego typu, należy wcześniej wykonać rzutowanie.
+
+\noindent\begin{minipage}[t]{.45\textwidth}
+\begin{lstlisting}[caption={Niepoprawny typowo kod nlasm},label={lst:reg_types_1}]
+[
+    :get_frm_idx({
+        dest => {
+            reg_no => 2,
+            type => :im,
+        },
+        idx => {
+            reg_no => 1,
+            type => :im,
+        },
+        src => {
+            reg_no => 0,
+            type => :im,
+        },
+    }),
+]
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[t]{.45\textwidth}
+\begin{lstlisting}[caption={Poprawny kod nlasm z rzutowaniem},label={lst:reg_types_2}]
+[
+    :move({
+        dest => {
+            reg_no => 3,
+            type => :int,
+        },
+        src => {
+            reg_no => 1,
+            type => :im,
+        },
+    }),
+    :get_frm_idx({
+        dest => {
+            reg_no => 2,
+            type => :im,
+        },
+        idx => {
+            reg_no => 3,
+            type => :int,
+        },
+        src => {
+            reg_no => 0,
+            type => :im,
+        },
+    }),
+]
+\end{lstlisting}
+\end{minipage}
+
+Należy jednak zaznaczyć, że opisane wyżej konwersje przy użyciu polecenia \texttt{move} dotyczą jedynie
+rzutowania pomiędzy typem \texttt{im} a typami \texttt{int}, \texttt{string} i \texttt{bool}.
+Decyzja taka została podjęta, ponieważ konwersje te są stosunkowo tanie i bardzo szeroko wykorzystywane
+Inne konwersje muszą być obsłużone na etapie sprawdzania typów.
+
+Przykład programu, dla którego zostanie wygenerowane rzutowanie podobne do przedstawionego wyżej
+znajduje się na listingu \ref{lst:reg_im}.
+Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, więc jest typu \texttt{im},
+a zatem także rejestr, w którym jest przechowywana musi być typu \texttt{im}.
+Jednak, jak zostało wspomniane wyżej, rejestr użyty do indeksowania tablicy musi być typu \texttt{int}.
+Wymusza to wprowadzenie rejestru pomocniczego tego typu i użycie rzutowania przy pomocy polecenia \texttt{move},
+analogicznie jak na listingu \ref{lst:reg_types_2}.
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Indeksowanie tablicy zmienną typu \texttt{im}},label={lst:reg_im}]
+var x;
+var arr = [1,2,3];
+x->i = 'a';
+x->i = 1;
+arr[x->i];
+\end{lstlisting}
+\end{minipage}
+
+\section{Tłumaczenie dostępów do zmiennych na kod nlasm}
+Jedną z głównych zalet nlasma jest prostota jego pojedynczych instrukcji, dzięki czemu większość
+pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla wszystkich językow docelowych.
+Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, to instrukcja NianioLanga
+\texttt{a->b[0] = 1} zostanie przetłumaczona do ciągu poleceń nlasma
+\texttt{get\_hash\_val}, \texttt{get\_frm\_idx}, \texttt{set\_at\_index}, \texttt{set\_hash\_val} zgodnie
+z opisem z rozdziału \nameref{sec:translation}.
+
+Niestety to podejście nie jest odpowiednie w przypadku dostępów do zmiennych typu own.
+Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} jest taka, że wartość pobierana
+z hasha lub tablicy jest leniwie kopiowana do rejestru docelowego, dzięki czemu także na poziomie nlasma
+nie występuje pojęcie referencji, a niezmienialność wartości jest zachowana.
+Leniwe kopiowanie zmiennych typu \texttt{own} nie jest możliwe, więc należało wybrać inny sposób na
+tłumaczenie dostępów do zmiennych \texttt{own} w efektywny sposób.
+
+Ponieważ celem typów \texttt{own} jest ich efektywna kompilacja do języka C, więc potrzebne było
+wprowadzenie do nlasma w jakiś sposób pojęcia referencji w sposób współgrający z jego dotychczasową filozofią.
+W tym celu zostały wprowadzone polecenia \texttt{use\_field}, \texttt{use\_index}, \texttt{use\_hash\_index} oraz
+\texttt{use\_variant}, umożliwiające pobranie referencji do elementu z wnętrza odpowiednio rekordu, tablicy, hasha
+i wariantu, oraz odpowiadające im polecenia \texttt{release\_*}.
+
+Polecenia \texttt{use\_*} oprócz pobrania referencji powodują także przeniesienie własności zmiennej z rejestru
+źródłowego na rejestr docelowy, a polecenia \texttt{release\_*} służą do zwrócenia własności po zakończeniu
+operacji. Kod nlasm, w którym następuje odwołanie do rejestru, który nie ma w tym momencie własności zmiennej,
+jest uznawany za niepoprawny. Dzięki takiemu rozwiązaniu w poprawnym kodzie nlasma nie ma możliwości wystąpienia
+współbieżnego dostępu do wartości poprzez różne referencje do niej.
+
+Dzięki dodaniu do nlasma pojęcia referencji znacząco zmniejszył się koszt modyfikacji elementów w głęboko
+zagnieżdżonych strukturach. W odróżnieniu od implementacji dla typów \texttt{im}, zmienne typu \texttt{own}
+są modyfikowane w miejscu -- podczas modyfikacji nie są tworzone żadne dodatkowe struktury, a jedynie
+kolejne rejestry wskaźnikowe. Rozwiązanie dla typów \texttt{im} przypomina podejście funkcyjne:
+najpierw dany element jest krok po kroku wyjmowany poprzez odpakowywanie kolejnych struktur
+(polecenia \texttt{get\_*}), następnie jest on modyfikowany, a na końcu jest pakowany z powrotem (polecenia
+\texttt{set\_*}). W odróżnieniu od tego, rozwiązanie dla typów \texttt{own} jest podobne do podejścia
+imperatywnego: poprzez ciąg poleceń \texttt{use\_*} obliczana jest referencja do modyfikowanego elementu, a
+następnie element ten jest modyfikowany poprzez odwołanie do tej referencji.
+Następujący potem ciąg poleceń \texttt{release\_*}
+spełnia jedynie funkcję wnioskowania o poprawności kodu nlasm i nie powoduje narzutu w czasie wykonania programu.
+Jednocześnie zachowana jest możliwość zignorowania typów rejestrów i traktowania wszystkich jako rejestry
+typu \texttt{im}.
+
+Przykład modyfikacji zmiennej typu \texttt{own} przetłumaczonej na nowe polecenia nlasma znajduje się na listingu 
+\ref{lst:own_access_nlasm}.
+
+\noindent\begin{minipage}[t]{.45\textwidth}
+\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} w NianioLangu}]
+# a : own::rec({
+#    b => own::arr(ptd::int()),
+# })
+
+a->b[0] = 1;
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[t]{.45\textwidth}
+\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} przetłumaczona na nlasm},label={lst:own_access_nlasm}]
+[
+    :use_field({
+        old_owner => {
+            reg_no => 0, type => :rec,
+        },
+        new_owner => {
+            reg_no => 2, type => :arr,
+        },
+        field_name => "b",
+    }),
+    :load_const({
+        dest => {
+            reg_no => 3, type => :int,
+        },
+        val => 0,
+    }),
+    :use_index({
+        index => {
+            reg_no => 3, type => :int,
+        },
+        new_owner => {
+            reg_no => 4, type => :int,
+        },
+        old_owner => {
+            reg_no => 2, type => :rec,
+        },
+    }),
+    :load_const({
+        dest => {
+            reg_no => 4, type => :int,
+        },
+        val => 1,
+    }),
+    :release_index({
+        current_owner => {
+            reg_no => 4, type => :int,
+        },
+        index => {
+            reg_no => 3, type => :int,
+        },
+    }),
+    :release_field({
+        current_owner => {
+            reg_no => 2, type => :arr,
+        },
+        field_name => "b",
+    }),
+]
+\end{lstlisting}
+\end{minipage}
+
 \section{Statyczne sprawdzanie poprawności}
+Decyzja o wprowadzeniu pojęcia referencji i własności zmiennej do nlasma wiązała się z ryzykiem generowania
+kodu nlasm, którego semantyka nie odpowiada semantyce zmiennych NianioLanga.
+Może to prowadzić do trudnych do wykrycia błędów oraz naruszeń bezpieczeństwa, które przed wprowadzeniem
+typów \texttt{own} było zagwarantowane na poziomie składni nlasma.
+
+Aby nie tracić zupełnie gwarancji dawanych przez nlasm można dodać do kompilatora moduł
+sprawdzający poprawność wygenerowanego kodu nlasma. Jest to możliwe dzięki odpowiedniemu zdefiniowaniu poleceń
+\texttt{use\_*} i \texttt{release\_*}. Z każdym poleceniem nlasma można powiązać listę niedostępnych
+rejestrów, czyli rejestrów które na pewnej ścieżce wykonania mogą nie posiadać własności powiązanej zmiennej.
+Jeśli polecenie próbuje odczytać lub zmodyfikować któryś z niedostępnych rejestrów, powinien zostać zgłoszony
+błąd.
+
+Generowanie listy niedostępnych rejestrów dla każdego polecenia może zostać wykonane przez kilkukrotne
+liniowe przejście po liście poleceń z uwzględnieniem możliwych skoków.
+Innym możliwym podejściem jest zapisywanie listy niedostępnych rejestrów bezpośrednio
+w kodzie nlasma, tak aby zawierał on łatwy do sprawdzenia dowód poprawności.
+Zagadnienia dotyczące statycznego sprawdzania poprawności nlasma pozostają jednak poza zakresem niniejszej
+pracy.
+
+\section{Pozostałe nowe polecenia}
+Oprócz poleceń pozwalających na dostęp do zmiennych typu \texttt{own} do nlasma zostały dodane także inne 
+polecenia, które wcześniej były realizowane jako wywołania funkcji bibliotecznych.
+Są to polecenia \texttt{array\_len} i \texttt{array\_push}, pozwalające na obsługę tablic typu \texttt{own}
+oraz rodzina poleceń \texttt{hash\_*\_iter} pozwalających na implementację pętli \texttt{forh},
+służącej do iterowania po elementach hasha.
+
+Każde z powyższych poleceń było w poprzedniej wersji kompilatora generowane jako polecenie \texttt{call},
+którego argumentem była nazwa konkretnej funkcji bibliotecznej realizującej dane zadanie (na przykład
+\texttt{c\_rt\_lib0array\_len} z bilioteki \texttt{c\_rt\_lib}). Podejście to wymagało zmiany ze względu
+na to, że w przypadku typów \texttt{own} dla każdego typu generowane są osobne funkcje o unikalnych
+nazwach tworzonych przez generator i nieznanych w momencie tłumaczenia drzewa AST do kodu nlasma.
+Dzięki dodaniu nowych poleceń możliwe było zaimplementowanie generowania nazw tych funkcji w momencie
+generowania kodu C, kiedy ich nazwy sa już znane.
 
 \chapter{Nowe implementacje typów}
 \section{Typy proste}
