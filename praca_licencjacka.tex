@@ -203,6 +203,15 @@ kompilacji NianioLanga do języków innych niż C do czasu implementacji nowych 
 To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 
 \section{Podstawowe pojęcia}
+\begin{itemize}
+  \item[] \textbf{AST} -- drzewo składni abstrakcyjnej, reprezentacja programu w formie drzewa, w którym każdy węzeł
+    reprezentuje konstrukcję języka, a jego synowie reprezentują części składowe tej konstrukcji
+  \item[] \textbf{nlasm} -- język pewnej maszyny rejestrowej, będący językiem pośrednim w kompilatorze NianioLanga
+  \item[] \textbf{parsowanie, analiza składniowa} -- proces przetwarzania kodu źródłowego programu na równoważne drzewo AST
+  \item[] \textbf{analiza semantyczna} -- proces sprawdzania programu na poziomie znaczenia poszczególnych instrukcji
+  \item[] \textbf{translacja} -- proces tłumaczenia drzewa AST na język pośredni
+  \item[] \textbf{generacja} -- proces tłumaczenia języka pośredniego na język docelowy
+\end{itemize}
 
 \chapter{Metodyka pracy}
 Prace nad kodem prowadzone były regularnie od połowy października do maja,
