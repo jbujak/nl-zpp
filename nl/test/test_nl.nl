@@ -6,7 +6,6 @@
 use test_forh;
 use test_hash_oper;
 use test_mod;
-use test_num;
 use test_op;
 use test_pub;
 use test_ref;
@@ -57,8 +56,6 @@ def test_nl::test_compile_and_run() {
 	test_str::test();
 	p('forh');
 	test_forh::test();
-	p('num');
-	test_num::test();
 	p('test_hash_oper');
 	test_hash_oper::test();
 	p('ensure');

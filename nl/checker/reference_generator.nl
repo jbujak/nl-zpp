@@ -9,12 +9,12 @@ use nast;
 def reference_generator::fun_ref() {
 	return ptd::rec({
 		module => @reference_generator::module,
-		name => ptd::sim(),
+		name => ptd::string(),
 	});
 }
 
 def reference_generator::module() {
-	return ptd::sim();
+	return ptd::string();
 }
 
 def reference_generator::refs() {
@@ -22,8 +22,8 @@ def reference_generator::refs() {
 		ptd::var({
 			ref => ptd::rec({
 				module => @reference_generator::module,
-				line => ptd::sim(),
-				position => ptd::sim(),
+				line => ptd::int(),
+				position => ptd::int(),
 				type => @reference_generator::ref_type,
 			}),
 			deref => ptd::var({
@@ -35,7 +35,7 @@ def reference_generator::refs() {
 }
 
 def reference_generator::deref_type() {
-	return ptd::rec({line => ptd::sim(), module => ptd::sim(), type_name => ptd::sim()});
+	return ptd::rec({line => ptd::int(), module => ptd::string(), type_name => ptd::string()});
 }
 
 def reference_generator::ref_type() {

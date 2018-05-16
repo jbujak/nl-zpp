@@ -13,8 +13,9 @@ use ntokenizer;
 use singleton;
 use compiler_lib;
 use ptd_parser;
+use string_utils;
 
-def get_end_list() : ptd::arr(ptd::sim()) {
+def get_end_list() : ptd::arr(ptd::string()) {
 	return singleton::sigleton_do_not_use_without_approval([';', 'if', 'unless', 'fora', 'forh', 'rep', 'while']);
 }
 
@@ -23,18 +24,18 @@ def nparser::parse_ret_t() {
 }
 
 def nparser::state_t() {
-	return ptd::rec({state => @ntokenizer::state_t, errors => @compiler_lib::errors_t, module_name => ptd::sim()});
+	return ptd::rec({state => @ntokenizer::state_t, errors => @compiler_lib::errors_t, module_name => ptd::string()});
 }
 
 def nparser::try_value_t() {
-	return ptd::var({ok => @nast::value_t, err => ptd::sim()});
+	return ptd::var({ok => @nast::value_t, err => ptd::string()});
 }
 
 def nparser::try_cmd_t() {
-	return ptd::var({ok => @nast::cmd_t, err => ptd::sim()});
+	return ptd::var({ok => @nast::cmd_t, err => ptd::string()});
 }
 
-def nparser::sparse(s : ptd::sim(), module_name : ptd::sim()) : ptd::var({
+def nparser::sparse(s : ptd::string(), module_name : ptd::string()) : ptd::var({
 		ok => @nast::module_t,
 		error => @compiler_lib::errors_t
 	}) {
@@ -44,27 +45,27 @@ def nparser::sparse(s : ptd::sim(), module_name : ptd::sim()) : ptd::var({
 	return :ok(ret);
 }
 
-def add_error(ref state : @nparser::state_t, message : ptd::sim()) : ptd::void() {
+def add_error(ref state : @nparser::state_t, message : ptd::string()) : ptd::void() {
 	var current_line = ntokenizer::get_line(state->state);
 	var pos = ntokenizer::get_column(state->state);
 	array::push(ref state->errors, {line => current_line, module => state->module_name, column => pos, message => message, type => :error});
 }
 
-def eat(ref state : @nparser::state_t, token : ptd::sim()) : @boolean_t::type {
+def eat(ref state : @nparser::state_t, token : ptd::string()) : @boolean_t::type {
 	return true if ntokenizer::eat_token(ref state->state, token);
 	add_error(ref state, 'expected: ' . token . string::lf() . ntokenizer::info(state->state));
 	return false;
 }
 
-def try_eat(ref state : @nparser::state_t, token : ptd::sim()) : @boolean_t::type {
+def try_eat(ref state : @nparser::state_t, token : ptd::string()) : @boolean_t::type {
 	return ntokenizer::eat_token(ref state->state, token);
 }
 
-def parse_module(ref state : @nparser::state_t, name : ptd::sim()) : @nast::module_t {
+def parse_module(ref state : @nparser::state_t, name : ptd::string()) : @nast::module_t {
 	var mod : @nast::module_t = {name => name, import => [], fun_def => [], stamp => ''};
 	mod->stamp = ntokenizer::get_last_comment(state->state);
 	while (try_eat(ref state, 'use')) {
-		var line : ptd::sim() = ntokenizer::get_line(state->state);
+		var line : ptd::int() = ntokenizer::get_line(state->state);
 		if (ntokenizer::is_type(ref state->state, :word)) {
 			array::push(ref mod->import, {name => ntokenizer::eat_type(ref state->state, :word), line => line});
 		} else {
@@ -86,7 +87,7 @@ def parse_module(ref state : @nparser::state_t, name : ptd::sim()) : @nast::modu
 
 def parse_fun_arg_list(ref state : @nparser::state_t) : ptd::var({
 		ok => ptd::arr(@nast::fun_def_arg_t),
-		err => ptd::sim()
+		err => ptd::string()
 	}) {
 	eat(ref state, '(');
 	var ret : ptd::arr(@nast::fun_def_arg_t) = [];
@@ -109,9 +110,9 @@ def parse_fun_arg_list(ref state : @nparser::state_t) : ptd::var({
 	return :ok(ret);
 }
 
-def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd::var({
+def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::string()) : ptd::var({
 		ok => @nast::fun_def_t,
-		err => ptd::sim()
+		err => ptd::string()
 	}) {
 	var ret : @nast::fun_def_t = {
 			ret_type => {type => :none, tct_type => :tct_empty},
@@ -150,7 +151,7 @@ def parse_fun_def(ref state : @nparser::state_t, module_name : ptd::sim()) : ptd
 
 def parse_fun_val_arg_list(ref state : @nparser::state_t) : ptd::var({
 		ok => ptd::arr(@nast::fun_val_arg_t),
-		err => ptd::sim()
+		err => ptd::string()
 	}) {
 	var res : ptd::arr(@nast::fun_val_arg_t) = [];
 	while (!ntokenizer::next_is(ref state->state, ')')) {
@@ -162,7 +163,7 @@ def parse_fun_val_arg_list(ref state : @nparser::state_t) : ptd::var({
 	return :ok(res);
 }
 
-def parse_expr_list(ref state : @nparser::state_t) : ptd::var({ok => ptd::arr(@nast::value_t), err => ptd::sim()}) {
+def parse_expr_list(ref state : @nparser::state_t) : ptd::var({ok => ptd::arr(@nast::value_t), err => ptd::string()}) {
 	var res : ptd::arr(@nast::value_t) = [];
 	while (!ntokenizer::next_is(ref state->state, ')')) {
 		try var tmp = parse_expr(ref state);
@@ -173,7 +174,7 @@ def parse_expr_list(ref state : @nparser::state_t) : ptd::var({ok => ptd::arr(@n
 	return :ok(res);
 }
 
-def parse_fun_val_arg(ref state : @nparser::state_t) : ptd::var({ok => @nast::fun_val_arg_t, err => ptd::sim()}) {
+def parse_fun_val_arg(ref state : @nparser::state_t) : ptd::var({ok => @nast::fun_val_arg_t, err => ptd::string()}) {
 	var el = {};
 	el->mod = try_eat(ref state, 'ref') ? :ref : :none;
 	try el->val = parse_expr(ref state);
@@ -197,10 +198,10 @@ def parse_fun_label(ref state : @nparser::state_t) : @nast::fun_label_t {
 }
 
 def parse_label(ref state : @nparser::state_t) : ptd::var({
-		ok => ptd::var({var => ptd::sim(), fun_val => @nast::fun_val_t}),
-		err => ptd::sim()
+		ok => ptd::var({var => ptd::string(), fun_val => @nast::fun_val_t}),
+		err => ptd::string()
 	}) {
-	var word : ptd::sim() = ntokenizer::eat_type(ref state->state, :word);
+	var word : ptd::string() = ntokenizer::eat_type(ref state->state, :word);
 	return :ok(:var(word))
 		if !ntokenizer::next_is(ref state->state, '(') && !ntokenizer::next_is(ref state->state, '::');
 	var fun_val : @nast::fun_val_t = {module => '', name => '', args => []};
@@ -226,7 +227,7 @@ def parse_hash_key(ref state : @nparser::state_t) : @nast::value_t {
 	};
 }
 
-def parse_hash(ref state : @nparser::state_t) : ptd::var({ok => @nast::hash_decl_t, err => ptd::sim()}) {
+def parse_hash(ref state : @nparser::state_t) : ptd::var({ok => @nast::hash_decl_t, err => ptd::string()}) {
 	var ret : @nast::hash_decl_t = [];
 	eat(ref state, '{');
 	while (!ntokenizer::next_is(ref state->state, '}')) {
@@ -240,7 +241,7 @@ def parse_hash(ref state : @nparser::state_t) : ptd::var({ok => @nast::hash_decl
 	return :ok(ret);
 }
 
-def parse_arr(ref state : @nparser::state_t) : ptd::var({ok => ptd::arr(@nast::value_t), err => ptd::sim()}) {
+def parse_arr(ref state : @nparser::state_t) : ptd::var({ok => ptd::arr(@nast::value_t), err => ptd::string()}) {
 	var ret : ptd::arr(@nast::value_t) = [];
 	eat(ref state, '[');
 	while (!ntokenizer::next_is(ref state->state, ']')) {
@@ -297,12 +298,12 @@ def parse_type(ref state : @nparser::state_t) : @nparser::try_value_t {
 	});
 }
 
-def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, prec : ptd::sim()) : @nparser::try_value_t {
+def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, prec : ptd::int()) : @nparser::try_value_t {
 	loop {
 		var new_left : @nast::value_only_t;
 		var new_begin = ntokenizer::get_place(ref state->state);
-		var token : ptd::sim() = ntokenizer::get_token(ref state->state);
-		var op : ptd::sim();
+		var token : ptd::string() = ntokenizer::get_token(ref state->state);
+		var op : ptd::string();
 		if (hash::has_key(nast::get_ternary_ops(), token)) {
 			op = token;
 			if (op eq '?') {
@@ -362,7 +363,7 @@ def parse_expr_rec_left(ref state : @nparser::state_t, left : @nast::value_t, pr
 	die;
 }
 
-def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser::try_value_t {
+def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::int()) : @nparser::try_value_t {
 	var expr : @nast::value_only_t;
 	var begin = ntokenizer::get_place(ref state->state);
 	if (try_eat(ref state, '(')) {
@@ -379,7 +380,14 @@ def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser:
 		try var tmp = parse_variant(ref state);
 		expr = :variant(tmp);
 	} elsif (ntokenizer::is_type(ref state->state, :number)) {
-		expr = :const(ntokenizer::eat_type(ref state->state, :number));
+		var const_str = ntokenizer::eat_type(ref state->state, :number); 
+		var const_int;
+		match (string_utils::get_integer(const_str)) case :ok(var int) {
+			const_int = int;
+		} case :err(var err) {
+			return :err('Invalid number: ' . const_str);
+		}
+		expr = :const(const_int);
 	} elsif (ntokenizer::is_type(ref state->state, :multi_string) || ntokenizer::is_type(ref state->state, :string)) {
 		var ret = {arr => []};
 		while (ntokenizer::is_type(ref state->state, :multi_string)) {
@@ -396,7 +404,7 @@ def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser:
 		try expr = parse_label(ref state);
 	} elsif (ntokenizer::is_type(ref state->state, :operator) && hash::has_key(nast::get_unary_ops(), 
 				ntokenizer::get_token(ref state->state))) {
-		var op : ptd::sim() = ntokenizer::eat_type(ref state->state, :operator);
+		var op : ptd::string() = ntokenizer::eat_type(ref state->state, :operator);
 		var value : @nast::value_t;
 		if (op eq '@') {
 			var fun_label_begin = ntokenizer::get_place(ref state->state);
@@ -421,12 +429,12 @@ def parse_expr_rec(ref state : @nparser::state_t, prec : ptd::sim()) : @nparser:
 		} elsif (try_eat(ref state, 'false')) {
 			expr = :variant({name => 'FALSE', var => get_value_nop(ref state)});
 		} else {
-			var err : ptd::sim() = 'use keyword in wrong context:' . string::lf() . ntokenizer::info(state->state);
+			var err : ptd::string() = 'use keyword in wrong context:' . string::lf() . ntokenizer::info(state->state);
 			add_error(ref state, err);
 			return :err(err);
 		}
 	} else {
-		var err : ptd::sim() = 'error in parse_expr:' . string::lf() . ntokenizer::info(state->state);
+		var err : ptd::string() = 'error in parse_expr:' . string::lf() . ntokenizer::info(state->state);
 		add_error(ref state, err);
 		return :err(err);
 	}
@@ -451,7 +459,7 @@ def get_value_nop(ref state : @nparser::state_t) : @nast::value_t {
 
 
 
-def eat_text(ref state : @nparser::state_t) : ptd::var({ok => ptd::sim(), err => ptd::sim()}) {
+def eat_text(ref state : @nparser::state_t) : ptd::var({ok => ptd::string(), err => ptd::string()}) {
 	if (ntokenizer::is_text(ref state->state)) {
 		return :ok(ntokenizer::eat_text(ref state->state));
 	} else {
@@ -460,7 +468,7 @@ def eat_text(ref state : @nparser::state_t) : ptd::var({ok => ptd::sim(), err =>
 	}
 }
 
-def parse_variant_label(ref state : @nparser::state_t) : ptd::sim() {
+def parse_variant_label(ref state : @nparser::state_t) : ptd::string() {
 	if (ntokenizer::is_text(ref state->state)) {
 		return ntokenizer::eat_text(ref state->state);
 	} else {
@@ -469,9 +477,9 @@ def parse_variant_label(ref state : @nparser::state_t) : ptd::sim() {
 	}
 }
 
-def parse_variant(ref state : @nparser::state_t) : ptd::var({ok => @nast::variant_t, err => ptd::sim()}) {
+def parse_variant(ref state : @nparser::state_t) : ptd::var({ok => @nast::variant_t, err => ptd::string()}) {
 	eat(ref state, ':');
-	var name : ptd::sim() = parse_variant_label(ref state);
+	var name : ptd::string() = parse_variant_label(ref state);
 	var decl = get_value_nop(ref state);
 	if (try_eat(ref state, '(')) {
 		try decl = parse_expr(ref state);
@@ -512,7 +520,7 @@ def parse_variant_decl(ref state : @nparser::state_t) : @nast::variant_decl_t {
 	return ret;
 }
 
-def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::variable_declaration_t, err => ptd::sim()}) {
+def parse_var_decl(ref state : @nparser::state_t) : ptd::var({ok => @nast::variable_declaration_t, err => ptd::string()}) {
 	eat(ref state, 'var');
 	var ret : @nast::variable_declaration_t = {name => '', type => :none, tct_type => :none, value => :none};
 	if (ntokenizer::is_type(ref state->state, :word)) {
@@ -555,7 +563,7 @@ def parse_ref_var_decl_sim(ref state : @nparser::state_t) : @nast::variable_decl
 	return ret;
 }
 
-def parse_cond(ref state : @nparser::state_t) : ptd::var({ok => @nast::value_t, err => ptd::sim()}) {
+def parse_cond(ref state : @nparser::state_t) : ptd::var({ok => @nast::value_t, err => ptd::string()}) {
 	eat(ref state, '(');
 	try var tmp = parse_expr(ref state);
 	eat(ref state, ')');
@@ -576,7 +584,7 @@ def parse_block(ref state : @nparser::state_t) : @nparser::try_cmd_t {
 	return :ok({debug => debug, cmd => :block(ret)});
 }
 
-def parse_try_ensure(ref state : @nparser::state_t) : ptd::var({ok => @nast::try_ensure_t, err => ptd::sim()}) {
+def parse_try_ensure(ref state : @nparser::state_t) : ptd::var({ok => @nast::try_ensure_t, err => ptd::string()}) {
 	if (ntokenizer::next_is(ref state->state, 'var')) {
 		try var tmp = parse_var_decl(ref state);
 		return :ok(:decl(tmp));

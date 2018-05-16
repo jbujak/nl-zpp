@@ -9,13 +9,13 @@ use boolean_t;
 use interpreter;
 
 def post_processing_t::fun_tree_t() {
-	return ptd::hash(ptd::hash(ptd::hash(ptd::arr(ptd::sim()))));
+	return ptd::hash(ptd::hash(ptd::hash(ptd::arr(ptd::string()))));
 }
 
 def post_processing_t::state_t() {
 	return ptd::rec({
 			nl_asm => ptd::hash(@nlasm::result_t),
-			mat_fun_def => ptd::hash(ptd::sim()),
+			mat_fun_def => ptd::hash(ptd::int()),
 			math_fs => @post_processing_t::math_funs_t,
 			fun_calls => @post_processing_t::fun_tree_t,
 			const_com => @post_processing_t::math_funs_t,
@@ -29,11 +29,11 @@ def post_processing_t::math_funs_t() {
 }
 
 def post_processing_t::reg_const() {
-	return ptd::var({no => ptd::none(), yes => ptd::sim()});
+	return ptd::var({no => ptd::none(), yes => ptd::int()});
 }
 
 def post_processing_t::reg_val_const() {
-	return ptd::var({no => ptd::none(), yes => ptd::rec({nr => ptd::sim(), value => ptd::ptd_im()})});
+	return ptd::var({no => ptd::none(), yes => ptd::rec({nr => ptd::int(), value => ptd::ptd_im()})});
 }
 
 def post_processing_t::optimization_t() {
@@ -41,11 +41,11 @@ def post_processing_t::optimization_t() {
 }
 
 def post_processing_t::const_reg_t() {
-	return ptd::arr(ptd::rec({regs => ptd::arr(@post_processing_t::reg_const), was => ptd::sim()}));
+	return ptd::arr(ptd::rec({regs => ptd::arr(@post_processing_t::reg_const), was => ptd::int()}));
 }
 
 def post_processing_t::const_reg_val_t() {
-	return ptd::arr(ptd::rec({regs => ptd::arr(@post_processing_t::reg_val_const), was => ptd::sim()}));
+	return ptd::arr(ptd::rec({regs => ptd::arr(@post_processing_t::reg_val_const), was => ptd::int()}));
 }
 
 

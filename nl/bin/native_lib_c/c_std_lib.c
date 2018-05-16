@@ -35,10 +35,10 @@ ImmT c_std_lib0fast_substr(ImmT ___nl__0, ImmT ___nl__1, ImmT ___nl__2) {
 	return c_std_lib0string_sub(strg, ___nl__1, ___nl__2);
 }
 
-ImmT c_std_lib0array_sub(ImmT ___nl__array, ImmT ___nl__begin, ImmT ___nl__length) {
+ImmT c_std_lib0array_sub(ImmT ___nl__array, INT ___nl__begin, INT ___nl__length) {
 	ImmT _out = c_rt_lib0array_new();
-	int beg = getIntFromImm(___nl__begin);
-	int len = getIntFromImm(___nl__length);
+	int beg = ___nl__begin;
+	int len = ___nl__length;
 	NlArray *arr = (NlArray*)___nl__array;
 	if(arr->size >= beg+len){
 		len +=beg;
@@ -58,7 +58,7 @@ ImmT c_std_lib0array_push(ImmT *___ref___arr, ImmT ___nl__el) {
 	return NULL;
 }
 
-ImmT c_std_lib0array_len(ImmT ___nl__arr) {
+INT c_std_lib0array_len(ImmT ___nl__arr) {
 	return c_rt_lib0array_len(___nl__arr);
 }
 ImmT c_std_lib0array_pop(ImmT *___ref___arr){
@@ -69,7 +69,7 @@ ImmT c_std_lib0hash_get_value(ImmT ___nl__hash, ImmT ___nl__key) {
 	return c_rt_lib0hash_get_value(___nl__hash, ___nl__key);
 }
 
-ImmT c_std_lib0hash_has_key(ImmT ___nl__hash, ImmT ___nl__key) {
+bool c_std_lib0hash_has_key(ImmT ___nl__hash, ImmT ___nl__key) {
 	return c_rt_lib0hash_has_key(___nl__hash, ___nl__key);
 }
 
@@ -83,7 +83,7 @@ ImmT c_std_lib0hash_delete(ImmT *___ref___hash, ImmT ___nl__key) {
 	return NULL;
 }
 
-ImmT c_std_lib0hash_size(ImmT ___nl__hash) {
+int c_std_lib0hash_size(ImmT ___nl__hash) {
 	return c_rt_lib0hash_size(___nl__hash);
 }
 
@@ -230,28 +230,28 @@ ImmT c_std_lib0string_replace(ImmT ___nl__str, ImmT ___nl__old, ImmT ___nl__new_
 	c_rt_lib0clear((void**)&nI);
 	return c_rt_lib0string_new_alloc(_out, l, _len);
 }
-ImmT c_std_lib0string_compare(ImmT ___nl__a, ImmT ___nl__b) {
+INT c_std_lib0string_compare(ImmT ___nl__a, ImmT ___nl__b) {
 	NlString *sI = toStringIfSim(___nl__a);
 	NlString *oI = toStringIfSim(___nl__b);
 	int ret = compare_strings(sI, oI);
 	c_rt_lib0clear((void**)&sI);
 	c_rt_lib0clear((void**)&oI);
-	return c_rt_lib0int_new(ret);
+	return ret;
 }
 
-ImmT c_std_lib0is_array(ImmT ___nl__imm) {
+bool c_std_lib0is_array(ImmT ___nl__imm) {
 	return c_rt_lib0is_array(___nl__imm);
 }
 
-ImmT c_std_lib0is_hash(ImmT ___nl__imm) {
+bool c_std_lib0is_hash(ImmT ___nl__imm) {
 	return c_rt_lib0is_hash(___nl__imm);
 }
 
-ImmT c_std_lib0is_sim(ImmT ___nl__imm) {
+bool c_std_lib0is_sim(ImmT ___nl__imm) {
 	return c_rt_lib0is_sim(___nl__imm);
 }
 
-ImmT c_std_lib0is_variant(ImmT ___nl__imm) {
+bool c_std_lib0is_variant(ImmT ___nl__imm) {
 	return c_rt_lib0is_variant(___nl__imm);
 }
 
@@ -358,4 +358,8 @@ ImmT c_std_lib0string_decode_utf16(ImmT ___nl__str, ImmT ___nl__a) {
 	utf8[set] = '\0';
 	c_rt_lib0clear((ImmT*)&sI);
 	return c_rt_lib0ov_arg_new(c_rt_lib0string_new("ok"), c_rt_lib0string_new_alloc((char*)utf8, set, size));
+}
+
+ImmT c_std_lib0int_to_string(INT n) {
+	return c_rt_lib0int_to_string(n);
 }

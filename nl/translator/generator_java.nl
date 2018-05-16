@@ -12,7 +12,7 @@ use ov;
 use ptd;
 use string;
 
-def generator_java::generate(nlasm : @nlasm::result_t) : ptd::sim() {
+def generator_java::generate(nlasm : @nlasm::result_t) : ptd::string() {
 	var result = '';
 	result .= print_package_name();
 	result .= print_imports(nlasm);
@@ -36,11 +36,11 @@ def print_imports(asm : @nlasm::result_t) {
 	return result;
 }
 
-def get_class_name(module_name : ptd::sim()) {
+def get_class_name(module_name : ptd::string()) {
 	return module_name . '_NL';
 }
 
-def print_class_begin(module_name : ptd::sim()) {
+def print_class_begin(module_name : ptd::string()) {
 	return 'public class ' . get_class_name(module_name) . ' {' . string::lf();
 }
 
@@ -67,7 +67,7 @@ def get_function_declaration(function : @nlasm::function_t) {
 	return result . ' static Imm ' . get_function_name(function);
 }
 
-def escape_string(string) : ptd::sim() {
+def escape_string(string) : ptd::string() {
 	string = string::replace(string, '\', '\\');
 	string = string::replace(string, '"', '\"');
 	string = string::replace(string, string::chr(13) . string::lf(), '\r\n');
@@ -78,7 +78,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 	return false if (array::len(function->args_type) > 0);
 	return true if function->annotation is :math;
 	var was_singleton = false;
-	var dest;
+	var dest = -1;
 	fora var cmd (function->commands) {
 		var command = cmd->cmd;
 		if (command is :call) {
@@ -91,7 +91,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return (ret as :val)->reg_no eq dest;
+			return (ret as :val)->reg_no == dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -101,7 +101,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 	return false;
 }
 
-def print_function_or_singleton(function : @nlasm::function_t, module_name : ptd::sim()) : ptd::sim() {
+def print_function_or_singleton(function : @nlasm::function_t, module_name : ptd::string()) : ptd::string() {
 	if (is_singleton_use_function(function)) {
 		var sin_fun = function;
 		sin_fun->name = 'SINGLETON_' . function->name;
@@ -121,23 +121,25 @@ def print_function_or_singleton(function : @nlasm::function_t, module_name : ptd
 	}
 }
 
-def print_function(function : @nlasm::function_t, module_name : ptd::sim()) : ptd::sim() {
+def print_function(function : @nlasm::function_t, module_name : ptd::string()) : ptd::string() {
 	var result = string::lf() . get_function_declaration(function) . '(';
 	rep var i (array::len(function->args_type)) {
 		result .= ', ' unless i == 0;
-		result .= 'ImmRef ___arg__' . i;
+		result .= 'ImmRef ___arg__' . ptd::int_to_string(i);
 	}
 	result .= ') throws Exception {' . string::lf();
 	rep var i (array::len(function->args_type)) {
+		var i_str = ptd::int_to_string(i);
 		match (function->args_type[i]->by) case :val {
-			result .= 'ImmRef ___nl__' . i . ' = new ImmRef(___arg__' . i . print_getter() . ');';
+			result .= 'ImmRef ___nl__' . i_str .
+				' = new ImmRef(___arg__' . i_str . print_getter() . ');';
 		} case :ref {
-			result .= 'ImmRef ___nl__' . i . ' = ___arg__' . i . ';';
+			result .= 'ImmRef ___nl__' . i_str . ' = ___arg__' . i_str . ';';
 		}
 	}
 	result .= string::lf();
 	for(var i = array::len(function->args_type); i < array::len(function->registers); ++i) {
-		result .= 'ImmRef ___nl__' . i . ' = new ImmRef(null);' . string::lf();
+		result .= 'ImmRef ___nl__' . ptd::int_to_string(i) . ' = new ImmRef(null);' . string::lf();
 	}
 	result .= 'Map<ImmString, Imm> ' . print_hash_name() . ';' . string::lf();
 	result .= 'String label = ""; while (true) { switch (label) { default: ' . string::lf();
@@ -145,7 +147,7 @@ def print_function(function : @nlasm::function_t, module_name : ptd::sim()) : pt
 	return result . '}}}' . string::lf();
 }
 
-def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
+def print_command(module : ptd::string(), command : @nlasm::cmd_t) {
 	var result;
 	match (command->cmd) case :arr_decl(var arr_decl) {
 		result = print_register_setter(arr_decl->dest, print_arr(arr_decl->src)) . ';';
@@ -199,7 +201,7 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 	} case :ov_mk(var ov_mk) {
 		result = print_ov_mk(ov_mk);
 	} case :prt_lbl(var prt_lbl) {
-		result = 'case "label_' . prt_lbl . '":';
+		result = 'case "label_' . ptd::int_to_string(prt_lbl) . '":';
 	} case :if_goto(var if_goto) {
 		result = 'if (c_rt_lib_NL.check_true_native_nl(' . print_register(if_goto->src) . ')) {' . 
 			print_goto(if_goto->dest) . '}';
@@ -234,10 +236,11 @@ def print_command(module : ptd::sim(), command : @nlasm::cmd_t) {
 	} case :hash_is_end(var is_end) {
 		die;
 	}
-	return '//line ' . command->debug->nast_debug->begin->line . string::lf() . result . string::lf();
+	return '//line ' . ptd::int_to_string(command->debug->nast_debug->begin->line) .
+			string::lf() . result . string::lf();
 }
 
-def print_arr(arr) : ptd::sim() {
+def print_arr(arr) : ptd::string() {
 	var result = 'new ImmArray(new Imm[';
 	if (array::len(arr) == 0) {
 		result .= '0]';
@@ -249,7 +252,7 @@ def print_arr(arr) : ptd::sim() {
 	return result . ')';
 }
 
-def print_bin_op(bin_op) : ptd::sim() {
+def print_bin_op(bin_op) : ptd::string() {
 	var result = '';
 	if (bin_op->op eq '>=' || bin_op->op eq '<=' || bin_op->op eq '<' || bin_op->op eq '>' || bin_op->op eq '==' || 
 		bin_op->op eq '!=') {
@@ -270,7 +273,7 @@ def print_bin_op(bin_op) : ptd::sim() {
 	return print_register_setter(bin_op->dest, result) . ';';
 }
 
-def print_imm_double_operation(bin_op) : ptd::sim() {
+def print_imm_double_operation(bin_op) : ptd::string() {
 	var result = print_register_as_number(bin_op->left);
 	if (bin_op->op eq '==' || bin_op->op eq '!=') {
 		result .= '.compareTo(' . print_register_as_number(bin_op->right) . ') ' . bin_op->op . ' 0';
@@ -280,15 +283,15 @@ def print_imm_double_operation(bin_op) : ptd::sim() {
 	return result;
 }
 
-def print_register_as_number(value) : ptd::sim() {
+def print_register_as_number(value) : ptd::string() {
 	return '(Double.valueOf(String.valueOf(' . print_register_getter(value) . print_getter() . ')))';
 }
 
-def print_int_value() : ptd::sim() {
+def print_int_value() : ptd::string() {
 	return '.intValue()';
 }
 
-def print_call(module : ptd::sim(), cmodule : ptd::sim(), cname : ptd::sim(), cargs) : ptd::sim() {
+def print_call(module : ptd::string(), cmodule : ptd::string(), cname : ptd::string(), cargs) : ptd::string() {
 	cname = cname . '_priv' if cmodule eq '';
 	cmodule = module if cmodule eq '';
 	var result = get_class_name(cmodule) . '.' . (cname) . '_nl(';
@@ -305,13 +308,13 @@ def print_call(module : ptd::sim(), cmodule : ptd::sim(), cname : ptd::sim(), ca
 	return result . ')';
 }
 
-def print_const_arr(reg, arr) : ptd::sim() {
+def print_const_arr(reg, arr) : ptd::string() {
 	var result = 'new Imm[] {';
 	result .= print_const_value(reg, val) . ',' fora var val (arr);
 	return result . '}';
 }
 
-def print_const_hash(reg, hash) : ptd::sim() {
+def print_const_hash(reg, hash) : ptd::string() {
 	var result = print_hash_name() . ' = new HashMap<ImmString, Imm>();' . string::lf();
 	result .= print_hash_name() . '.put(new ImmString("' . escape_string(key) . '"),' . print_const_value(reg, val) . 
 			');' . string::lf()
@@ -319,7 +322,7 @@ def print_const_hash(reg, hash) : ptd::sim() {
 	return result . print_register_setter(reg, 'new ImmMap(' . print_hash_name() . ')');
 }
 
-def print_const_ov(reg, variant) : ptd::sim() {
+def print_const_ov(reg, variant) : ptd::string() {
 	var result = '';
 	if (ov::has_value(variant)) {
 		result = 'new OV("' . escape_string(ov::get_element(variant)) . '", ' . 
@@ -331,8 +334,8 @@ def print_const_ov(reg, variant) : ptd::sim() {
 }
 
 def print_const_value(reg, value) {
-	if (nl::is_sim(value) && (string_utils::is_integer(ptd::ensure(ptd::sim(), value)) || 
-			string_utils::is_float(ptd::ensure(ptd::sim(), value)))) {
+	if (nl::is_sim(value) && (string_utils::is_integer(ptd::ensure(ptd::string(), value)) || 
+			string_utils::is_float(ptd::ensure(ptd::string(), value)))) {
 		return 'new ImmDouble(' . value . ')';
 	} elsif (nl::is_sim(value)) {
 		return 'new ImmString("' . escape_string(value) . '")';
@@ -347,11 +350,11 @@ def print_const_value(reg, value) {
 	}
 }
 
-def print_goto(goto : ptd::sim()) : ptd::sim() {
-	return 'if (true) {label = "label_' . goto . '"; continue; }';
+def print_goto(goto : @nlasm::label_t) : ptd::string() {
+	return 'if (true) {label = "label_' . ptd::int_to_string(goto) . '"; continue; }';
 }
 
-def print_hash(hash) : ptd::sim() {
+def print_hash(hash) : ptd::string() {
 	var result = print_hash_name() . ' = new HashMap<ImmString, Imm>();' . string::lf();
 	result .= print_hash_name() . '.put(new ImmString("' . escape_string(map->key) . '"),' . 
 			print_register_getter(map->val) . ');' . string::lf()
@@ -359,7 +362,7 @@ def print_hash(hash) : ptd::sim() {
 	return result;
 }
 
-def print_hash_name() : ptd::sim() {
+def print_hash_name() : ptd::string() {
 	return '__function_map';
 }
 
@@ -375,7 +378,7 @@ def print_set_hash_value(set_val) {
 	return result;
 }
 
-def print_ov_mk(ov_mk) : ptd::sim() {
+def print_ov_mk(ov_mk) : ptd::string() {
 	var result = '';
 	if (ov_mk->src is :emp && (ov_mk->label eq 'TRUE')) {
 		result = 'c_rt_lib_NL.get_true_nl()';
@@ -392,24 +395,24 @@ def print_ov_mk(ov_mk) : ptd::sim() {
 	return print_register_setter(ov_mk->dest, result) . ';';
 }
 
-def print_register(register) : ptd::sim() {
+def print_register(register) : ptd::string() {
 	return '___nl__' . register;
 }
 
-def print_register_getter(register) : ptd::sim() {
+def print_register_getter(register) : ptd::string() {
 	return print_register(register) . print_getter();
 }
 
-def print_getter() : ptd::sim() {
+def print_getter() : ptd::string() {
 	return '.getValue()';
 }
 
-def print_register_setter(register, value) : ptd::sim() {
+def print_register_setter(register, value) : ptd::string() {
 	return value . '' if register eq '';
 	return print_register(register) . '.setValue(' . value . ')';
 }
 
-def print_return(return_i) : ptd::sim() {
+def print_return(return_i) : ptd::string() {
 	var result = '';
 	match (return_i) case :val(var val) {
 		result = 'return ' . print_register_getter(val) . ';';
@@ -419,7 +422,7 @@ def print_return(return_i) : ptd::sim() {
 	return 'if(true) ' . result;
 }
 
-def print_una_op(una_op) : ptd::sim() {
+def print_una_op(una_op) : ptd::string() {
 	var result = '';
 	if (una_op->op eq '!') {
 		result .= 'c_rt_lib_NL.native_to_nl_nl(!c_rt_lib_NL.check_true_native_nl(' . print_register(una_op->src) . '))';

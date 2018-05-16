@@ -10,14 +10,13 @@ use ov;
 use nast;
 use ptd;
 
-def ptd_parser::fun_def_to_ptd(ast : @nast::cmd_t) : ptd::var({ok => @tct::meta_type, err => ptd::sim()}) {
-	var cmd = ast->cmd;
-	cmd = cmd as :block;
+def ptd_parser::fun_def_to_ptd(ast : @nast::cmd_t) : ptd::var({ok => @tct::meta_type, err => ptd::string()}) {
+	var cmd = ast->cmd as :block;
 	return :err('type function should have only a return command') unless array::len(cmd) == 1 && cmd[0]->cmd is :return;
 	return ptd_parser::try_value_to_ptd(cmd[0]->cmd as :return);
 }
 
-def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tct::meta_type, err => ptd::sim()}) {
+def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tct::meta_type, err => ptd::string()}) {
 	var ast = ast_arg->value;
 	if (ast is :unary_op) {
 		var op = ast as :unary_op;
@@ -30,26 +29,27 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 	var fun_val : @nast::fun_val_t = ast as :fun_val;
 	return :err('can parse only ptd function: ' . fun_val->module . '::' . fun_val->name)
 		unless fun_val->module eq 'ptd' || fun_val->module eq 'own';
-	var args_size : ptd::sim() = array::len(fun_val->args);
-	var mod_name : ptd::sim() = fun_val->module;
-	var fun_name : ptd::sim() = fun_val->name;
+	var args_size : ptd::int() = array::len(fun_val->args);
+	var args_size_str = ptd::int_to_string(args_size);
+	var mod_name : ptd::string() = fun_val->module;
+	var fun_name : ptd::string() = fun_val->name;
 	if (mod_name eq 'ptd') {
 		if (fun_name eq 'sim') {
-			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
+			return :err('sim can''t have arguments: ' . args_size_str) unless args_size == 0;
 			return :ok(tct::string());
 		} elsif (fun_name eq 'ptd_im') {
-			return :err('im can''t have arguments: ' . args_size) unless args_size == 0;
+			return :err('im can''t have arguments: ' . args_size_str) unless args_size == 0;
 			return :ok(tct::tct_im());
 		} elsif (fun_name eq 'void') {
 			return :err('Void type can be used only as a return type of function');
 		} elsif (fun_name eq 'int') {
-			return :err('int can''t have arguments: ' . args_size) unless args_size == 0;
+			return :err('int can''t have arguments: ' . args_size_str) unless args_size == 0;
 			return :ok(tct::int());
 		} elsif (fun_name eq 'string') {
-			return :err('string can''t have arguments: ' . args_size) unless args_size == 0;
+			return :err('string can''t have arguments: ' . args_size_str) unless args_size == 0;
 			return :ok(tct::string());
 		} elsif (fun_name eq 'bool') {
-			return :err('sim can''t have arguments: ' . args_size) unless args_size == 0;
+			return :err('sim can''t have arguments: ' . args_size_str) unless args_size == 0;
 			return :ok(tct::bool());
 		}
 	}
@@ -79,7 +79,7 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 			return :ok(tct::own_arr(ret));
 		}
 	} elsif (fun_name eq 'var') {
-		return :err('var must have hash' . args_size) unless args_size == 1;
+		return :err('var must have hash' . args_size_str) unless args_size == 1;
 		return :err('var must have hash: ' . ov::get_element(fun_arg)) unless fun_arg->value is :hash_decl;
 		var hash_decl = fun_arg->value as :hash_decl;
 		var elems = {};
@@ -104,7 +104,7 @@ def ptd_parser::try_value_to_ptd(ast_arg : @nast::value_t) : ptd::var({ok => @tc
 	}
 }
 
-def parse_hash(fun_arg : @nast::value_t) : ptd::var({ok => ptd::hash(@tct::meta_type), err => ptd::sim()}) {
+def parse_hash(fun_arg : @nast::value_t) : ptd::var({ok => ptd::hash(@tct::meta_type), err => ptd::string()}) {
 	var hash_decl = fun_arg->value as :hash_decl;
 	var elems = {};
 	fora var hash_elem (hash_decl) {

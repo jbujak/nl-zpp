@@ -3,6 +3,7 @@
 ###
 
 
+use string;
 use hash;
 use nassert;
 use array;
@@ -31,7 +32,10 @@ def test_forh::test() {
 	var arr = [];
 	exec2(ref arr);
 	var hash = {arr => arr, inne => ''};
-	exec(ref hash{'arr'}, i) rep var i (100000);
+	rep var i (100000) {
+		var i_str = c_std_lib::int_to_string(i);
+		exec(ref hash{'arr'}, i);
+	}
 	hash{'arr'}[i] += i rep var i (100000);
 	var long = {};
 	rep var i (20000) {
@@ -48,7 +52,7 @@ def test_forh::test() {
 	var record = [{a => 'a'}];
 	var r = record[0];
 	var x = hash::get_value(r, 'a');
-	ptd::ensure(ptd::sim(), x);
+	ptd::ensure(ptd::string(), x);
 
 }
 

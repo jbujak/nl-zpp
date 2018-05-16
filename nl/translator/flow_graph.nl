@@ -14,22 +14,22 @@ def flow_graph::block_t() {
 			from => @nlasm::reg_t,
 			to => @nlasm::reg_t,
 			reg_uses => ptd::arr(@flow_graph::reg_use_t),
-			last_modif => ptd::hash(ptd::var({write => ptd::sim(), clear => ptd::none()})),
-			prev => ptd::arr(ptd::sim()),
-			next => ptd::arr(ptd::sim())
+			last_modif => ptd::hash(ptd::var({write => ptd::string(), clear => ptd::none()})),
+			prev => ptd::arr(ptd::string()),
+			next => ptd::arr(ptd::string())
 		});
 }
 
 def flow_graph::reg_use_t() {
 	return ptd::rec({
 			reg => @nlasm::reg_t,
-			cmd_nr => ptd::sim(),
+			cmd_nr => ptd::int(),
 			type => ptd::var({write => ptd::none(), read => ptd::none(), clear => ptd::none()})
 		});
 }
 
 def flow_graph::state_t() {
-	return ptd::rec({map => ptd::hash(@flow_graph::block_t), tab => ptd::arr(ptd::sim())});
+	return ptd::rec({map => ptd::hash(@flow_graph::block_t), tab => ptd::arr(ptd::string())});
 }
 
 def flow_graph::blocks_t() {
@@ -49,7 +49,7 @@ def block_name_to_nr(blocks : @flow_graph::state_t) : ptd::arr(@flow_graph::bloc
 	var hash = {};
 	var tab = blocks->tab;
 	rep var i (array::len(tab)) {
-		hash::set_value(ref hash, tab[i], i);
+		hash::set_value(ref hash, tab[i], ptd::int_to_string(i));
 	}
 	var ret = [];
 	fora var name (tab) {
@@ -101,7 +101,7 @@ def remove_unused_block(ref blocks : @flow_graph::state_t) : ptd::void() {
 	blocks->tab = ret_tab;
 }
 
-def set_prev_block(ref map : ptd::hash(@flow_graph::block_t), name : ptd::sim()) : ptd::void() {
+def set_prev_block(ref map : ptd::hash(@flow_graph::block_t), name : ptd::string()) : ptd::void() {
 	var block = hash::get_value(map, name);
 	return unless (array::len(block->prev) <= 1);
 	fora var next (block->next) {
@@ -112,7 +112,7 @@ def set_prev_block(ref map : ptd::hash(@flow_graph::block_t), name : ptd::sim())
 	}
 }
 
-def mk_block(nr : ptd::sim()) : @flow_graph::block_t {
+def mk_block(nr : ptd::int()) : @flow_graph::block_t {
 	return {
 		cmds => [],
 		prev => [],
@@ -124,35 +124,35 @@ def mk_block(nr : ptd::sim()) : @flow_graph::block_t {
 	};
 }
 
-def add_block(ref blocks : @flow_graph::state_t, ref block : @flow_graph::block_t, nr : ptd::sim(), last_label : 
-		ptd::sim()) {
+def add_block(ref blocks : @flow_graph::state_t, ref block : @flow_graph::block_t, nr : ptd::int(), last_label : 
+		ptd::string()) {
 	block->to = {type => :im, reg_no => nr, access_type => :value};
 	hash::set_value(ref blocks->map, last_label, block);
 	array::push(ref blocks->tab, last_label);
 	block = mk_block(nr + 1);
 }
 
-def read_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg->reg_no eq '');
+def read_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::int()) {
+	return if nlasm::is_empty(reg);
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :read});
 }
 
-def write_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg->reg_no eq '');
+def write_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::int()) {
+	return if nlasm::is_empty(reg);
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :write});
-	hash::set_value(ref block->last_modif, reg->reg_no, :write(cmd_nr));
+	hash::set_value(ref block->last_modif, ptd::int_to_string(reg->reg_no), :write(ptd::int_to_string(cmd_nr)));
 }
 
-def clear_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::sim()) {
-	return if (reg->reg_no eq '');
+def clear_reg(ref block : @flow_graph::block_t, reg : @nlasm::reg_t, cmd_nr : ptd::int()) {
+	return if nlasm::is_empty(reg);
 	array::push(ref block->reg_uses, {reg => reg, cmd_nr => cmd_nr, type => :clear});
-	hash::set_value(ref block->last_modif, reg->reg_no, :clear);
+	hash::set_value(ref block->last_modif, ptd::int_to_string(reg->reg_no), :clear);
 }
 
 def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::arg_type_t)) : @flow_graph::state_t {
 	var blocks : @flow_graph::state_t = {map => {}, tab => []};
 	var block : @flow_graph::block_t = mk_block(0);
-	var last_label = 'label_init';
+	var last_label : ptd::string() = 'label_init';
 	var nr = 0;
 	fora var com (commands) {
 		array::push(ref block->cmds, com);
@@ -238,25 +238,25 @@ def mk_blocks(commands : ptd::arr(@nlasm::cmd_t), args_types : ptd::arr(@nlasm::
 			add_block(ref blocks, ref block, nr, last_label);
 			last_label .= '_D';
 		} case :prt_lbl(var label) {
-			if (label ne last_label) {
-				array::push(ref block->next, label);
+			if (ptd::int_to_string(label) ne last_label) {
+				array::push(ref block->next, ptd::int_to_string(label));
 				array::pop(ref block->cmds);
 				add_block(ref blocks, ref block, nr - 1, last_label);
 				array::push(ref block->cmds, com);
-				last_label = label;
+				last_label = ptd::int_to_string(label);
 			}
 		} case :if_goto(var label) {
 			read_reg(ref block, label->src, nr);
-			array::push(ref block->next, label->dest);
+			array::push(ref block->next, ptd::int_to_string(label->dest));
 			var next_l = last_label . '_I';
 			if (commands[nr + 1]->cmd is :prt_lbl) {
-				next_l = commands[nr + 1]->cmd as :prt_lbl;
+				next_l = ptd::int_to_string(commands[nr + 1]->cmd as :prt_lbl);
 			}
 			array::push(ref block->next, next_l);
 			add_block(ref blocks, ref block, nr, last_label);
 			last_label = next_l;
 		} case :goto(var label) {
-			array::push(ref block->next, label);
+			array::push(ref block->next, ptd::int_to_string(label));
 			add_block(ref blocks, ref block, nr, last_label);
 			last_label .= '_G';
 		} case :clear(var reg) {

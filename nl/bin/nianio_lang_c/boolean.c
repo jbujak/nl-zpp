@@ -4,6 +4,7 @@
  */
 #include "c_rt_lib.h"
 #include "c_global_const.h"
+#include </usr/include/string.h>
 #include "boolean.h"
 #line 1 "boolean.nl"
 
@@ -14,56 +15,81 @@ ImmT boolean_priv0__const__sing(int __nr);
 
 
 
-ImmT boolean0to_nl0ptr(int _num, ImmT *_tab){
+ImmT  boolean0to_nl0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "boolean0to_nl");
-return boolean0to_nl(_tab[0]);}
-ImmT boolean0to_nl(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return boolean0to_nl(var0);
+}
+ImmT  boolean0to_nl(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 boolean_priv0__const__init();
-ImmT ___nl__1 = NULL;
+ImmT  ___nl__im__1 = NULL;
+bool  ___nl__bool__2 = false;
+ImmT  ___nl__im__3 = NULL;
 #line 7
-c_rt_lib0move(&___nl__1,___get_global_const(1));
+c_rt_lib0move(&___nl__im__3,___get_global_const(41));
 #line 7
-c_rt_lib0move(&___nl__1, c_rt_lib0eq(___nl__0, ___nl__1));
+___nl__bool__2 = c_rt_lib0eq(___nl__im__0, ___nl__im__3);
 #line 7
-c_rt_lib0clear(&___nl__0);
+c_rt_lib0clear(&___nl__im__3);
 #line 7
-return ___nl__1;
+c_rt_lib0move(&___nl__im__1, c_rt_lib0bool_to_nl_native(___nl__bool__2));
 #line 7
-c_rt_lib0clear(&___nl__1);
+c_rt_lib0clear(&___nl__im__0);
 #line 7
-c_rt_lib0clear(&___nl__0);
+//clear ___nl__bool__2;
+#line 7
+c_rt_lib0clear(&___nl__im__3);
+#line 7
+return ___nl__im__1;
+#line 7
+c_rt_lib0clear(&___nl__im__0);
+#line 7
+c_rt_lib0clear(&___nl__im__1);
+#line 7
+//clear ___nl__bool__2;
+#line 7
+c_rt_lib0clear(&___nl__im__3);
 #line 7
 return NULL;
 }
 
-ImmT boolean0check_true0ptr(int _num, ImmT *_tab){
+ImmT  boolean0check_true0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "boolean0check_true");
-return boolean0check_true(_tab[0]);}
-ImmT boolean0check_true(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return boolean0check_true(var0);
+}
+ImmT  boolean0check_true(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 boolean_priv0__const__init();
-ImmT ___nl__1 = NULL;
+ImmT  ___nl__im__1 = NULL;
+INT  ___nl__int__2 = 0;
 #line 11
-if(c_rt_lib0check_true_native(___nl__0)){ goto label_3;}
+if(___nl__im__0){ goto label_2;}
 #line 11
-c_rt_lib0move(&___nl__1,___get_global_const(0));
+___nl__int__2 = 0;
 #line 11
-goto label_5;
+goto label_1;
 #line 11
-label_3:
+label_2:
 #line 11
-c_rt_lib0move(&___nl__1,___get_global_const(1));
+___nl__int__2 = 1;
 #line 11
-label_5:
+label_1:
 #line 11
-c_rt_lib0clear(&___nl__0);
+c_rt_lib0move(&___nl__im__1, c_rt_lib0int_new(___nl__int__2));
 #line 11
-return ___nl__1;
+c_rt_lib0clear(&___nl__im__0);
 #line 11
-c_rt_lib0clear(&___nl__1);
+//clear ___nl__int__2;
 #line 11
-c_rt_lib0clear(&___nl__0);
+return ___nl__im__1;
+#line 11
+c_rt_lib0clear(&___nl__im__0);
+#line 11
+c_rt_lib0clear(&___nl__im__1);
+#line 11
+//clear ___nl__int__2;
 #line 11
 return NULL;
 }

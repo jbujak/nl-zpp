@@ -19,7 +19,7 @@ def diff_time(a, b) {
 		sec -= 1;
 		usec += 1000000;
 	}
-	return sec * 1000.0 + usec / 1000.0;
+	return sec * 1000 + usec / 1000;
 }
 
 def print_row(ref prof_data, time, label) {

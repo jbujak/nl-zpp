@@ -26,19 +26,19 @@ def dfile::rs(str, is_key) {
 	return ret->str;
 }
 
-def dfile::ssave(obj) : ptd::sim() {
+def dfile::ssave(obj) : ptd::string() {
 	var state = {str => '', objects => {}};
 	sprint(ref state, obj, 0, false);
 	return state->str;
 }
 
-def dfile::debug(obj) : ptd::sim() {
+def dfile::debug(obj) : ptd::string() {
 	var state = {str => '', objects => {}};
 	sprint(ref state, obj, 0, true);
 	return state->str;
 }
 
-def dfile::ssave_net_format(obj) : ptd::sim() {
+def dfile::ssave_net_format(obj) : ptd::string() {
 	var state = {str => '', objects => {}};
 	print_net_format(ref state, obj);
 	return state->str;
@@ -56,7 +56,7 @@ def eat_ws(ref state : @dfile::state_t) {
 	}
 }
 
-def get_char(ref state : @dfile::state_t) : ptd::sim() {
+def get_char(ref state : @dfile::state_t) : ptd::string() {
 	return c_std_lib::fast_substr(state->str, state->pos, 1);
 }
 
@@ -64,7 +64,7 @@ def is_ov(ref state : @dfile::state_t) : @boolean_t::type {
 	return c_std_lib::fast_substr(state->str, state->pos, 7) eq 'ov::mk(';
 }
 
-def eat_non_ws(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::sim() {
+def eat_non_ws(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::string() {
 	var ret = '';
 	var l = state->len;
 	if (state->pos >= l) {
@@ -85,7 +85,7 @@ def eat_non_ws(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd:
 	return ret;
 }
 
-def parse_scalar(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::sim() {
+def parse_scalar(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::string() {
 	eat_ws(ref state);
 	if (get_char(ref state) eq '"') {
 		++state->pos;
@@ -120,7 +120,7 @@ def parse_scalar(ref state : @dfile::state_t, ref error : @boolean_t::type) : pt
 	}
 }
 
-def match_s(ref state : @dfile::state_t, pattern : ptd::sim()) : @boolean_t::type {
+def match_s(ref state : @dfile::state_t, pattern : ptd::string()) : @boolean_t::type {
 	var len = string::length(pattern);
 	if (c_std_lib::fast_substr(state->str, state->pos, len) eq pattern) {
 		state->pos += len;
@@ -131,7 +131,7 @@ def match_s(ref state : @dfile::state_t, pattern : ptd::sim()) : @boolean_t::typ
 }
 
 def dfile::state_t() {
-	return ptd::rec({str => ptd::arr(ptd::sim()), len => ptd::int(), pos => ptd::int()});
+	return ptd::rec({str => ptd::arr(ptd::string()), len => ptd::int(), pos => ptd::int()});
 }
 
 def parse(ref state : @dfile::state_t, ref error : @boolean_t::type) : ptd::ptd_im() {
@@ -207,8 +207,8 @@ def dfile::sload(str_im) : ptd::ptd_im() {
 	return result;
 }
 
-def dfile::try_sload(str_im) : ptd::var({ok => ptd::ptd_im(), err => ptd::sim()}) {
-	var str = ptd::ensure(ptd::sim(), str_im);
+def dfile::try_sload(str_im) : ptd::var({ok => ptd::ptd_im(), err => ptd::string()}) {
+	var str = ptd::ensure(ptd::string(), str_im);
 	var state = {str => [str], pos => 0, len => string::length(str)};
 	var error = false;
 	match_s(ref state, 'use utf8;');
@@ -220,7 +220,7 @@ def dfile::try_sload(str_im) : ptd::var({ok => ptd::ptd_im(), err => ptd::sim()}
 		val = 'pos ' . c_std_lib::int_to_string(state->pos) . ': expected eof';
 	}
 	if (error) {
-		val = ptd::ensure(ptd::sim(), val);
+		val = ptd::ensure(ptd::string(), val);
 		return :err(val);
 	} else {
 		return :ok(val);
@@ -228,7 +228,7 @@ def dfile::try_sload(str_im) : ptd::var({ok => ptd::ptd_im(), err => ptd::sim()}
 }
 
 def dfile::state_out() {
-	return ptd::rec({str => ptd::sim(), objects => ptd::hash(@boolean_t::type)});
+	return ptd::rec({str => ptd::string(), objects => ptd::hash(@boolean_t::type)});
 }
 
 def sp(ref state : @dfile::state_out, str) : ptd::void() {
@@ -263,7 +263,7 @@ def sprint_hash_key(ref state : @dfile::state_out, str) : ptd::void() {
 	}
 }
 
-def get_ind(ind : ptd::int()) : ptd::sim() {
+def get_ind(ind : ptd::int()) : ptd::string() {
 	return string::char_times(string::tab(), ind);
 }
 

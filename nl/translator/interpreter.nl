@@ -20,9 +20,9 @@ use profile_inter;
 
 def interpreter::stack_element_t() {
 	return ptd::rec({
-			func_key => ptd::sim(),
-			module_name => ptd::sim(),
-			next => ptd::sim(),
+			func_key => ptd::string(),
+			module_name => ptd::string(),
+			next => ptd::int(),
 			vars => ptd::arr(ptd::ptd_im()),
 			ret => @nlasm::reg_t,
 			code_vars => ptd::hash(@nlasm::reg_t),
@@ -31,7 +31,7 @@ def interpreter::stack_element_t() {
 }
 
 def interpreter::module_labels_t() {
-	return ptd::hash(ptd::hash(ptd::sim()));
+	return ptd::hash(ptd::hash(ptd::int()));
 }
 
 def interpreter::known_exec_func_t() {
@@ -51,10 +51,10 @@ def interpreter::state_t() {
 			functions => ptd::hash(@nlasm::function_t),
 			stack => ptd::arr(@interpreter::stack_element_t),
 			top => @interpreter::stack_element_t,
-			instruction_nr => ptd::sim(),
+			instruction_nr => ptd::int(),
 			check_all_instructions => @boolean_t::type,
 			known_exec_func => ptd::hash(@interpreter::known_exec_func_t),
-			compiler_functions => ptd::hash(ptd::sim()),
+			compiler_functions => ptd::hash(ptd::string()),
 			profile => ptd::arr(@profile_inter::row_t)
 		});
 }
@@ -62,13 +62,13 @@ def interpreter::state_t() {
 def interpreter::rstate_t() {
 	return ptd::var({
 			running => ptd::none(),
-			error => ptd::sim(),
+			error => ptd::string(),
 			callback => @interpreter::callback_t,
 			finished => ptd::rec({
 					return => ptd::ptd_im(),
 					ref_args => ptd::hash(ptd::ptd_im()),
-					func => ptd::sim(),
-					module => ptd::sim()
+					func => ptd::string(),
+					module => ptd::string()
 				})
 		});
 }
@@ -83,11 +83,11 @@ def interpreter::stack_t() {
 
 def interpreter::stack_element_debug_t() {
 	return ptd::rec({
-			variables => ptd::arr(ptd::rec({name => ptd::sim(), value => ptd::ptd_im()})),
+			variables => ptd::arr(ptd::rec({name => ptd::string(), value => ptd::ptd_im()})),
 			command_debug => @nast::debug_t,
-			func_name => ptd::sim(),
-			module_name => ptd::sim(),
-			instruction_nr => ptd::sim()
+			func_name => ptd::string(),
+			module_name => ptd::string(),
+			instruction_nr => ptd::int()
 		});
 }
 
@@ -95,7 +95,7 @@ def interpreter::part_state_t() {
 	return ptd::rec({
 			labels => ptd::hash(@interpreter::module_labels_t),
 			functions => ptd::hash(@nlasm::function_t),
-			module_name => ptd::sim()
+			module_name => ptd::string()
 		});
 }
 
@@ -128,7 +128,7 @@ def build_state(labels : ptd::hash(@interpreter::module_labels_t), functions : p
 				vars => [],
 				ret => {
 					type => :im,
-					reg_no => '',
+					reg_no => -1,
 					access_type => :value,
 				},
 				code_vars => {},
@@ -181,34 +181,34 @@ def interpreter::init_from_part(state_parts : ptd::arr(@interpreter::part_state_
 	return build_state(labels, functions, known_exec_func);
 }
 
-def interpreter::start(ref state : @interpreter::state_t, main_fun : ptd::sim(), module_name : ptd::sim()) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def interpreter::start(ref state : @interpreter::state_t, main_fun : ptd::string(), module_name : ptd::string()) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	return interpreter::start_args(ref state, main_fun, module_name, []);
 }
 
-def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::sim(), module_name : ptd::sim(), 
-	func_args : ptd::arr(ptd::ptd_im())) : ptd::var({ok => ptd::sim(), err => ptd::sim()}) {
+def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::string(), module_name : ptd::string(), 
+	func_args : ptd::arr(ptd::ptd_im())) : ptd::var({ok => ptd::string(), err => ptd::string()}) {
 	var key = module_name . '::' . main_fun;
 	if (!hash::has_key(state->functions, key)) {
 		return :err('brak funkcji ' . key);
 	}
 	var func = hash::get_value(state->functions, key);
 	if (array::len(func->args_type) != array::len(func_args)) {
-		return :err('niewlasciwa liczba argumentow: ' . array::len(func_args) . ' zamiast: ' . 
-			array::len(func->args_type));
+		return :err('niewlasciwa liczba argumentow: ' . ptd::int_to_string(array::len(func_args)) . ' zamiast: ' . 
+			ptd::int_to_string(array::len(func->args_type)));
 	}
 	state->profile = [];
 	profile_inter::begin(ref state->profile, key);
 	state->rstate = :running;
-	var new_vars = build_registers(func->reg_size);
+	var new_vars = build_registers(array::len(func->registers));
 	var new_ref_arguments = {};
 	rep var idx (array::len(func->args_type)) {
 		var arg = func->args_type[idx];
 		match (arg->by) case :val {
 		} case :ref {
-			hash::set_value(ref new_ref_arguments, idx, {type => :im, reg_no => idx, access_type => :value});
+			hash::set_value(ref new_ref_arguments, ptd::int_to_string(idx), {type => :im, reg_no => idx, access_type => :value});
 		}
 		new_vars[idx] = func_args[idx];
 	}
@@ -221,7 +221,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 			vars => new_vars,
 			ret => {
 				type => :im,
-				reg_no => '',
+				reg_no => -1,
 				access_type => :value,
 			},
 			code_vars => {},
@@ -232,7 +232,7 @@ def interpreter::start_args(ref state : @interpreter::state_t, main_fun : ptd::s
 	return :ok('');
 }
 
-def interpreter::exec_instruction(ref state : @interpreter::state_t, ins_nr : ptd::sim()) : @interpreter::rstate_t {
+def interpreter::exec_instruction(ref state : @interpreter::state_t, ins_nr : ptd::int()) : @interpreter::rstate_t {
 	state->instruction_nr = ins_nr;
 	loop {
 		match (state->rstate) case :error(var err) {
@@ -265,8 +265,8 @@ def interpreter::exec_all_code(state : @interpreter::state_t) {
 	}
 	return :err;
 }
-def interpreter::evaluate_const(state : @interpreter::state_t, func : @nlasm::function_t, module : ptd::sim(), regs : 
-	ptd::arr(ptd::ptd_im()), ins_nr : ptd::sim()) : ptd::var({ok => ptd::arr(ptd::ptd_im()), err => ptd::sim()}) {
+def interpreter::evaluate_const(state : @interpreter::state_t, func : @nlasm::function_t, module : ptd::string(), regs : 
+	ptd::arr(ptd::ptd_im()), ins_nr : ptd::int()) : ptd::var({ok => ptd::arr(ptd::ptd_im()), err => ptd::string()}) {
 	var key = get_func_key(func, module);
 	die unless (hash::has_key(state->functions, key));
 	state->rstate = :running;
@@ -280,7 +280,7 @@ def interpreter::evaluate_const(state : @interpreter::state_t, func : @nlasm::fu
 			vars => regs,
 			ret => {
 				type => :im,
-				reg_no => '',
+				reg_no => -1,
 				access_type => :value,
 			},
 			code_vars => {},
@@ -326,12 +326,12 @@ def build_labels(nlasms : ptd::arr(@nlasm::result_t)) : ptd::hash(@interpreter::
 		var module_result = {};
 		fora var func (nlasm->functions) {
 			var key = get_func_key(func, module);
-			var labels : ptd::hash(ptd::sim()) = {};
+			var labels : ptd::hash(ptd::int()) = {};
 			rep var i (array::len(func->commands)) {
 				var cmd = func->commands[i]->cmd;
 				if (cmd is :prt_lbl) {
 					var as_label = cmd as :prt_lbl;
-					hash::set_value(ref labels, as_label, i);
+					hash::set_value(ref labels, ptd::int_to_string(as_label), i);
 				}
 			}
 			hash::set_value(ref module_result, key, labels);
@@ -384,7 +384,7 @@ def interpreter::has_next_instruction(state : @interpreter::state_t) : @boolean_
 }
 
 def get_variables(element : @interpreter::stack_element_t) : ptd::arr(ptd::rec({
-			name => ptd::sim(),
+			name => ptd::string(),
 			value => ptd::ptd_im()
 		})) {
 	var result = [];
@@ -395,7 +395,7 @@ def get_variables(element : @interpreter::stack_element_t) : ptd::arr(ptd::rec({
 	return result;
 }
 
-def interpreter::get_instruction_nr(state : @interpreter::state_t) : ptd::sim() {
+def interpreter::get_instruction_nr(state : @interpreter::state_t) : ptd::int() {
 	return get_command(state)->debug->instruction_nr;
 }
 
@@ -675,7 +675,7 @@ def interpreter::callback_value_t() {
 					args => ptd::arr(ptd::ptd_im()),
 					profile => ptd::arr(@profile_inter::row_t)
 				}),
-			err => ptd::sim()
+			err => ptd::string()
 		});
 }
 
@@ -696,7 +696,7 @@ def append_profile(ref state : @interpreter::state_t, profile : ptd::arr(@profil
 	array::append(ref state->profile, profile);
 }
 
-def interpreter::finish_callback(function : ptd::sim(), module : ptd::sim(), value : @interpreter::callback_value_t, ref 
+def interpreter::finish_callback(function : ptd::string(), module : ptd::string(), value : @interpreter::callback_value_t, ref 
 	state : @interpreter::state_t) : ptd::void() {
 	if (! state->rstate is :callback){
 		state->rstate = :error('returned from another function compared to calling');
@@ -732,7 +732,7 @@ def interpreter::finish_callback(function : ptd::sim(), module : ptd::sim(), val
 	}
 }
 
-def handle_normal_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @interpreter::state_t) : ptd::void() {
+def handle_normal_call(call : @nlasm::call_t, key : ptd::string(), ref state : @interpreter::state_t) : ptd::void() {
 	--state->top->next;
 	var new_module;
 	if (call->mod eq '') {
@@ -742,7 +742,7 @@ def handle_normal_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @int
 	}
 	profile_inter::begin(ref state->profile, key);
 	var func = hash::get_value(state->functions, key);
-	var new_vars = build_registers(func->reg_size);
+	var new_vars = build_registers(array::len(func->registers));
 	var new_code_vars = {};
 	var new_ref_arguments = {};
 	var arg_num = 0;
@@ -753,7 +753,7 @@ def handle_normal_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @int
 			value = state->top->vars[reg->reg_no];
 		} case :ref(var reg) {
 			value = state->top->vars[reg->reg_no];
-			hash::set_value(ref new_ref_arguments, arg_num, reg);
+			hash::set_value(ref new_ref_arguments, ptd::int_to_string(arg_num), reg);
 		}
 		new_vars[arg_num] = value;
 		arg_num++;
@@ -829,7 +829,7 @@ def handle_extern_call(call : @nlasm::call_t, ref state : @interpreter::state_t)
 	}
 }
 
-def get_compiler_functions() : ptd::hash(ptd::sim()) {
+def get_compiler_functions() : ptd::hash(ptd::string()) {
 	var ret = {};
 	hash::set_value(ref ret, 'array::push', '');
 	hash::set_value(ref ret, 'array::pop', '');
@@ -869,7 +869,7 @@ def get_compiler_functions() : ptd::hash(ptd::sim()) {
 	hash::set_value(ref ret, 'c_rt_lib::get_key_iter', '');
 	hash::set_value(ref ret, 'c_rt_lib::hash_get_value', '');
 	hash::set_value(ref ret, 'c_rt_lib::next_iter', '');
-	hash::set_value(ref ret, 'ptd::sim', '');
+	hash::set_value(ref ret, 'ptd::string', '');
 	hash::set_value(ref ret, 'ptd::hash', '');
 	hash::set_value(ref ret, 'ptd::arr', '');
 	hash::set_value(ref ret, 'ptd::none', '');
@@ -879,9 +879,9 @@ def get_compiler_functions() : ptd::hash(ptd::sim()) {
 	return ret;
 }
 
-def handle_array_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_array_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
 	return error_message unless nl::is_array(args[0]);
@@ -903,7 +903,7 @@ def handle_array_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : 
 	} elsif (key eq 'array::len') {
 		ret_val = array::len(args[0]);
 	} elsif (key eq 'array::sort') {
-		match(ptd::try_dynamic_cast(ptd::arr(ptd::sim()), args[0])) case :ok(var ok){
+		match(ptd::try_dynamic_cast(ptd::arr(ptd::string()), args[0])) case :ok(var ok){
 		} case :err(var err){
 			return :err('incorrect type');
 		}
@@ -914,9 +914,9 @@ def handle_array_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : 
 	return :ok('');
 }
 
-def handle_hash_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_hash_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
 	return error_message unless nl::is_hash(args[0]);
@@ -943,9 +943,9 @@ def handle_hash_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : p
 	return :ok('');
 }
 
-def handle_string_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_string_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
 	if (key eq 'string::lf') {
@@ -984,9 +984,9 @@ def handle_string_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args :
 	return :ok('');
 }
 
-def handle_ov_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_ov_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
 	if (key eq 'ov::mk') {
@@ -1015,13 +1015,13 @@ def handle_ov_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd
 	return :ok('');
 }
 
-def handle_ptd_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_ptd_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
-	if (key eq 'ptd::sim') {
-		ret_val = ptd::sim();
+	if (key eq 'ptd::string') {
+		ret_val = ptd::string();
 	} elsif (key eq 'ptd::none') {
 		ret_val = ptd::none();
 	} elsif (key eq 'ptd::ptd_im') {
@@ -1052,9 +1052,9 @@ def handle_ptd_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : pt
 	return :ok('');
 }
 
-def handle_c_rt_lib_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
-		ok => ptd::sim(),
-		err => ptd::sim()
+def handle_c_rt_lib_call(key : ptd::string(), ref ret_val : ptd::ptd_im(), ref args : ptd::arr(ptd::ptd_im())) : ptd::var({
+		ok => ptd::string(),
+		err => ptd::string()
 	}) {
 	var error_message = :err('incorrect command');
 	if (key eq 'c_rt_lib::array_len') {
@@ -1102,7 +1102,7 @@ def handle_c_rt_lib_call(key : ptd::sim(), ref ret_val : ptd::ptd_im(), ref args
 	return :ok('');
 }
 
-def handle_compiler_call(call : @nlasm::call_t, key : ptd::sim(), ref state : @interpreter::state_t) : ptd::void() {
+def handle_compiler_call(call : @nlasm::call_t, key : ptd::string(), ref state : @interpreter::state_t) : ptd::void() {
 	var args = [];
 	fora var arg (call->args) {
 		var val;
@@ -1156,7 +1156,8 @@ def handle_return(return_i : ptd::var({val => @nlasm::reg_t, emp => ptd::none()}
 		state->top->next = array::len(state->func->commands);
 		var to_ret = {};
 		forh var nr, var none (state->top->ref_arguments) {
-			hash::set_value(ref to_ret, nr, state->top->vars[nr]);
+			ensure var nr_int = string_utils::get_integer(nr);
+			hash::set_value(ref to_ret, nr, state->top->vars[nr_int]);
 		}
 		state->rstate = :finished({
 				return => retval,
@@ -1173,7 +1174,8 @@ def handle_return(return_i : ptd::var({val => @nlasm::reg_t, emp => ptd::none()}
 		state->top = selem;
 		state->func = hash::get_value(state->functions, state->top->func_key);
 		forh var arg, var reg (old_ref_arguments) {
-			var value = old_vars[arg];
+			ensure var arg_no = string_utils::get_integer(arg);
+			var value = old_vars[arg_no];
 			state->top->vars[reg->reg_no] = value;
 		}
 		state->top->vars[old_ret->reg_no] = retval unless nlasm::is_empty(old_ret);
@@ -1182,16 +1184,16 @@ def handle_return(return_i : ptd::var({val => @nlasm::reg_t, emp => ptd::none()}
 	++state->top->next;
 }
 
-def goto(ref state : @interpreter::state_t, label : ptd::sim()) : ptd::void() {
+def goto(ref state : @interpreter::state_t, label : @nlasm::label_t) : ptd::void() {
 	var module_labels = hash::get_value(state->labels, state->top->module_name);
 	var func_labels = hash::get_value(module_labels, state->top->func_key);
-	if (!hash::has_key(func_labels, label)) {
+	if (!hash::has_key(func_labels, ptd::int_to_string(label))) {
 		die;
 	}
-	state->top->next = hash::get_value(func_labels, label) + 1;
+	state->top->next = hash::get_value(func_labels, ptd::int_to_string(label)) + 1;
 }
 
-def execute_bin_op(left, right, op : ptd::sim()) {
+def execute_bin_op(left, right, op : ptd::string()) {
 	return left + right if op eq '+';
 	return left - right if op eq '-';
 	return left * right if op eq '*';
@@ -1211,7 +1213,7 @@ def execute_bin_op(left, right, op : ptd::sim()) {
 	die;
 }
 
-def execute_una_op(arg, op : ptd::sim()) {
+def execute_una_op(arg, op : ptd::string()) {
 	return !arg if op eq '!';
 	return -arg if op eq '-';
 	return +arg if op eq '+';
@@ -1222,7 +1224,7 @@ def get_command(state : @interpreter::state_t) : @nlasm::cmd_t {
 	return state->func->commands[state->top->next];
 }
 
-def get_func_key(func : @nlasm::function_t, module : ptd::sim()) : ptd::sim() {
+def get_func_key(func : @nlasm::function_t, module : ptd::string()) : ptd::string() {
 	var key = module . '::';
 	if (func->access is :priv) {
 		key .= 'priv::';

@@ -4,6 +4,7 @@
  */
 #include "c_rt_lib.h"
 #include "c_global_const.h"
+#include </usr/include/string.h>
 #include "enum.h"
 #include "ov.h"
 #include "boolean_t.h"
@@ -16,59 +17,127 @@ ImmT enum_priv0__const__sing(int __nr);
 
 
 
-ImmT enum0eq0ptr(int _num, ImmT *_tab){
+bool enum0eq0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 2, "enum0eq");
-return enum0eq(_tab[0], _tab[1]);}
-ImmT enum0eq(ImmT ___nl__0,ImmT ___nl__1) {
-c_rt_lib0arg_val(___nl__0);
-c_rt_lib0arg_val(___nl__1);
+ImmT  var0 = (_tab[0]);
+ImmT  var1 = (_tab[1]);
+return enum0eq(var0, var1);
+}
+bool enum0eq(ImmT  ___nl__im__0,ImmT  ___nl__im__1) {
+c_rt_lib0arg_val(___nl__im__0);
+c_rt_lib0arg_val(___nl__im__1);
 enum_priv0__const__init();
-ImmT ___nl__2 = NULL;
-ImmT ___nl__3 = NULL;
+bool  ___nl__bool__2 = false;
+bool  ___nl__bool__3 = false;
+ImmT  ___nl__im__4 = NULL;
+ImmT  ___nl__im__5 = NULL;
+ImmT  ___nl__im__6 = NULL;
+bool  ___nl__bool__7 = false;
+bool  ___nl__bool__8 = false;
+ImmT  ___nl__im__9 = NULL;
+ImmT  ___nl__im__10 = NULL;
 #line 10
-c_rt_lib0move(&___nl__2, ov0has_value(___nl__0));
+c_rt_lib0move(&___nl__im__4, ov0has_value(___nl__im__0));
 #line 10
-if(c_rt_lib0check_true_native(___nl__2)){ goto label_3;}
+___nl__bool__2 = c_rt_lib0check_true_native(___nl__im__4);
 #line 10
-c_rt_lib0move(&___nl__2, ov0has_value(___nl__1));
+c_rt_lib0clear(&___nl__im__4);
+#line 10
+if(___nl__bool__2){ goto label_3;}
+#line 10
+c_rt_lib0move(&___nl__im__5, ov0has_value(___nl__im__1));
+#line 10
+___nl__bool__2 = c_rt_lib0check_true_native(___nl__im__5);
+#line 10
+c_rt_lib0clear(&___nl__im__5);
 #line 10
 label_3:
 #line 10
-c_rt_lib0move(&___nl__2, c_rt_lib0not(___nl__2));
+//clear ___nl__bool__3;
 #line 10
-if(c_rt_lib0check_true_native(___nl__2)){ goto label_9;}
+c_rt_lib0clear(&___nl__im__4);
 #line 10
-c_rt_lib0move(&___nl__3, c_rt_lib0array_mk(0));
+c_rt_lib0clear(&___nl__im__5);
 #line 10
-nl_die_arg(___nl__3);
+___nl__bool__2 = !___nl__bool__2;
 #line 10
-goto label_9;
+if(___nl__bool__2){ goto label_2;}
 #line 10
-label_9:
+c_rt_lib0move(&___nl__im__6, c_rt_lib0array_mk(0));
 #line 10
-c_rt_lib0clear(&___nl__2);
+nl_die_arg(___nl__im__6);
 #line 10
-c_rt_lib0clear(&___nl__3);
+goto label_1;
+#line 10
+label_2:
+#line 10
+label_1:
+#line 10
+//clear ___nl__bool__2;
+#line 10
+//clear ___nl__bool__3;
+#line 10
+c_rt_lib0clear(&___nl__im__4);
+#line 10
+c_rt_lib0clear(&___nl__im__5);
+#line 10
+c_rt_lib0clear(&___nl__im__6);
 #line 11
-c_rt_lib0move(&___nl__2, ov0get_element(___nl__0));
+c_rt_lib0move(&___nl__im__9, ov0get_element(___nl__im__0));
 #line 11
-c_rt_lib0move(&___nl__3, ov0get_element(___nl__1));
+c_rt_lib0move(&___nl__im__10, ov0get_element(___nl__im__1));
 #line 11
-c_rt_lib0move(&___nl__2, c_rt_lib0eq(___nl__2, ___nl__3));
+___nl__bool__8 = c_rt_lib0eq(___nl__im__9, ___nl__im__10);
 #line 11
-c_rt_lib0clear(&___nl__3);
+c_rt_lib0clear(&___nl__im__9);
 #line 11
-c_rt_lib0clear(&___nl__0);
+c_rt_lib0clear(&___nl__im__10);
 #line 11
-c_rt_lib0clear(&___nl__1);
+___nl__bool__7 = ___nl__bool__8;
 #line 11
-return ___nl__2;
+c_rt_lib0clear(&___nl__im__0);
 #line 11
-c_rt_lib0clear(&___nl__2);
+c_rt_lib0clear(&___nl__im__1);
 #line 11
-c_rt_lib0clear(&___nl__0);
+//clear ___nl__bool__2;
 #line 11
-c_rt_lib0clear(&___nl__1);
+//clear ___nl__bool__3;
+#line 11
+c_rt_lib0clear(&___nl__im__4);
+#line 11
+c_rt_lib0clear(&___nl__im__5);
+#line 11
+c_rt_lib0clear(&___nl__im__6);
+#line 11
+//clear ___nl__bool__8;
+#line 11
+c_rt_lib0clear(&___nl__im__9);
+#line 11
+c_rt_lib0clear(&___nl__im__10);
+#line 11
+return ___nl__bool__7;
+#line 11
+c_rt_lib0clear(&___nl__im__0);
+#line 11
+c_rt_lib0clear(&___nl__im__1);
+#line 11
+//clear ___nl__bool__2;
+#line 11
+//clear ___nl__bool__3;
+#line 11
+c_rt_lib0clear(&___nl__im__4);
+#line 11
+c_rt_lib0clear(&___nl__im__5);
+#line 11
+c_rt_lib0clear(&___nl__im__6);
+#line 11
+//clear ___nl__bool__7;
+#line 11
+//clear ___nl__bool__8;
+#line 11
+c_rt_lib0clear(&___nl__im__9);
+#line 11
+c_rt_lib0clear(&___nl__im__10);
 #line 11
 return NULL;
 }

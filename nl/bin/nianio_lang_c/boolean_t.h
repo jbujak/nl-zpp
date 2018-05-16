@@ -4,5 +4,9 @@
  */
 #pragma once
 #include "c_rt_lib.h"
-ImmT boolean_t0type();
-ImmT boolean_t0type0ptr(int _num, ImmT *_tab);
+#include <stdbool.h>
+#include "ptd.h"
+typedef bool  boolean_t0type0type;
+
+ImmT  boolean_t0type();
+ImmT  boolean_t0type0ptr(int _num, ImmT *_tab);

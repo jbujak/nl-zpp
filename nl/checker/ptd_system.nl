@@ -12,7 +12,7 @@ use string;
 use array;
 use ptd_parser;
 
-def add_error(ref errors : @tc_types::errors_t, msg : ptd::sim()) : ptd::void() {
+def add_error(ref errors : @tc_types::errors_t, msg : ptd::string()) : ptd::void() {
 	array::push(ref errors->errors, {message => msg, line => errors->current_line, module => errors->module, column => -1, type => :error});
 }
 
@@ -125,8 +125,8 @@ def ptd_system::is_accepted_info(from : @tc_types::type, as_type : @tct::meta_ty
 	return check_assignment_info(as_type, from->type, ref_inf, from->src, ref modules, ref errors);
 }
 
-def add_ref_name(ref from : @tct::meta_type, ref hash : ptd::hash(ptd::arr(ptd::sim())), ref arr : ptd::arr(ptd::sim()),
-		level : ptd::sim(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : ptd::sim() {
+def add_ref_name(ref from : @tct::meta_type, ref hash : ptd::hash(ptd::arr(ptd::int())), ref arr : ptd::arr(ptd::int()),
+		level : ptd::int(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : ptd::string() {
 	var type_name = from as :tct_ref;
 	arr = hash::get_value(hash, type_name) if (hash::has_key(hash, type_name));
 	array::push(ref arr, level);
@@ -346,6 +346,7 @@ def cross_type(a : @tct::meta_type, b : @tct::meta_type, ref_inf : @tc_types::re
 			recb = b as :tct_rec;
 		} else {
 			add_error(ref errors, 'cannot merge non own::rec with own::rec');
+			return tct::tct_im();
 		}
 		var err = false;
 		forh var field, var type (reca) {
@@ -432,12 +433,13 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			return :err(info);
 		}
 	} case :tct_own_arr(var arr_type) {
-		return mk_err(to, from) unless from is :tct_own_arr || from is :tct_arr;
 		var from_inner;
 		if (from is :tct_arr) {
 			from_inner = from as :tct_arr;
 		} elsif (from is :tct_own_arr) {
 			from_inner = from as :tct_own_arr;
+		} else {
+			return mk_err(to, from);
 		}
 		match (check_assignment_info(arr_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			return :ok;
@@ -474,12 +476,13 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 			}
 			return :ok;
 		}
-		return mk_err(to, from) unless from is :tct_own_hash || from is :tct_hash;
 		var from_inner;
 		if (from is :tct_hash) {
 			from_inner = from as :tct_hash;
 		} elsif (from is :tct_own_hash) {
 			from_inner = from as :tct_own_hash;
+		} else {
+			return mk_err(to, from);
 		}
 		match (check_assignment_info(hash_type, from_inner, ref_inf, type_src, ref modules, ref errors)) case :ok {
 			return :ok;
@@ -616,7 +619,7 @@ def check_assignment_info(to : @tct::meta_type, from : @tct::meta_type, ref_inf 
 	}
 }
 
-def add_delete(type_name : ptd::sim(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
+def add_delete(type_name : ptd::string(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
 		ptd::void() {
 	array::push(ref modules->env->deref->delete, {
 			line => errors->current_line,
@@ -625,7 +628,7 @@ def add_delete(type_name : ptd::sim(), ref modules : @tc_types::modules_t, ref e
 		});
 }
 
-def add_create(type_name : ptd::sim(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
+def add_create(type_name : ptd::string(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
 		ptd::void() {
 	array::push(ref modules->env->deref->create, {
 			line => errors->current_line,
@@ -655,7 +658,7 @@ def ptd_system::can_create(from : @tc_types::type, ref modules : @tc_types::modu
 }
 
 def walk_on_type(type : @tct::meta_type, operation : ptd::var({create => ptd::none(), delete => ptd::none()}), ref_inf : 
-	ptd::hash(ptd::arr(ptd::sim())), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : ptd::void() {
+	ptd::hash(ptd::arr(ptd::int())), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : ptd::void() {
 	var refs = {};
 	get_ref_in_type(type, ref refs);
 	var refs2 = refs;
@@ -693,7 +696,7 @@ def walk_on_type(type : @tct::meta_type, operation : ptd::var({create => ptd::no
 	}
 }
 
-def get_all_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim()), ref modules : @tc_types::modules_t, 
+def get_all_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::string()), ref modules : @tc_types::modules_t, 
 	ref errors : @tc_types::errors_t) : ptd::void() {
 	var refs2 = {};
 	get_ref_in_type(type, ref refs2);
@@ -705,7 +708,7 @@ def get_all_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())
 	}
 }
 
-def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : ptd::void() {
+def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::string())) : ptd::void() {
 	match (type) case :tct_im {
 	} case :tct_arr(var arr_type) {
 		get_ref_in_type(arr_type, ref refs);
@@ -743,10 +746,10 @@ def get_ref_in_type(type : @tct::meta_type, ref refs : ptd::hash(ptd::sim())) : 
 	}
 }
 
-def get_function_def(type_name : ptd::sim(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
+def get_function_def(type_name : ptd::string(), ref modules : @tc_types::modules_t, ref errors : @tc_types::errors_t) : 
 		ptd::arr(@tc_types::def_fun_t) {
-	var module : ptd::sim();
-	var fun_name : ptd::sim();
+	var module : ptd::string();
+	var fun_name : ptd::string();
 	var ix = string::index2(type_name, '::');
 	if (ix >= 0) {
 		module = string::substr(type_name, 0, ix);
@@ -767,11 +770,11 @@ def get_function_def(type_name : ptd::sim(), ref modules : @tc_types::modules_t,
 	return [hash::get_value(module_st, fun_name)];
 }
 
-def ptd_system::get_ref_type(type_name : ptd::sim(), ref modules : @tc_types::modules_t, ref errors : 
+def ptd_system::get_ref_type(type_name : ptd::string(), ref modules : @tc_types::modules_t, ref errors : 
 	@tc_types::errors_t) : @tct::meta_type {
-	var function = get_function_def(type_name, ref modules, ref errors);
-	return tct::tct_im() if array::len(function) == 0;
-	function = function[0];
+	var functions = get_function_def(type_name, ref modules, ref errors);
+	return tct::tct_im() if array::len(functions) == 0;
+	var function = functions[0];
 	var module_st = hash::get_value(modules->funs, function->module);
 	match (function->is_type) case :yes(var typ) {
 		return typ;

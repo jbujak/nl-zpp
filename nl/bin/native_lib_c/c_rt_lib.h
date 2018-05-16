@@ -6,6 +6,7 @@
 #pragma once
 
 #include </usr/include/stdio.h>
+#include <stdbool.h>
 
 typedef double FLOAT;
 typedef long long INT;
@@ -102,19 +103,21 @@ ImmT c_rt_lib0exec(ImmT func, ImmT *arr);
 ImmT c_rt_lib0hash_new();
 ImmT c_rt_lib0hash_mk(int nargs, ...);
 ImmT c_rt_lib0hash_mk_dec(int nargs, ...);
-ImmT c_rt_lib0hash_size(ImmT hashI);
+int c_rt_lib0hash_size(ImmT hashI);
 ImmT c_rt_lib0hash_get_value_dec(ImmT hash, ImmT key);
 ImmT c_rt_lib0hash_get_value(ImmT hash, ImmT key);
 ImmT c_rt_lib0hash_set_value_dec(ImmT *hash, ImmT key, ImmT val);
 ImmT c_rt_lib0hash_set_value(ImmT *hash, ImmT key, ImmT val);
 ImmT c_rt_lib0hash_delete(ImmT *hash, ImmT key);
-ImmT c_rt_lib0hash_has_key(ImmT hash, ImmT key);
+bool c_rt_lib0hash_has_key(ImmT hash, ImmT key);
+unsigned get_hash_key(ImmT key);
+int nl_compare_internal(ImmT left, ImmT right);
 
 //forh
 ImmT c_rt_lib0init_iter(ImmT hashI);
 ImmT c_rt_lib0get_key_iter(ImmT iter);
 ImmT c_rt_lib0next_iter(ImmT iter);
-ImmT c_rt_lib0is_end_hash(ImmT iter);
+bool c_rt_lib0is_end_hash(ImmT iter);
 
 //ov
 ImmT c_rt_lib0ov_arg_new(ImmT name, ImmT arg);
@@ -123,18 +126,19 @@ ImmT c_rt_lib0ov_mk_arg(ImmT name, ImmT arg);
 ImmT c_rt_lib0ov_mk_arg_dec(ImmT name, ImmT arg);
 ImmT c_rt_lib0ov_mk_none(ImmT name);
 ImmT c_rt_lib0mk_ov(const char * var, ImmT val);
-ImmT c_rt_lib0ov_is(ImmT variant, ImmT is_val);
+bool c_rt_lib0ov_is(ImmT variant, ImmT is_val);
 ImmT c_rt_lib0ov_as(ImmT variant, ImmT as_val);
 ImmT c_rt_lib0ov_get_element(ImmT variant);
 ImmT c_rt_lib0ov_get_value(ImmT variant);
 ImmT c_rt_lib0ov_has_value(ImmT variant);
-ImmT c_rt_lib0priv_is(ImmT variant, ImmT is);
+bool c_rt_lib0priv_is(ImmT variant, ImmT is);
 ImmT c_rt_lib0priv_as(ImmT variant, ImmT as);
 
 //int
 INT getIntFromImm(ImmT num);
 ImmT c_rt_lib0int_new(INT i);
 void c_rt_lib0int_new_to_memory(INT i, ImmT memory);
+INT* c_rt_lib0int_new_zpp(INT i);
 
 //float
 FLOAT getFloatFromImm(ImmT num);
@@ -154,6 +158,7 @@ ImmT c_rt_lib0string_ord(ImmT sI);
 ImmT c_rt_lib0string_length(ImmT sI);
 ImmT c_rt_lib0concat_new(ImmT left, ImmT right);
 ImmT c_rt_lib0concat_add(ImmT left, ImmT right);
+ImmT c_rt_lib0int_to_string(INT n);
 
 ImmT c_rt_lib0fast_concat(ImmT *left, ImmT right);
 
@@ -163,19 +168,19 @@ ImmT c_rt_lib0array_push(ImmT *arrI, ImmT el);
 ImmT c_rt_lib0array_new();
 ImmT c_rt_lib0array_mk(int nargs, ...);
 ImmT c_rt_lib0array_mk_dec(int nargs, ...);
-ImmT c_rt_lib0array_len(ImmT arrI);
-ImmT c_rt_lib0array_get(ImmT arrI, ImmT indexI);
-ImmT c_rt_lib0array_set(ImmT *arrI, ImmT indexI, ImmT el);
+INT c_rt_lib0array_len(ImmT arrI);
+ImmT c_rt_lib0array_get(ImmT arrI, INT indexI);
+ImmT c_rt_lib0array_set(ImmT *arrI, INT indexI, ImmT el);
 
 //types
-ImmT c_rt_lib0is_array(ImmT imm);
-ImmT c_rt_lib0is_hash(ImmT imm);
-ImmT c_rt_lib0is_sim(ImmT imm);
-ImmT c_rt_lib0is_variant(ImmT imm);
+bool c_rt_lib0is_array(ImmT imm);
+bool c_rt_lib0is_hash(ImmT imm);
+bool c_rt_lib0is_sim(ImmT imm);
+bool c_rt_lib0is_variant(ImmT imm);
 
 //operators
-ImmT c_rt_lib0eq(ImmT left, ImmT right);
-ImmT c_rt_lib0ne(ImmT left, ImmT right);
+bool c_rt_lib0eq(ImmT left, ImmT right);
+bool c_rt_lib0ne(ImmT left, ImmT right);
 
 ImmT c_rt_lib0add(ImmT left, ImmT right);
 ImmT c_rt_lib0sub(ImmT left, ImmT right);
@@ -200,16 +205,34 @@ ImmT c_rt_lib0not(ImmT arg);
 ImmT c_rt_lib0unary_minus(ImmT arg);
 ImmT c_rt_lib0unary_plus(ImmT arg);
 
+//INT operators
+INT c_rt_lib0int_add(INT left, INT right);
+INT c_rt_lib0int_sub(INT left, INT right);
+INT c_rt_lib0int_mul(INT left, INT right);
+INT c_rt_lib0int_div(INT left, INT right);
+INT c_rt_lib0int_mod(INT left, INT right);
+
+ImmT c_rt_lib0int_le(INT left, INT right);
+ImmT c_rt_lib0int_lt(INT left, INT right);
+ImmT c_rt_lib0int_gt(INT left, INT right);
+ImmT c_rt_lib0int_ge(INT left, INT right);
+ImmT c_rt_lib0int_num_eq(INT left, INT right);
+ImmT c_rt_lib0int_num_ne(INT left, INT right);
+
+INT c_rt_lib0int_unary_minus(INT arg);
+INT c_rt_lib0int_unary_plus(INT arg);
+
 //boolean
-int c_rt_lib0check_true_native(ImmT imm);
+bool c_rt_lib0check_true_native(ImmT imm);
+ImmT c_rt_lib0bool_to_nl_native(bool b);
 ImmT c_rt_lib0get_false();
 ImmT c_rt_lib0get_true();
 
 //ref arg
 ImmT c_rt_lib0get_ref_hash(ImmT hashI, ImmT keyI);
-ImmT c_rt_lib0get_ref_arr(ImmT arrI, ImmT indexI);
+ImmT c_rt_lib0get_ref_arr(ImmT arrI, INT indexI);
 ImmT c_rt_lib0set_ref_hash(ImmT *hashI, ImmT keyI, ImmT valI);
-ImmT c_rt_lib0set_ref_arr(ImmT *arrI, ImmT indexI, ImmT valI);
+ImmT c_rt_lib0set_ref_arr(ImmT *arrI, INT indexI, ImmT valI);
 
 //memory function
 void* alloc_mem(int size);

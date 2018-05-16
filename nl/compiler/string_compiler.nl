@@ -17,7 +17,7 @@ use pretty_printer;
 use nast;
 use compiler_lib;
 
-def string_compiler::compile(program : ptd::sim(), module_name : ptd::sim()) : ptd::var({
+def string_compiler::compile(program : ptd::string(), module_name : ptd::string()) : ptd::var({
 		ok => @nlasm::result_t,
 		err => @compiler_lib::errors_t,
 	}) {
@@ -41,22 +41,22 @@ def string_compiler::compile(program : ptd::sim(), module_name : ptd::sim()) : p
 }
 
 def string_compiler::modules_t() {
-	return ptd::hash(ptd::rec({code => ptd::sim(), module_name => ptd::sim()}));
+	return ptd::hash(ptd::rec({code => ptd::string(), module_name => ptd::string()}));
 }
 
 def string_compiler::type_check_t() {
-	return ptd::arr(ptd::rec({check => ptd::arr(ptd::sim()), lib => ptd::arr(ptd::sim())}));
+	return ptd::arr(ptd::rec({check => ptd::arr(ptd::string()), lib => ptd::arr(ptd::string())}));
 }
 
 def string_compiler::printed_struct_t() {
 	return ptd::rec({
-			imports => ptd::arr(ptd::sim()),
-			functions => ptd::arr(ptd::rec({name => ptd::sim(), head => ptd::sim(), body => ptd::sim()}))
+			imports => ptd::arr(ptd::string()),
+			functions => ptd::arr(ptd::rec({name => ptd::string(), head => ptd::string(), body => ptd::string()}))
 		});
 }
 
 def string_compiler::error_t() {
-	return ptd::rec({error => @compiler_lib::error_t, key => ptd::sim()});
+	return ptd::rec({error => @compiler_lib::error_t, key => ptd::string()});
 }
 
 def string_compiler::print_modules(asts : ptd::hash(@nast::module_t)) : ptd::hash(@string_compiler::printed_struct_t) {
@@ -92,7 +92,7 @@ def string_compiler::parse_module(modules : @string_compiler::modules_t) : ptd::
 }
 
 def string_compiler::check_type(type_check : @string_compiler::type_check_t, asts : ptd::hash(@nast::module_t)) : ptd::var({
-		ok => ptd::sim(),
+		ok => ptd::string(),
 		err => ptd::arr(@string_compiler::error_t)
 	}) {
 	var errors = [];
@@ -117,7 +117,7 @@ def string_compiler::check_type(type_check : @string_compiler::type_check_t, ast
 	return :ok('');
 }
 
-def string_compiler::compile_to_nlasm(modules : ptd::hash(ptd::sim())) : ptd::var({
+def string_compiler::compile_to_nlasm(modules : ptd::hash(ptd::string())) : ptd::var({
 		ok => ptd::hash(@nlasm::result_t),
 		err => @compiler_lib::errors_t
 	}) {
@@ -145,8 +145,8 @@ def string_compiler::compile_to_nlasm(modules : ptd::hash(ptd::sim())) : ptd::va
 	return :ok(nlasms);
 }
 
-def string_compiler::compile_to_js(modules : ptd::hash(ptd::sim()), namespace : ptd::sim()) : ptd::var({
-		ok => ptd::hash(ptd::sim()),
+def string_compiler::compile_to_js(modules : ptd::hash(ptd::string()), namespace : ptd::string()) : ptd::var({
+		ok => ptd::hash(ptd::string()),
 		err => @compiler_lib::errors_t
 	}) {
 	try var nlasms = string_compiler::compile_to_nlasm(modules);

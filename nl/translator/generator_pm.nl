@@ -17,14 +17,14 @@ def generator_pm::fun_args_t() {
 }
 
 def generator_pm::state_t() {
-	return ptd::rec({perl_file => ptd::sim(), module_name => ptd::sim(), fun_args => @generator_pm::fun_args_t});
+	return ptd::rec({perl_file => ptd::string(), module_name => ptd::string(), fun_args => @generator_pm::fun_args_t});
 }
 
-def print(ref state : @generator_pm::state_t, s : ptd::sim()) : ptd::void() {
+def print(ref state : @generator_pm::state_t, s : ptd::string()) : ptd::void() {
 	state->perl_file .= s;
 }
 
-def generator_pm::generate(nlasm : @nlasm::result_t) : ptd::sim() {
+def generator_pm::generate(nlasm : @nlasm::result_t) : ptd::string() {
 	var state : @generator_pm::state_t = {perl_file => '', module_name => nlasm->module_name, fun_args => []};
 	print(ref state, 'use c_rt_lib;' . string::lf());
 	print_imports(nlasm->imports, ref state);
@@ -38,7 +38,7 @@ def generator_pm::generate(nlasm : @nlasm::result_t) : ptd::sim() {
 	return state->perl_file;
 }
 
-def print_imports(imports : ptd::arr(ptd::sim()), ref state : @generator_pm::state_t) : ptd::void() {
+def print_imports(imports : ptd::arr(ptd::string()), ref state : @generator_pm::state_t) : ptd::void() {
 	fora var import (imports) {
 		print(ref state, 'use ' . import . ';' . string::lf());
 	}
@@ -75,7 +75,7 @@ def print_function(function : @nlasm::function_t, ref state : @generator_pm::sta
 	print(ref state, ') {' . string::lf());
 	fora var reg (function->registers) {
 		if (reg->type is :im) {
-			print(ref state, 'my $memory_' . reg->reg_no . ';');
+			print(ref state, 'my $memory_' . ptd::int_to_string(reg->reg_no) . ';');
 		} else {
 			die;
 		}
@@ -91,7 +91,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 	return false if (array::len(function->args_type) > 0);
 	return true if function->annotation is :math;
 	var was_singleton = false;
-	var dest;
+	var dest = -1;
 	fora var cmd (function->commands) {
 		var command = cmd->cmd;
 		if (command is :call) {
@@ -104,7 +104,7 @@ def is_singleton_use_function(function : @nlasm::function_t) : @boolean_t::type 
 			return false unless was_singleton;
 			var ret = command as :return;
 			return false unless (ret is :val);
-			return ret as :val->reg_no eq dest;
+			return ret as :val->reg_no == dest;
 		} elsif (command is :prt_lbl) {
 		} elsif (command is :clear) {
 		} else {
@@ -118,7 +118,7 @@ def print_function_access(access : @nlasm::access_t, ref state : @generator_pm::
 	print(ref state, get_function_access(access, state->module_name));
 }
 
-def get_function_access(access : @nlasm::access_t, module_name : ptd::sim()) : ptd::sim() {
+def get_function_access(access : @nlasm::access_t, module_name : ptd::string()) : ptd::string() {
 	match (access) case :pub {
 		return module_name . '::';
 	} case :priv {
@@ -126,7 +126,7 @@ def get_function_access(access : @nlasm::access_t, module_name : ptd::sim()) : p
 	}
 }
 
-def print_args_dollar(args_size : ptd::sim(), ref state : @generator_pm::state_t) : ptd::void() {
+def print_args_dollar(args_size : ptd::int(), ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (args_size) {
 		print(ref state, '$');
 	}
@@ -134,10 +134,11 @@ def print_args_dollar(args_size : ptd::sim(), ref state : @generator_pm::state_t
 
 def move_args_to_register(ref state : @generator_pm::state_t) : ptd::void() {
 	rep var arg_id (array::len(state->fun_args)) {
-		print(ref state, '$memory_' . arg_id . ' = $_[' . arg_id . '];');
+		var arg_id_str = ptd::int_to_string(arg_id);
+		print(ref state, '$memory_' . arg_id_str . ' = $_[' . arg_id_str . '];');
 		match (state->fun_args[arg_id]->by) case :val {
 		} case :ref {
-			print(ref state, 'Scalar::Util::weaken($_[' . arg_id . ']) if ref($_[' . arg_id . ']);');
+			print(ref state, 'Scalar::Util::weaken($_[' . arg_id_str . ']) if ref($_[' . arg_id_str . ']);');
 		}
 	}
 }
@@ -146,7 +147,8 @@ def move_register_to_ref_args(ref state : @generator_pm::state_t) : ptd::void() 
 	rep var arg_id (array::len(state->fun_args)) {
 		match (state->fun_args[arg_id]->by) case :val {
 		} case :ref {
-			print(ref state, '$_[' . arg_id . '] = $memory_' . arg_id . ';');
+			var arg_id_str = ptd::int_to_string(arg_id);
+			print(ref state, '$_[' . arg_id_str . '] = $memory_' . arg_id_str . ';');
 		}
 	}
 }
@@ -158,7 +160,7 @@ def print_commands(commands : ptd::arr(@nlasm::cmd_t), ref state : @generator_pm
 }
 
 def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) : ptd::void() {
-	print(ref state, '#line ' . command->debug->nast_debug->begin->line . string::lf());
+	print(ref state, '#line ' . ptd::int_to_string(command->debug->nast_debug->begin->line) . string::lf());
 	match (command->cmd) case :arr_decl(var arr_decl) {
 		print_register_to_assign(arr_decl->dest, ref state);
 		print(ref state, '[');
@@ -219,7 +221,7 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 		print(ref state, ';');
 	} case :load_const(var const) {
 		print_register_to_assign(const->dest, ref state);
-		if (nl::is_sim(const->val) && string_utils::is_integer(const->val . '') && 0 + const->val eq const->val) {
+		if (nl::is_sim(const->val) && string_utils::is_integer(const->val . '')) {
 			print(ref state, const->val . ';');
 		} else {
 			print(ref state, dfile::ssave(const->val) . ';');
@@ -245,15 +247,15 @@ def print_command(command : @nlasm::cmd_t, ref state : @generator_pm::state_t) :
 	} case :ov_mk(var ov_mk) {
 		print_ov_mk(ov_mk, ref state);
 	} case :prt_lbl(var prt_lbl) {
-		print(ref state, 'label_' . prt_lbl . ':');
+		print(ref state, 'label_' . ptd::int_to_string(prt_lbl) . ':');
 	} case :if_goto(var if_goto) {
 		print(ref state, 'if (c_rt_lib::check_true(');
 		print_register(if_goto->src, ref state);
 		print(ref state, ')) {');
-		print(ref state, 'goto label_' . if_goto->dest . ';');
+		print(ref state, 'goto label_' . ptd::int_to_string(if_goto->dest) . ';');
 		print(ref state, '}');
 	} case :goto(var goto) {
-		print(ref state, 'goto label_' . goto . ';');
+		print(ref state, 'goto label_' . ptd::int_to_string(goto) . ';');
 	} case :clear(var reg) {
 		print(ref state, 'undef(');
 		print_register(reg, ref state);
@@ -311,7 +313,7 @@ def print_call(call : @nlasm::call_t, ref state : @generator_pm::state_t) : ptd:
 	print(ref state, ');');
 }
 
-def print_una_op(una_op : ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, op => ptd::sim()}), ref state : 
+def print_una_op(una_op : ptd::rec({dest => @nlasm::reg_t, src => @nlasm::reg_t, op => ptd::string()}), ref state : 
 	@generator_pm::state_t) : ptd::void() {
 	print_register_to_assign(una_op->dest, ref state);
 	print(ref state, 'c_rt_lib::to_nl(') if (una_op->op eq '!');
@@ -326,7 +328,7 @@ def print_bin_op(bin_op : ptd::rec({
 		dest => @nlasm::reg_t,
 		left => @nlasm::reg_t,
 		right => @nlasm::reg_t,
-		op => ptd::sim()
+		op => ptd::string()
 	}), ref state : @generator_pm::state_t) : ptd::void() {
 	print_register_to_assign(bin_op->dest, ref state);
 	if (bin_op->op eq '>=' || bin_op->op eq '<=' || bin_op->op eq '<' || bin_op->op eq '>' || bin_op->op eq '==' || 
@@ -361,7 +363,7 @@ def print_set_at_idx(set_at_idx : ptd::rec({src => @nlasm::reg_t, idx => @nlasm:
 	print(ref state, ';');
 }
 
-def print_set_val(set_val : ptd::rec({src => @nlasm::reg_t, key => ptd::sim(), val => @nlasm::reg_t}), ref state : 
+def print_set_val(set_val : ptd::rec({src => @nlasm::reg_t, key => ptd::string(), val => @nlasm::reg_t}), ref state : 
 	@generator_pm::state_t) : ptd::void() {
 	print(ref state, ' if (c_rt_lib::get_hashcount(');
 	print_register(set_val->src, ref state);
@@ -394,12 +396,12 @@ def print_ov_mk(ov_mk : @nlasm::ov_mk_t, ref state : @generator_pm::state_t) : p
 }
 
 def print_register(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
-	return if (register->reg_no eq '');
-	print(ref state, '$memory_' . register->reg_no. '');
+	return if nlasm::is_empty(register);
+	print(ref state, '$memory_' . ptd::int_to_string(register->reg_no) . '');
 }
 
 def print_register_to_assign(register : @nlasm::reg_t, ref state : @generator_pm::state_t) : ptd::void() {
 	print_register(register, ref state);
-	print(ref state, ' = ') if (register->reg_no ne '');
+	print(ref state, ' = ') if !nlasm::is_empty(register);
 }
 

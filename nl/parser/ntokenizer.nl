@@ -14,7 +14,7 @@ use c_std_lib;
 use boolean_t;
 use singleton;
 
-def get_keywords() : ptd::hash(ptd::sim()) {
+def get_keywords() : ptd::hash(ptd::string()) {
 	return singleton::sigleton_do_not_use_without_approval({
 			use => '',
 			fora => '',
@@ -43,7 +43,7 @@ def get_keywords() : ptd::hash(ptd::sim()) {
 		});
 }
 
-def get_char_oper() : ptd::arr(ptd::sim()) {
+def get_char_oper() : ptd::arr(ptd::string()) {
 	var ret = [[], [], []];
 	fora var hash ([nast::get_unary_ops(), nast::get_bin_ops(), nast::get_ternary_ops()]) {
 		forh var oper, var tmp (hash) {
@@ -55,7 +55,7 @@ def get_char_oper() : ptd::arr(ptd::sim()) {
 	return singleton::sigleton_do_not_use_without_approval(ret[2]);
 }
 
-def get_lett_oper() : ptd::hash(ptd::sim()) {
+def get_lett_oper() : ptd::hash(ptd::string()) {
 	var ret = {};
 	fora var hash ([nast::get_unary_ops(), nast::get_bin_ops(), nast::get_ternary_ops()]) {
 		forh var oper, var tmp (hash) {
@@ -67,16 +67,16 @@ def get_lett_oper() : ptd::hash(ptd::sim()) {
 
 def ntokenizer::state_t() {
 	return ptd::rec({
-			text => ptd::arr(ptd::sim()),
-			pos => ptd::sim(),
-			len => ptd::sim(),
+			text => ptd::arr(ptd::string()),
+			pos => ptd::int(),
+			len => ptd::int(),
 			type => @ntokenizer::token_t,
-			next_token => ptd::sim(),
-			ln_nr => ptd::sim(),
-			ln_pos => ptd::sim(),
-			place => ptd::rec({line => ptd::sim(), position => ptd::sim()}),
-			place_ws => ptd::rec({line => ptd::sim(), position => ptd::sim()}),
-			last_comment => ptd::sim(),
+			next_token => ptd::string(),
+			ln_nr => ptd::int(),
+			ln_pos => ptd::int(),
+			place => ptd::rec({line => ptd::int(), position => ptd::int()}),
+			place_ws => ptd::rec({line => ptd::int(), position => ptd::int()}),
+			last_comment => ptd::string(),
 		});
 }
 
@@ -94,7 +94,7 @@ def ntokenizer::token_t() {
 		});
 }
 
-def ntokenizer::init(text : ptd::sim()) : @ntokenizer::state_t {
+def ntokenizer::init(text : ptd::string()) : @ntokenizer::state_t {
 	var state = {
 			text => [text],
 			len => string::length(text),
@@ -111,15 +111,15 @@ def ntokenizer::init(text : ptd::sim()) : @ntokenizer::state_t {
 	return state;
 }
 
-def ntokenizer::get_last_comment(state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::get_last_comment(state : @ntokenizer::state_t) : ptd::string() {
 	return state->last_comment;
 }
 
-def get_char(ref state : @ntokenizer::state_t) : ptd::sim() {
+def get_char(ref state : @ntokenizer::state_t) : ptd::string() {
 	return c_std_lib::fast_substr(state->text, state->pos, 1) . '';
 }
 
-def get_next_char(ref state : @ntokenizer::state_t) : ptd::sim() {
+def get_next_char(ref state : @ntokenizer::state_t) : ptd::string() {
 	return '' if (state->len <= state->pos + 1);
 	return c_std_lib::fast_substr(state->text, state->pos + 1, 1);
 }
@@ -167,7 +167,7 @@ def is_token(ref state : @ntokenizer::state_t) : @boolean_t::type {
 	return false;
 }
 
-def ntokenizer::eat_token(ref state : @ntokenizer::state_t, token : ptd::sim()) : @boolean_t::type {
+def ntokenizer::eat_token(ref state : @ntokenizer::state_t, token : ptd::string()) : @boolean_t::type {
 	if (token eq state->next_token && is_token(ref state)) {
 		get_next_token(ref state);
 		return true;
@@ -175,21 +175,21 @@ def ntokenizer::eat_token(ref state : @ntokenizer::state_t, token : ptd::sim()) 
 	return false;
 }
 
-def ntokenizer::get_line(state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::get_line(state : @ntokenizer::state_t) : ptd::int() {
 	return state->ln_nr;
 }
-def ntokenizer::get_column(state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::get_column(state : @ntokenizer::state_t) : ptd::int() {
 	return (1 + state->pos - state->ln_pos - string::length(state->next_token));
 }
-def ntokenizer::get_place(ref state : @ntokenizer::state_t) : ptd::rec({line => ptd::sim(), position => ptd::sim()}) {
+def ntokenizer::get_place(ref state : @ntokenizer::state_t) : ptd::rec({line => ptd::int(), position => ptd::int()}) {
 	return state->place;
 }
 
-def ntokenizer::get_place_ws(ref state : @ntokenizer::state_t) : ptd::rec({line => ptd::sim(), position => ptd::sim()}) {
+def ntokenizer::get_place_ws(ref state : @ntokenizer::state_t) : ptd::rec({line => ptd::int(), position => ptd::int()}) {
 	return state->place_ws;
 }
 
-def ntokenizer::get_token(ref state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::get_token(ref state : @ntokenizer::state_t) : ptd::string() {
 	return state->next_token;
 }
 
@@ -197,11 +197,11 @@ def ntokenizer::is_type(ref state : @ntokenizer::state_t, type : @ntokenizer::to
 	return enum::eq(state->type, type);
 }
 
-def ntokenizer::next_is(ref state : @ntokenizer::state_t, token : ptd::sim()) : @boolean_t::type {
+def ntokenizer::next_is(ref state : @ntokenizer::state_t, token : ptd::string()) : @boolean_t::type {
 	return token eq state->next_token && is_token(ref state);
 }
 
-def ntokenizer::eat_type(ref state : @ntokenizer::state_t, type : @ntokenizer::token_t) : ptd::sim() {
+def ntokenizer::eat_type(ref state : @ntokenizer::state_t, type : @ntokenizer::token_t) : ptd::string() {
 	die unless ntokenizer::is_type(ref state, type);
 	var ret = state->next_token;
 	get_next_token(ref state);
@@ -217,7 +217,7 @@ def ntokenizer::is_text(ref state : @ntokenizer::state_t) : @boolean_t::type {
 	return false;
 }
 
-def ntokenizer::eat_text(ref state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::eat_text(ref state : @ntokenizer::state_t) : ptd::string() {
 	return ntokenizer::eat_type(ref state, :word) if (ntokenizer::is_type(ref state, :word));
 	return ntokenizer::eat_type(ref state, :keyword) if (ntokenizer::is_type(ref state, :keyword));
 	if (ntokenizer::is_type(ref state, :operator)) {
@@ -227,20 +227,20 @@ def ntokenizer::eat_text(ref state : @ntokenizer::state_t) : ptd::sim() {
 	die;
 }
 
-def ntokenizer::info(state : @ntokenizer::state_t) : ptd::sim() {
+def ntokenizer::info(state : @ntokenizer::state_t) : ptd::string() {
 	return 'token: ''' . state->next_token . '''
-		'line:  ' . state->ln_nr . '
-		'pos:   ' . (1 + state->pos - state->ln_pos - string::length(state->next_token)) . '
+		'line:  ' . ptd::int_to_string(state->ln_nr) . '
+		'pos:   ' . ptd::int_to_string(1 + state->pos - state->ln_pos - string::length(state->next_token)) . '
 		'type: ' . ov::get_element(state->type) . '
 		'';
 }
 
-def is_hex_number(char : ptd::sim()) : @boolean_t::type {
+def is_hex_number(char : ptd::string()) : @boolean_t::type {
 	return string::is_digit(char) || (string::ord(char) >= 65 && string::ord(char) <= 70) || 
 		(string::ord(char) >= 97 && string::ord(char) <= 102);
 }
 
-def try_get_operator(state : @ntokenizer::state_t, ref char : ptd::sim()) {
+def try_get_operator(state : @ntokenizer::state_t, ref char : ptd::string()) {
 	fora var oper (get_char_oper()) {
 		continue if (state->len < 1 + state->pos + string::length(oper));
 		if (c_std_lib::fast_substr(state->text, state->pos, string::length(oper)) eq oper) {

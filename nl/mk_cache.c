@@ -23,9 +23,7 @@ int main(int argc, char **argv) {
 		c_rt_lib0array_push(&args, el);
 		c_rt_lib0clear(&el);
 	}
-	ImmT ret = compiler0compile(args);
-	int ret_code = getIntFromImm(ret);
-	c_rt_lib0clear(&ret);
+	int ret_code = compiler0compile(args);
 	c_rt_lib0clear(&args);
 	c_rt_lib0finish();
 	return ret_code;

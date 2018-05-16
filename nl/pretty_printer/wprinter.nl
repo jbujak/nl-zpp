@@ -8,11 +8,11 @@ use ptd;
 use array;
 use boolean_t;
 
-def get_tab_size() : ptd::sim() {
+def get_tab_size() : ptd::int() {
 	return 4;
 }
 
-def get_line_width() : ptd::sim() {
+def get_line_width() : ptd::int() {
 	return 120;
 }
 
@@ -21,18 +21,18 @@ def get_sep() : @wprinter::pretty_t {
 }
 
 def wprinter::state_t() {
-	return ptd::rec({out => ptd::sim()});
+	return ptd::rec({out => ptd::string()});
 }
 
-def is_to_long(len : ptd::sim()) : @boolean_t::type {
+def is_to_long(len : ptd::int()) : @boolean_t::type {
 	return len > get_line_width();
 }
 
-def state_print(ref state : @wprinter::state_t, str : ptd::sim()) : ptd::void() {
+def state_print(ref state : @wprinter::state_t, str : ptd::string()) : ptd::void() {
 	state->out .= str;
 }
 
-def pind(ind : ptd::sim()) : ptd::sim() {
+def pind(ind : ptd::int()) : ptd::string() {
 	var r = '';
 	r .= string::chr(9) rep var i (ind);
 	return r;
@@ -44,12 +44,12 @@ def wprinter::arr_kind_t() {
 
 def wprinter::pretty_t() {
 	return ptd::rec({
-			len => ptd::sim(),
+			len => ptd::int(),
 			el => ptd::var({
 					arr => ptd::rec({arr => @wprinter::pretty_arr_t, type => @wprinter::arr_kind_t}),
-					arr_decl => ptd::rec({arr => @wprinter::pretty_arr_t, start => ptd::sim(), end => ptd::sim()}),
+					arr_decl => ptd::rec({arr => @wprinter::pretty_arr_t, start => ptd::string(), end => ptd::string()}),
 					bind => ptd::rec({first => @wprinter::pretty_t, second => @wprinter::pretty_t}),
-					sim => ptd::sim(),
+					sim => ptd::string(),
 					sep => ptd::none(),
 					str_arr => @wprinter::str_arr_t
 				})
@@ -57,7 +57,7 @@ def wprinter::pretty_t() {
 }
 
 def wprinter::str_arr_t() {
-	return ptd::rec({arr => ptd::arr(ptd::sim()), last => ptd::var({end => ptd::none(), new_line => ptd::none()})});
+	return ptd::rec({arr => ptd::arr(ptd::string()), last => ptd::var({end => ptd::none(), new_line => ptd::none()})});
 }
 
 def wprinter::pretty_arr_t() {
@@ -68,8 +68,8 @@ def wprinter::get_sep() : @wprinter::pretty_t {
 	return get_sep();
 }
 
-def count_len(arr : @wprinter::pretty_arr_t) : ptd::sim() {
-	var ret : ptd::sim() = 0;
+def count_len(arr : @wprinter::pretty_arr_t) : ptd::int() {
+	var ret : ptd::int() = 0;
 	fora var el (arr) {
 		ret += el->len;
 	}
@@ -92,7 +92,7 @@ def wprinter::build_pretty_bind(a : @wprinter::pretty_t, b : @wprinter::pretty_t
 	return {len => a->len + b->len, el => :bind({first => a, second => b})};
 }
 
-def wprinter::build_pretty_arr_decl(arr : @wprinter::pretty_arr_t, start : ptd::sim(), end : ptd::sim()) : 
+def wprinter::build_pretty_arr_decl(arr : @wprinter::pretty_arr_t, start : ptd::string(), end : ptd::string()) : 
 	@wprinter::pretty_t {
 	return {
 			len => count_len(arr) + string::length(start) + string::length(end),
@@ -100,11 +100,11 @@ def wprinter::build_pretty_arr_decl(arr : @wprinter::pretty_arr_t, start : ptd::
 		};
 }
 
-def wprinter::build_sim(str : ptd::sim()) : @wprinter::pretty_t {
+def wprinter::build_sim(str : ptd::string()) : @wprinter::pretty_t {
 	return {len => string::length(str), el => :sim(str)};
 }
 
-def wprinter::build_str_arr(str_arr : ptd::arr(ptd::sim()), last : ptd::var({
+def wprinter::build_str_arr(str_arr : ptd::arr(ptd::string()), last : ptd::var({
 		end => ptd::none(),
 		new_line => ptd::none()
 	})) : @wprinter::pretty_t {
@@ -121,8 +121,8 @@ def print_sim_arr(ref state : @wprinter::state_t, arr : @wprinter::pretty_arr_t)
 	}
 }
 
-def print_str_arr(ref state : @wprinter::state_t, elem : @wprinter::str_arr_t, pref : ptd::sim(), ind : ptd::sim()) : 
-		ptd::sim() {
+def print_str_arr(ref state : @wprinter::state_t, elem : @wprinter::str_arr_t, pref : ptd::int(), ind : ptd::int()) : 
+		ptd::int() {
 	var ret_pref = pref;
 	var str_arr = elem->arr;
 	if (is_to_long(pref + string::length(str_arr[0]))) {
@@ -167,12 +167,12 @@ def print_sim_rec(ref state : @wprinter::state_t, wise_s : @wprinter::pretty_t) 
 	}
 }
 
-def wprinter::print_t(ref state : @wprinter::state_t, wise_s : @wprinter::pretty_t, ind : ptd::sim()) : ptd::void() {
+def wprinter::print_t(ref state : @wprinter::state_t, wise_s : @wprinter::pretty_t, ind : ptd::int()) : ptd::void() {
 	print_t_rec(ref state, wise_s, ind * get_tab_size(), ind);
 }
 
-def flush_list(ref state : @wprinter::state_t, list : @wprinter::pretty_arr_t, pref : ptd::sim(), len : ptd::sim(), ind 
-	: ptd::sim(), first : @boolean_t::type) : ptd::sim() {
+def flush_list(ref state : @wprinter::state_t, list : @wprinter::pretty_arr_t, pref : ptd::int(), len : ptd::int(), ind 
+	: ptd::int(), first : @boolean_t::type) : ptd::int() {
 	if (!is_to_long(len)) {
 		fora var e (list) {
 			print_sim_rec(ref state, e);
@@ -192,8 +192,8 @@ def flush_list(ref state : @wprinter::state_t, list : @wprinter::pretty_arr_t, p
 	}
 }
 
-def print_arr_in_lines(ref state : @wprinter::state_t, arr : @wprinter::pretty_arr_t, ind : ptd::sim(), pref : ptd::sim()) 
-	: ptd::sim() {
+def print_arr_in_lines(ref state : @wprinter::state_t, arr : @wprinter::pretty_arr_t, ind : ptd::int(), pref : ptd::int()) 
+	: ptd::int() {
 	fora var el (arr) {
 		if (el->el is :sep) {
 			state_print(ref state, string::lf() . pind(ind));
@@ -206,9 +206,9 @@ def print_arr_in_lines(ref state : @wprinter::state_t, arr : @wprinter::pretty_a
 }
 
 def process_list(ref state : @wprinter::state_t, arr : @wprinter::pretty_arr_t, is_op_list : @boolean_t::type, pref : 
-		ptd::sim(), ind : ptd::sim()) : ptd::sim() {
+		ptd::int(), ind : ptd::int()) : ptd::int() {
 	var els : @wprinter::pretty_arr_t = [];
-	var els_len : ptd::sim() = 0;
+	var els_len : ptd::int() = 0;
 	var first : @boolean_t::type = true;
 	rep var i (array::len(arr)) {
 		var elem : @wprinter::pretty_t = arr[i];
@@ -229,8 +229,8 @@ def process_list(ref state : @wprinter::state_t, arr : @wprinter::pretty_arr_t, 
 	return pref;
 }
 
-def print_t_rec(ref state : @wprinter::state_t, wise_s : @wprinter::pretty_t, pref : ptd::sim(), ind : ptd::sim()) : 
-		ptd::sim() {
+def print_t_rec(ref state : @wprinter::state_t, wise_s : @wprinter::pretty_t, pref : ptd::int(), ind : ptd::int()) : 
+		ptd::int() {
 	if (!is_to_long(wise_s->len + pref)) {
 		print_sim_rec(ref state, wise_s);
 		pref += wise_s->len;

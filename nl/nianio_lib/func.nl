@@ -10,8 +10,8 @@ use array;
 def func::func_t() {
 	return ptd::var({
 		ref => ptd::rec({
-			module => ptd::sim(), 
-			name => ptd::sim()
+			module => ptd::string(), 
+			name => ptd::string()
 		})
 	});
 }

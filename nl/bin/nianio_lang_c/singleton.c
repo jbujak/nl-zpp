@@ -4,6 +4,7 @@
  */
 #include "c_rt_lib.h"
 #include "c_global_const.h"
+#include </usr/include/string.h>
 #include "singleton.h"
 #line 1 "singleton.nl"
 
@@ -14,16 +15,25 @@ ImmT singleton_priv0__const__sing(int __nr);
 
 
 
-ImmT singleton0sigleton_do_not_use_without_approval0ptr(int _num, ImmT *_tab){
+ImmT  singleton0sigleton_do_not_use_without_approval0ptr(int _num, ImmT *_tab){
 c_rt_lib0func_num_args(_num, 1, "singleton0sigleton_do_not_use_without_approval");
-return singleton0sigleton_do_not_use_without_approval(_tab[0]);}
-ImmT singleton0sigleton_do_not_use_without_approval(ImmT ___nl__0) {
-c_rt_lib0arg_val(___nl__0);
+ImmT  var0 = (_tab[0]);
+return singleton0sigleton_do_not_use_without_approval(var0);
+}
+ImmT  singleton0sigleton_do_not_use_without_approval(ImmT  ___nl__im__0) {
+c_rt_lib0arg_val(___nl__im__0);
 singleton_priv0__const__init();
+ImmT  ___nl__im__1 = NULL;
 #line 9
-return ___nl__0;
+c_rt_lib0copy(&___nl__im__1, ___nl__im__0);
 #line 9
-c_rt_lib0clear(&___nl__0);
+c_rt_lib0clear(&___nl__im__0);
+#line 9
+return ___nl__im__1;
+#line 9
+c_rt_lib0clear(&___nl__im__0);
+#line 9
+c_rt_lib0clear(&___nl__im__1);
 #line 9
 return NULL;
 }

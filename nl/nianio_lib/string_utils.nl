@@ -6,7 +6,6 @@ use string;
 use boolean_t;
 use ptd;
 use array;
-use c_rt_lib;
 
 def string_utils::is_int(char) {
 	return (string::ord(char) > 47 && string::ord(char) < 58);
@@ -21,22 +20,24 @@ def string_utils::is_alpha(char) {
 	return ((int > 64 && int < 91) || (int > 96 && int < 123));
 }
 
-def string_utils::get_integer(str) : ptd::var({ok => ptd::sim(), err => ptd::sim()}) {
+def string_utils::get_integer(str) : ptd::var({ok => ptd::int(), err => ptd::string()}) {
 	return :err('') if str eq '' || str eq '-';
 	var split_res = string::split('', str);
-	var ret = '';
+	var ret = 0;
+	var sign = 1;
 	if (split_res[0] eq '-') {
 		split_res = array::subarray(split_res, 1, array::len(split_res) - 1);
-		ret = '-';
+		sign = -1;
 	}
 	fora var char (split_res) {
 		return :err('') unless string_utils::is_int(char);
-		ret .= char;
+		ret *= 10;
+		ret += string::ord(char) - string::ord('0');
 	}
-	return :ok(ret);
+	return :ok(sign * ret);
 }
 
-def string_utils::is_integer(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_integer(obj : ptd::string()) : @boolean_t::type {
 	obj = obj . '';
 	return false unless string_utils::is_integer_possibly_leading_zeros(obj);
 	return true if obj eq '0';
@@ -46,7 +47,7 @@ def string_utils::is_integer(obj : ptd::sim()) : @boolean_t::type {
 	return true;
 }
 
-def string_utils::is_integer_possibly_leading_zeros(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_integer_possibly_leading_zeros(obj : ptd::string()) : @boolean_t::type {
 	var string = obj . '';
 	var len = string::length(string);
 	var i = 0;
@@ -58,7 +59,7 @@ def string_utils::is_integer_possibly_leading_zeros(obj : ptd::sim()) : @boolean
 	return true;
 }
 
-def string_utils::is_float(obj : ptd::sim()) : @boolean_t::type {
+def string_utils::is_float(obj : ptd::string()) : @boolean_t::type {
 	var string = obj . '';
 	var len = string::length(string);
 	return false if len < 3;
@@ -76,7 +77,7 @@ def string_utils::is_float(obj : ptd::sim()) : @boolean_t::type {
 }
 
 def string_utils::is_number(string) : @boolean_t::type {
-	var sim : ptd::sim() = string . '';
+	var sim : ptd::string() = string . '';
 	return string_utils::is_integer(sim) || string_utils::is_float(sim);
 }
 
@@ -202,8 +203,8 @@ def string_utils::eval_number(string) {
 }
 
 def string_utils::get_date(string, char) : ptd::var({
-		ok => ptd::rec({first => ptd::sim(), second => ptd::sim(), third => ptd::sim()}),
-		err => ptd::sim()
+		ok => ptd::rec({first => ptd::string(), second => ptd::string(), third => ptd::string()}),
+		err => ptd::string()
 	}) {
 	var split_result = string::split(char, string);
 	return :err('')
@@ -223,7 +224,7 @@ def string_utils::change(str, from, to) {
 	return ret;
 }
 
-def string_utils::erase_tail_whitespace(str) : ptd::sim() {
+def string_utils::erase_tail_whitespace(str) : ptd::string() {
 	return '' if str eq '';
 	var str_end_index = string::length(str) - 1;
 	while (str_end_index >= 0 && string_utils::is_whitespace(string::substr(str, str_end_index, 1))) {
@@ -232,7 +233,7 @@ def string_utils::erase_tail_whitespace(str) : ptd::sim() {
 	return string::substr(str, 0, str_end_index + 1);
 }
 
-def string_utils::erase_tail_zeroes(str : ptd::sim()) : ptd::sim() {
+def string_utils::erase_tail_zeroes(str : ptd::string()) : ptd::string() {
 	return str if str eq '';
 	var chars = string::to_array(str);
 	var str_end_index = array::len(chars) - 1;
@@ -242,7 +243,7 @@ def string_utils::erase_tail_zeroes(str : ptd::sim()) : ptd::sim() {
 	return string::substr(str, 0, str_end_index + 1);
 }
 
-def string_utils::erase_leading_zeroes(str : ptd::sim()) : ptd::sim() {
+def string_utils::erase_leading_zeroes(str : ptd::string()) : ptd::string() {
 	return str if str eq '';
 	var chars = string::to_array(str);
 	var str_start_index = 0;
@@ -287,23 +288,6 @@ def string_utils::hex2char(a, b) {
 		die;
 	}
 	return string::chr(ret);
-}
-
-def string_utils::float2str(float, prec) : ptd::sim() {
-	var pot = 1.0;
-	rep var i (prec) {
-		pot *= 10.0;
-	}
-	float = c_rt_lib::float_round(float * pot);
-	var min = '';
-	if (float < 0) {
-		min = '-';
-		float = -float;
-	}
-	var str = string_utils::int2str_leading_digits(float, prec + 1);
-	var len = string::length(str);
-	return min . string::substr(str, 0, len) if prec == 0;
-	return min . string::substr(str, 0, len - prec) . '.' . string::substr(str, len - prec, prec);
 }
 
 def string_utils::int2str_leading_digits(int, digits) {

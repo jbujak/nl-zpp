@@ -22,7 +22,7 @@ def t1() {
 
 
 def test_type_deref::t2() {
-	return ptd::arr(ptd::sim());
+	return ptd::arr(ptd::string());
 }
 
 def t2() {
