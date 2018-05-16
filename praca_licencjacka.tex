@@ -507,7 +507,7 @@ możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać o
  est kopiowana do argumentu, a po zakończeniu wywołania następuje kopiowanie z powrotem.
  Zapobiega to naruszeniu niezmienialności struktur,
  które miałoby miejsce gdyby argumenty były przekazywane przez referencję (listing \ref{lst:ref}).
- Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implmementacja takiej semantyki wymaga
+ Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja takiej semantyki wymaga
  faktycznego skopiowania zmiennej do argumentów, co jest zabronione w przypadku zmiennych typu \texttt{own}.
 \begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref}]
 int main() [
@@ -897,7 +897,7 @@ W celu oszczędności pamięci przy zachowaniu sprawdzania poprawności typów p
 wariantowych kompilowane są do rekordów, zawierających całkowitoliczbowe pole określające, który z wariantów
 jest przechowywany i unię wskaźników na typy poszczególnych możliwych wartości.
 Zastosowanie liczby całkowitej jako wartości określający konkretny wariant umożliwiło bardziej efektywne
-rozpoznawanie wariantu i skróciło czas wykonania instrukcji \texttt{match} (poprzednia implmementacja do
+rozpoznawanie wariantu i skróciło czas wykonania instrukcji \texttt{match} (poprzednia implementacja do
 odróżniania wariantów używała nazwy wariantu z kodu, co wymuszało kosztowne porównywanie łańcuchów znaków
 w trakcie działania programu).
 \subsection{Tablice asocjacyjne}
@@ -908,7 +908,7 @@ Niemniej jednak zostały one uwzględnione, ponieważ ze względu na ograniczeni
 one być zawarte w typach \texttt{ptd}, więc dodanie typu \texttt{own::hash} było jedynym sposobem na efektywną
 kompilację struktur zawartych wewnątrz tablic asocjacyjnych.
 
-Sama implmementacja dostępów do elementów tablic asocjacyjnych nie zmieniła się znacząco w porównaniu
+Sama implementacja dostępów do elementów tablic asocjacyjnych nie zmieniła się znacząco w porównaniu
 do poprzedniej implementacji. Główną różnicą jest generowanie osobnej funkcji dostępu dla każdego zdefiniowanego
 typu, co zapewnia zachowanie typowania na poziomie C i umożliwia pominięcie utrzymywania licznika referencji
 tam, gdzie jest on zbędny.
@@ -971,7 +971,38 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
 \section{Porównanie czasu wykonania programów}
 
 \chapter{Wkład poszczególnych członków zespołu}
-\emph{Co zrobiliśmy w rozbiciu na osoby}
+\begin{itemize}
+  \item[] \textbf{Michał Borkowski}
+  \begin{itemize}
+   \item Implementacja konwersji typów \texttt{own} na typy \texttt{im}
+   \item Implementacja skryptu do testowania zmian wydajności w czasie trwania projektu
+   \item Opis konwersji typów \texttt{own} na typy \texttt{im} w pracy licencjackiej
+  \end{itemize}
+
+  \item[] \textbf{Jakub Bujak}
+  \begin{itemize}
+   \item Implementacja generowania typów języka C dla zdefiniowanych w NianioLangu typów \texttt{own}
+   \item Generowanie funkcji umożliwiających dostęp do zmiennych typu \texttt{own} i ich modyfikację
+   \item Opis zmian w systemie typów w pracy licencjackiej
+  \end{itemize}
+
+  \item[] \textbf{Marian Dziubiak}
+  \begin{itemize}
+   \item Implementacja uzupełniania drzewa AST typami wywnioskowanymi w procesie kontroli typów
+   \item Modyfikacja typów funkcji bibliotecznyh w związku z rozdzieleniem typu \texttt{ptd::sim}
+   \item Opis w pracy licencjackiej metodyki pracy używanej podzcas projektu
+  \end{itemize}
+
+  \item[] \textbf{Marek Puzyna}
+  \begin{itemize}
+   \item Implementacja generowania definicji funkcji zwalnianjących pamięć zajmowaną przez typy \texttt{own}
+   \item Implementacja generowania wywołań funkcji zwalniających pamięć dla zmiennnych typu \texttt{own} wychodzących
+     z zasięgu
+   \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
+  \end{itemize}
+
+
+\end{itemize}
 
 
 \appendix
