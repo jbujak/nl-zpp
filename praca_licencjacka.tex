@@ -80,7 +80,7 @@
   }
 
 % miesiąc i~rok:
-\date{Maj 2018}
+\date{Czerwiec 2018}
 
 %Podać dziedzinę wg klasyfikacji Socrates-Erasmus:
 \dziedzina{
@@ -189,7 +189,7 @@ Podstawowymi założeniami systemu typów w NianioLangu są: niemutowalność st
 
 W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
 a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
-W rozdziale \nameref{sec:compiler} opisana została implementacja powyższych typów w języku C.
+W rozdziale \textit{\nameref{sec:compiler}} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
 Celem projektu była modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz
@@ -221,7 +221,7 @@ To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 \end{itemize}
 
 \chapter{Metodyka pracy}
-Prace nad kodem prowadzone były regularnie od połowy października do maja,
+Prace nad kodem prowadzone były regularnie od połowy października 2017 do maja 2018,
 z wyłączeniem sesji na przełomie lutego i stycznia. Na rysunku \ref{img:commits_over_time}
 przedstawiony został wykres zmian, które wpływały na główną gałąź repozytorium kodu.
 Co tydzień zespół prezentował swoje poczynania opiekunowi, co dostarczało stałej motywacji
@@ -229,10 +229,23 @@ do implementacji kolejnych elementów projektu.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.9\textwidth]{commits_over_time}
+  \includegraphics[width=0.9\textwidth]{files/commits_over_time}
   \caption{Liczba commitów na głównej gałęzi repozytorium w czasie trwania projektu.}
   \label{img:commits_over_time}
 \end{figure}
+
+\section{Programowanie zwinne}
+Metodyka pracy, z której korzystaliśmy, najbliższa była metodyce programowania zwinnego (ang. \textit{Agile}).
+Praca toczyła się w iteracjach i była podzielona tak, że na końu każdej iteracji gotowa była implementacja
+nowego typu. Fragmenty kody NianioLanga korzystające z tych typów oraz odpowiadające im pogramy wynikowe w języku
+C były na bieżąco przesyłane do zleceniodawcy i konsultowane z nim.
+
+Metodyka ta została wybrana ze względu na brak jasnego początkowego zakresu pracy.
+Praca nad językiem miała charakter badawczy i wymagała zdefiniowania semantyki nowych typów,
+która ulegała ciągłym zmianom w tracie trwania projektu.
+Dzięki ciągłej konsulatcji ze zleceniodawcą można było na bieżąco wykrywać problemy z definicją typów
+i szybko na nie reagować.
+
 
 \section{Korzystanie z systemu kontroli wersji}
 Podczas pracy zespołowej niezmiernie istotna jest wymiana i zarządzanie fragmentami kodu,
@@ -256,13 +269,27 @@ Dzięki temu w dowolnej chwili możliwe było określenie nad czym pracuje dany 
 zespołu i jakie otwarte zadania pozostały do przydzielenia.
 
 \section{Zgłaszanie zmian i code review}
-Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. Pull Request,
+Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. pull request,
 czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszczone
 w głównej gałęzi projektu, musiały być zatwierdzone przez co najmniej jednego członka
-zespołu, innego niż ten który zgłosił PR. GitHub udostępnia widok naniesionych zmian
+zespołu, innego niż ten który zgłosił pull request. GitHub udostępnia widok naniesionych zmian
 wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
 był dialog między recenzentem kodu, a jego twórcą, tak aby ostatecznie zatwierdzone
 zmiany spełniały oczekiwania obu stron.
+
+\section{Testowanie i ciągła integracja}
+W projekcie została wykorzystana praktyka ciągłej integracji z wykorzystaniem systemu Travis.
+Został on wybrany, ponieważ jest dostępny za darmo i umożliwia łatwą integrację z repozytorium kodu
+na platformie GitHub.
+
+Każdorazowo po przesłaniu zmian do repozytorium uruchamiany był skrypt sprawdzający, czy dana wersja kompilatora
+kompiluje się i przechodzi szereg testów automatycznych.
+Zmiany, w wyniku których testy nie przechodziły nie mogły być scalane z główną gałęzią.
+
+Testy na początku projektu obejmowały całość istniejącego języka.
+Za każdym razem, kiedy były dodawane nowe typy lub nowe operacje na już istniejących typach,
+testy były uzupełnianie o daną konstrukcję.
+W ten sposób można było łatwo sprawdzić, czy nowe zmiany nie wpłynęły negatywnie na działające wcześniej funkcje.
 
 \section{Techniki komunikacji w zespole}
 Większość komunikacji w zespole odbywała się online przez portal społecznościowy Facebook.
@@ -273,12 +300,11 @@ ustalał większość detali implementacyjnych przed rozpoczęciem ich wdrażani
 Ten środek komunikacji był najchętniej wykorzystywany ze względu na najkrótszy czas
 reakcji członków zespołu.
 
-Drugim kanałem komunikacji były zadania i PRy na GitHubie. Zadania w prosty sposób
-opisywały co i kto ma zrobić, a opisy PRów określały co zostało przez daną osobę zrobione.
-Ta forma komunikacji w projekcie była najmniej używana.
+Drugim kanałem komunikacji były zadania i pull requesty na GitHubie. Zadania w prosty sposób
+opisywały co i kto ma zrobić, a opisy pull requestów określały co zostało przez daną osobę zrobione.
 
 Ostatnim sposobem komunikacji były cotygodniowe spotkania podczas zajęć z Zespołowego
-Projektu Programistycznego, po których zespół spędzał 10-20 minut na dogadywaniu się,
+Projektu Programistycznego, po których członkowie zespołu spędzali 10-20 minut na ustalaniu
 kto wybiera które zadanie, a w przypadku pytań lub problemów, na ich rozwiązaniu.
 
 \chapter{Kompilator NianioLanga}
@@ -297,7 +323,7 @@ podstawowej analizy semantycznej, gdyż wydzielenie tych czynności spowodowało
 \end{figure}
 
 Najpierw parser próbuje przeczytać listę importowanych modułów, gdyż zgodnie ze składnią języka musi ona zostać umieszczona na początku programu. Po
-tym etapie następuje parsowanie listy funkcji. Każdy etap parsowania odbywa się poprzez analizę możliwie najdłuższej ilości tekstu, dopisanie błędów,
+tym etapie następuje parsowanie listy funkcji. Każdy etap parsowania odbywa się poprzez analizę możliwie najdłuższego fragmentu tekstu, dopisanie błędów,
 ustawienie wskaźnika następnej pozycji oraz innych pomocniczych wartości, które są przechowywane w zmiennej reprezentującej stan parsera, a na końcu
 zwrócenie sparsowanej wartości. Nie ma znaczenia, co zwróci dana funkcja w razie błędu, gdyż wtedy kompilacja zostanie zatrzymana, a użytkownik
 poinformowany o błędzie. W przypadku, gdy nie jest jasne, co należy sparsować (na przykład nie wiadomo, czy oczekujemy kolejnej deklaracji importu
@@ -319,7 +345,7 @@ jest jednak obsługiwana, stanie się to dopiero podczas sprawdzania poprawnośc
 \section{Analiza semantyczna}
 Drugim etapem kompilacji jest sprawdzenie poprawności typów. Wbrew nazwie etap ten nie ma na celu wyłącznie sprawdzenia, czy program jest poprawny
 typowo -- do drzewa programu wpisywane są informacje o uzyskanych typach. Jest to konieczne, by móc dopasować typy NianioLanga do typów języka
-wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \nameref{sec:own_to_im}.
+wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \textit{\nameref{sec:own_to_im}}.
 
 Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy definicje funkcji nie dublują się, oraz w końcu czy używane typy zgodne
 są z oczekiwanymi. Trzeci element rozumiany jest dwojako. Po pierwsze, jeżeli dana zmienna ma zadeklarowany przez użytkownika typ, sprawdza się, czy
@@ -350,7 +376,7 @@ typu \texttt{im}, o tyle teraz przechować należy strukturę typów \texttt{own
 to znaczy nie mają żadnego znaczenia semantycznego.
 
 Najważniejszą cechą nlasma jest nie drzewiasta, lecz liniowa struktura programu. Oznacza to, że argumentami wywołań mogą być wyłącznie rejestry, a nie
-zmienne czy inne wywołania. W znacznym stopniu ułatwia to dalszą pracę kompilatora, przede wszystkim z powodu mniejszej liczby niuansów dotyczących na
+zmienne czy inne wywołania. W znacznym stopniu ułatwia to dalszą pracę kompilatora, przede wszystkim z powodu mniejszej liczby problemów dotyczących na
 przykład wartości zwracanych, przez co kod generatora języka docelowego może być znacznie prostszy. Ponadto generowanie kodu może odbywać się w sposób
 liniowy, to znaczy każda komenda nlasma może mieć jednoznaczne, proste odzwierciedlenie w języku docelowym. Dzięki temu generator może dokonywać
 analizy wyłącznie w zakresie charakterystycznym dla danego języka, na przykład do generatora C zostało wprowadzone sortowanie topologiczne deklaracji
@@ -431,13 +457,22 @@ programu wskazuje na konkretne struktury danego obiektu. Pierwsze bajty każdego
 wartość ma licznik referencji. Jest to powszechny schemat symulowania programowania obiektowego w językach, które takowego nie wspierają, a takim
 językiem jest C.
 
-
 Operacje na danych definiowane są przez szereg funkcji dostępnych w bibliotece standardowej NianioLanga, dokompilowywanej do każdego programu, to
 znaczy każdy moduł NianioLanga importuje jej nagłówki. Zawierają one podstawową funkcjonalność obsługi arytmetyki, struktur danych, operacji I/O.
 
-
 Cała obsługa jest dość prosta i ma charakter możliwie najbardziej generyczny, wobec czego jest niezwykle niewydajna, w szczególności w kontekście
-operacji na liczbach lub wartościach logicznych. Celem projektu była zmiana tej sytuacji i umożliwienie kompilatorowi C zastosowanie większej liczby
+operacji na liczbach lub wartościach logicznych.
+Przed wykonaniem dowolnej operacji na zmiennej o którymś z tych typów konieczne jest odpakowanie konkretnej wartości
+ze zmiennej, wykonanie na niej danej operacji, a następnie opakowanie jej z powrotem w typ \texttt{ImmT}.
+Szczególny problem pojawia się przy operacjach na wartościach logicznych: nie mają one bezpośredniego odzwierciedlenia
+w typach NianioLanga i są zaimplementowane jako warianty o wartościach \texttt{:TRUE} lub \texttt{:FALSE}.
+Każda operacja na wartościach logicznych wymaga więc, oprócz odpakowania wartości z typu \texttt{ImmT}, rozpoznania,
+który z wariantów reprezentuje ta zmienna.
+Stanowi to bardzo dużą różnicę w stosunku do czystych wartości logicznych języka C, na których operacje nie wymagają
+całego tego narzutu.
+
+
+Celem projektu była zmiana tej sytuacji i umożliwienie kompilatorowi C zastosowanie większej liczby
 optymalizacji, co opisane jest w kolejnych rozdziałach.
 
 
@@ -680,7 +715,7 @@ pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla ws
 Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, to instrukcja NianioLanga
 \texttt{a->b[0] = 1} zostanie przetłumaczona do ciągu poleceń nlasma
 \texttt{get\_hash\_val}, \texttt{get\_frm\_idx}, \texttt{set\_at\_index}, \texttt{set\_hash\_val} zgodnie
-z opisem z rozdziału \nameref{sec:translation}.
+z opisem z rozdziału \textit{\nameref{sec:translation}}.
 
 Niestety to podejście nie jest odpowiednie w przypadku dostępów do zmiennych typu own.
 Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} jest taka, że wartość pobierana
@@ -816,11 +851,14 @@ Dzięki dodaniu nowych poleceń możliwe było zaimplementowanie generowania naz
 generowania kodu C, kiedy ich nazwy sa już znane.
 
 \chapter{Nowe implementacje typów}
+Aby zmiana systemu typów mogła przyczynić się do zwiększonej wydajności NianioLanga, konieczna była uważna
+implementacja generowania operacji na nich wykonywanych.
+Poniżej opisane zostały modyfikacje dotyczące kodu generowanego dla poszczególnych wprowadzonych typów.
 \section{Typy proste}
 Pierwszą zmianą, jaka została wprowadzona w generatorze kodu, było uproszczenie,
 tam gdzie to możliwe, kodu generowanego dla operacji na typach prostych.
 Rozdzielenie typu \texttt{ptd::sim} na osobne typy dla liczb naturalnych,
-łańcuchów znaków i wartości logicznych umożliwiło bardziej uważny dobór instrukcji języka C,
+łańcuchów znaków i wartości logicznych umożliwiło bardziej precyzyjny dobór instrukcji języka C,
 co przełożyło się na wydajniejszy kod wynikowy.
 
 \subsection{Liczby całkowite}
@@ -839,7 +877,8 @@ zachować bezpieczeństwo języka i uchronić programistę przed błedami, takim
 Z tego względu została podjęta decyzja o niepowielaniu istniejącej implementacji i wykorzystaniu
 tej już istniejącej.
 \subsection{Wartości logiczne}
-Jak zostało to opisane w rozdziale \nameref{sec:c_types_implementation}, dotychczasowa implementacja wartości logicznych opierała się na dwuwartościowych
+Jak zostało to opisane w rozdziale \textit{\nameref{sec:c_types_implementation}}, dotychczasowa implementacja
+wartości logicznych opierała się na dwuwartościowych wariantach
 języka NianioLang. Z uwagi na to, że warianty są dość wysokopoziomowym mechanizmem, bez
 bezpośredniego odzwierciedlenia w języku C, kod wynikowy generowany dla wartości logicznych nie był
 efektywny.
