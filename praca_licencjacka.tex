@@ -376,23 +376,23 @@ Przykładowe komendy nlasma:
 \end{itemize}
 \section{Translacja drzewa AST do nlasma}
 \label{sec:translation}
-Drzewo AST, reprezentujące funkcję z języka nianiolang, zostaje w sposób rekurencyjny tłumaczone na ciąg komend języka nlasm. Sposobem działania 
-komendy języka nlasm przypominają rozkazy maszynowe: identyfikator + argumenty. Zgodnie ze specyfikacją języka nlasm, każdemu argumentowi funkcji jak 
-i każdej zmiennej lokalnej jest przydzielany rejestr odpowiedniego typu. Z powodu struktury języka nlasm, brak w nim jakichkolwiek rozgałęzień kodu, 
+Drzewo AST, reprezentujące funkcję języka nianiolang, jest w sposób rekurencyjny tłumaczone na ciąg komend nlasma. Sposobem działania 
+komendy nlasma przypominają rozkazy maszynowe: identyfikator komendy + identyfikatory rejestrów. Zgodnie ze specyfikacją języka nlasm, każdemu argumentowi funkcji jak 
+i każdej zmiennej lokalnej jest przydzielany rejestr odpowiedniego typu. Ze względu na strukturę języka nlasm brak w nim jakichkolwiek rozgałęzień kodu, 
 więc każda instrukcja warunkowa czy pętla jest tłumaczona na odpowiedni ciąg komend, zawierający warunkowy skok (komendę \texttt{if\_goto}) do 
-odpowiedniej etykiety.  Przypisanie wartości jednej zmiennej do innej jest realizowane za pomocą komendy \texttt{move}. 
+odpowiedniej etykiety. Przypisanie wartości jednej zmiennej do innej jest realizowane za pomocą komendy \texttt{move}. 
 
-Tłumaczenie wartości wyrażeń jest bardziej skomplikowane: dla danego wierzchołka w drzewie AST generujemy, wywołania komend, obliczających wartości w 
-danym wierzchołku na podstawie podwyrażeń. Na przykład, dla wyrażeń arytmetycznych zapisujemy wartości lewej i prawej strony w rejestrach, po czym 
-stosujemy komendę \texttt{bin\_op}, która dla danych trzech rejestrów: docelowego, lewej strony i prawej strony wyrażenia, a także operatora oblicza 
-wartość i zapisuje w odpowiednim rejestrze. Dla operacji, posiadających skutki uboczne (np. zapisanie wartośi do zmiennej) stosujemy t.zw. obliczanie 
-z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia (która w takim przypadku powinna być zmienną bądź ciągiem 
-dostępów do elementów talic/haszy/rekordów, kończący się wartością), oblicza ciąg zstępujący odwołań do elementu kolekcji. To translator realizuje za 
-pomocą wywołania określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
+Tłumaczenie wartości wyrażeń jest bardziej skomplikowane: dla danego wierzchołka w drzewie AST generujemy wywołania komend obliczające wartości w 
+danym wierzchołku na podstawie podwyrażeń. Na przykład dla wyrażeń arytmetycznych zapisujemy wartości lewej i prawej strony w odpowiednich rejestrach, po czym 
+stosujemy komendę \texttt{bin\_op}, która dla danych trzech rejestrów: docelowego, lewej strony i prawej strony wyrażenia, a także operatora, oblicza 
+wartość i zapisuje w odpowiednim rejestrze. Dla operacji posiadających skutki uboczne (np. zapisanie wartości do zmiennej) stosujemy tzw. obliczanie 
+z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia, która w takim przypadku powinna być zmienną bądź ciągiem 
+dostępów do elementów talic/haszy/rekordów, kończących się wartością, oblicza ciąg zstępujący odwołań do elementów kolekcji. To translator realizuje za 
+pomocą wywołań określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
 komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funcje te tworzą kopię elementu kolekcji, którą zapisują w 
-odpowiednim rejestrze. Po zapisaniu nowej wartości, translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
+odpowiednim rejestrze. Po zapisaniu nowej wartości translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
 \texttt{set\_at\_idx}, \texttt{set\_val}. Na przykład, tłumacząc operatory arytmetyczne, przypisujące wynik do lewej strony (np. \texttt{+=}), na 
-początek obliczamy ciąg dostępów do wartości lewej strony, obliczamy prawą stronę, wynik, po czym generuje ciąg przypisań nowych wartości kolejnych 
+początek obliczamy ciąg dostępów do wartości lewej strony, obliczamy prawą stronę, wynik, po czym generuje się ciąg przypisań nowych wartości dla odpowiednich elementów kolejnych 
 kolekcji.
 
 \section{Generowanie kodu C na podstawie nlasma}
