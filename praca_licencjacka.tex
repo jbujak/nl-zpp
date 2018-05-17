@@ -22,6 +22,9 @@
 \usepackage{xcolor}
 \usepackage{textcomp}
 \usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{tabularx}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
 
 
 \lstset{
@@ -115,7 +118,7 @@
 \begin{abstract}
 W pracy opisany został proces projektowania i implementacji rozszerzenia języka NianioLang mającego umożliwić
 kompilację jego zmiennych do efektywnych konstrukcji języka C przy zachowaniu jego podstawowych cech.
-W pierwszej części pracy krótko opisany został sam język NianioLang i stan kompilatora zastany w chwili
+W pierwszej części pracy zawarte zostało wprowadzenie do języka NianioLang i stan kompilatora zastany w chwili
 rozpoczynania projektu. W dalszych rozdziałach zostały opisane zmiany w systemie typów, jakie były potrzebne
 do osiągnięcia zamierzonych celów i sposób implementacji tych zmian w kompilatorze.
 \end{abstract}
@@ -210,13 +213,19 @@ kompilacji NianioLanga do języków innych niż C do czasu implementacji nowych 
 To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 
 \section{Podstawowe pojęcia}
+Jesli nie zaznaczono inaczej, pojęcia dotyczące kompilacji rozumiane są zgodnie z definicjami
+podanymi w książce \cite{dragonbook}.
 \begin{itemize}
-  \item[] \textbf{AST} -- drzewo składni abstrakcyjnej, reprezentacja programu w formie drzewa, w którym każdy węzeł
+  \item[] \textbf{AST} (ang. \textit{Abstract syntax tree}) -- drzewo składni abstrakcyjnej,
+    reprezentacja programu w formie drzewa, w którym każdy węzeł
     reprezentuje konstrukcję języka, a jego synowie reprezentują części składowe tej konstrukcji
-  \item[] \textbf{nlasm} -- język pewnej maszyny rejestrowej, będący językiem pośrednim w kompilatorze NianioLanga
-  \item[] \textbf{parsowanie, analiza składniowa} -- proces przetwarzania kodu źródłowego programu na równoważne drzewo AST
+  \item[] \textbf{nlasm} -- język maszyny rejestrowej, będący językiem pośrednim w kompilatorze NianioLanga
+  \item[] \textbf{parsowanie, analiza składniowa} -- proces przetwarzania kodu źródłowego programu na równoważne drzewo
+  AST
   \item[] \textbf{analiza semantyczna} -- proces sprawdzania programu na poziomie znaczenia poszczególnych instrukcji
-  \item[] \textbf{translacja} -- proces tłumaczenia drzewa AST na język pośredni
+  oraz zbierania informacji potrzebnych na kolejnych etapach
+  \item[] \textbf{generacja kodu pośredniego} -- proces tłumaczenia drzewa AST na język pośredni, w kompilatorze
+  NianioLanga nazywana \textbf{translacją}
   \item[] \textbf{generacja} -- proces tłumaczenia języka pośredniego na język docelowy
 \end{itemize}
 
@@ -364,7 +373,8 @@ czy są one poprawne. Tak jak w parserze zapisane jest, że operator \texttt{+} 
 checkerze wie, że argumenty tego operatora muszą mieć typ zwracany \texttt{int}. Ponownie pozwala to na podział funkcji w taki sposób, by każda
 dotyczyła jednego, jasno wyszczególnionego elementu.
 \section{Architektura nlasma}
-nlasm to język stosowany w kompilatorze jako pomost pomiędzy NianioLangiem a językiem wyjściowym, gdyż bezpośrednia kompilacja NianioLanga do C, lub
+nlasm to język stosowany w kompilatorze jako język pośredni pomiędzy NianioLangiem a językiem docelowy.
+Został wprowadzony, gdyż bezpośrednia kompilacja NianioLanga do C, lub
 też innego języka, może okazać się trudna, ponieważ używane struktury językowe znacząco od siebie odbiegają. Umożliwia to w łatwy sposób tworzenie
 modułów kompilujących NianioLanga do różnych języków. Taka technika jest szeroko stosowana w świecie kompilatorów, jednym z najszerzej znanych
 przykładów jest LLVM. Obecność autorskiego nlasma podyktowana jest przede wszystkim potrzebą języka pośredniego, który z jednej strony będzie możliwie
@@ -422,7 +432,7 @@ początek obliczamy ciąg dostępów do wartości lewej strony, obliczamy prawą
 kolekcji.
 
 \section{Generowanie kodu C na podstawie nlasma}
-Jak zostało to omówione w poprzednim rozdziale, \texttt{nlasm} został zaprojektowany z myślą o ułatwieniu dalszej kompilacji. Wobec tego generowanie
+Jak zostało to omówione w poprzednim rozdziale, nlasm został zaprojektowany z myślą o ułatwieniu dalszej kompilacji. Wobec tego generowanie
 kodu C jest bardzo proste.
 
 
@@ -442,7 +452,8 @@ się wskaźnikiem na typ \texttt{A}.
 
 
 Trzecim i ostatnim etapem jest wygenerowanie kodu odpowiedzialnego za same funkcje NianioLanga. Komendy nlasm w bardzo prosty sposób tłumaczą się na
-język C, wobec czego generator na tym etapie wykonuje niewiele logiki, lecz jedynie pracę związaną z właściwie słownikowym przełożeniem instrukcji
+język C.
+Wobec tego generator na tym etapie wykonuje jedynie pracę związaną z właściwie słownikowym przełożeniem instrukcji,
 mając jedynie na uwadze pewne szczegóły techniczne. Do tych szczegółów należy, pośród innych pomniejszych zadań, utworzenie wrapperów na funkcje tak,
 by można było je wywoływać także mając daną tablicę argumentów, obsługa wskaźników i zarządzanie pamięcią oraz tworzenie komentarzy będących
 informacją, której linii oryginalnego programu odpowiada dana seria instrukcji.
@@ -625,7 +636,9 @@ Pierwszym elementem, który należało uwzględnić była kwestia wykonywania op
 W celu uproszczenia semantyki nlasma została podjęta decyzja, żeby jedyną instrukcją, która może powodować
 rzutowanie pomiędzy różnymi typami była instrukcja \texttt{move}.
 Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator trafi na instrukcję z argumentem
-o niepoprawnym typie, zgłosi błąd. Drugą ważną kwestią była decyzja co do przeniesienia opcjonalności typów
+o niepoprawnym typie, zgłosi błąd.
+
+Drugą ważną kwestią była decyzja co do przeniesienia opcjonalności typów
 na poziom nlasma. Ponieważ w kompilatorze istnieje możliwość bezpośredniej interpretacji nlasma bez kompilacji,
 opcjonalność typów na poziomie nlasma okazała się koniecznością, którą należało uwzględnić podczas projektowania
 rozszerzenia nlasma o rejestry typowane.
@@ -919,7 +932,7 @@ maksymalną pojemność i wskaźnik na jej pierwszy element. Do programu wynikow
 dodawane są również funkcje,
 pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
 o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
-została zaimplementowana w sposób opisany na przykład w książce
+została zaimplementowana w sposób opisany w książce
 \textit{Wprowadzenie do algorytmów} \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
 tablica zostaje powiększona dwukrotnie. Dzięki takiej implementacji operacja
 ta działa w zamortyzowanym czasie stałym.
@@ -1038,39 +1051,131 @@ Aby zbadać przyrost wydajności wynikający z użycia nowych typów przygotowan
 przetestować koszt użycia poszczególnych konstrukcji języka.
 Każdy program został napisany w trzech wersjach: w wersji z typami \texttt{ptd}, w wersji z typami \texttt{own}
 i równoważny program napisany w języku C.
-Programy używające typów \texttt{ptd} były kompilowane kompilatorem NL w wersji sprzed wprowadzonych zmian,
-programy używające typów \texttt{own} były kompilowane wersją kompilatora NL z uwzlęgnieniem zmian, a programy w języku C
-kompilowane były kompilatorem \texttt{gcc} w wersji 8.1.0.
+
+Testy te były kompilowane zgodnie z tabelą \ref{tab:compilers} na komputerze z procesorem 
+Intel\textsuperscript{\tiny{\textregistered}} Core\textsuperscript{\tiny{TM}} i5-5200U 2.20GHz,
+zaopatrzonym w 16GB pamięci RAM. System zainstalowany na komputerze to Arch Linux x86\_64
+z jądrem w wersji 4.16.8-1-ARCH. Czas wykonania mierzony był poleceniem \texttt{time}
+
+\begin{table}[h]
+\caption{Wersje kompilatorów użyte do testów}
+\label{tab:compilers}
+\begin{tabular}{|l|l|l|}
+  \hline
+  \textbf{Przedmiot testów} & \textbf{Wersja kompilatora} & \textbf{Polecenie kompilacji} \\
+  \hline
+  Testy wykorzystujące typy \texttt{ptd} & \texttt{NL}, wersja z 15.02.2017 & \texttt{./mk\_cache.exe ----c \&\& gcc -O0} \\
+  \hline
+  Testy wykorzystujące typy \texttt{own} & \texttt{NL}, wersja z 17.05.2018 & \texttt{./mk\_cache.exe ----c \&\& gcc -O0} \\
+  \hline
+  Testy w języku C & \texttt{gcc 8.1.0} & \texttt{gcc -O0} \\
+  \hline
+\end{tabular}
+\end{table}
+
 \section{Porównanie czasu wykonania programów}
 \subsection{Narzut czasowy pętli}
 Aby zbadać zmianę narzutu czasowego pętli, czyli czasu, który program poświęca na modyfikację iteratora i sprawdzanie
 warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania programu wykonującego pustą pętlę
-o $10^8$ iteracjach. Programym, na których wykonane zostały testy są zamieszczone na listingach, a w tabeli
+o $10^8$ iteracjach. Programym, na których wykonane zostały testy są zamieszczone na listingach
+\ref{lst:int_loop_nl} -- \ref{lst:rec_loop_c}, a w tabeli
 \ref{tab:loop}
 przestawione zostały uśrednione wyniki 10 testów.
 
-\begin{table}[t]
-\caption{Przyrost wydajności programów NianioLanga}
-\label{tab:loop}
-\begin{tabular}{|l|r|r|r|}
+\begin{table}[h]
+\caption{Średni czas wykonania pętli}
+\begin{tabularx}{\textwidth}{|c|R|R|R|}
  \hline 
-  Test & Czas wykonania \texttt{ptd} & Czas wykonania \texttt{own} & Czas wykonania C\\
+  \multirow{2}{*}{\textbf{Test}}
+  & \multicolumn{3}{|c|}{\textbf{Czas wykonania}} \\
+  \cline{2-4}
+  & \multicolumn{1}{|c|}{\texttt{ptd}} & \multicolumn{1}{|c|}{\texttt{own}} & \multicolumn{1}{|c|}{\texttt{C}}\\
  \hline 
-  Iterator -- liczba całkowita (\ref{lst:int_loop}) & 9s & 0.3s & 0.2s \\
+  Iterator -- liczba całkowita & 9,066 s & 0,2627 s & 0,234 s \\
   \hline
-  Iterator -- pole w rekordzie (\ref{lst:rec_loop}) & 71s & 0.6s & 0.3s \\
+  Iterator -- pole w rekordzie & 60,137 s & 0,896 s & 0,234 s \\
   \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
-\begin{lstlisting}[caption={Iterator całkowitoliczbowy},label={lst:int_loop}]
-rep var i (1000000000) {
-}
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy NL},label={lst:int_loop_nl}]
+rep var i (1000000000) { }
 \end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu},label={lst:rec_loop}]
-a = {b => { c => 0 } };
-for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
-}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy C},label={lst:int_loop_c}]
+for (int i = 0; i < 100000000; i++) {}
 \end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{ptd}},label={lst:rec_loop_ptd}]
+var a = {b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{own}},label={lst:rec_loop_own}]
+var a : own::rec({ b => own::rec({
+		c => ptd::int()
+	}) }) = { b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu C},label={lst:rec_loop_c}]
+struct s { struct { int c; } b; } a;
+for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
+\end{lstlisting}
+\end{minipage}
+
+\begin{table}[h]
+\caption{Czasy wykonania poszczególnych testów pętli}
+\label{tab:loop}
+\begin{tabularx}{\textwidth}{|c|R|R|R|}
+ \hline 
+  \multirow{2}{*}{\textbf{Test}}
+  & \multicolumn{3}{|c|}{\textbf{Czas wykonania}} \\
+  \cline{2-4}
+  & \multicolumn{1}{|c|}{\texttt{ptd}} & \multicolumn{1}{|c|}{\texttt{own}} & \multicolumn{1}{|c|}{\texttt{C}}\\
+ \hline 
+  \multirow{10}{*}{Iterator -- liczba całkowita}
+  & 9,214 s & 0,267 s & 0,238 s \\
+  \cline{2-4}
+  & 9,160 s & 0,267 s & 0,233 s \\
+  \cline{2-4}
+  & 9,045 s & 0,259 s & 0,233 s \\
+  \cline{2-4}
+  & 9,096 s & 0,266 s & 0,234 s \\
+  \cline{2-4}
+  & 8,963 s & 0,260  s &0,235  s \\
+  \cline{2-4}
+  & 9,120 s & 0,262 s & 0,233 s \\
+  \cline{2-4}
+  & 8,936 s & 0,259 s & 0,234 s \\
+  \cline{2-4}
+  & 8,970 s & 0,262 s & 0,235 s \\
+  \cline{2-4}
+  & 8,973 s & 0,259 s & 0,233 s \\
+  \cline{2-4}
+  & 9,180 s & 0,266 s & 0,232 s \\
+  \hline
+  \multirow{10}{*}{Iterator -- pole w rekordzie}
+  & 60,187 s & 0,897 s & 0,235 s \\
+  \cline{2-4}
+  & 60,235 s & 0,897 s & 0,239 s \\
+  \cline{2-4}
+  & 60,674 s & 0,891 s & 0,232 s \\
+  \cline{2-4}
+  & 59,996 s & 0,892 s & 0,228 s \\
+  \cline{2-4}
+  & 59,966 s & 0,916 s & 0,231 s \\
+  \cline{2-4}
+  & 60,163 s & 0,899 s & 0,229 s \\
+  \cline{2-4}
+  & 60,022 s & 0,888 s & 0,235 s \\
+  \cline{2-4}
+  & 59,953 s & 0,895 s & 0,235 s \\
+  \cline{2-4}
+  & 60,088 s & 0,901 s & 0,236 s \\
+  \cline{2-4}
+  & 60,089 s & 0,887 s & 0,240 s \\
+  \hline
+\end{tabularx}
+\end{table}
+
 \chapter{Wkład poszczególnych członków zespołu}
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
@@ -1078,6 +1183,7 @@ for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
    \item Implementacja konwersji typów \texttt{own} na typy \texttt{im}
    \item Implementacja skryptu do testowania zmian wydajności w czasie trwania projektu
    \item Opis konwersji typów \texttt{own} na typy \texttt{im} w pracy licencjackiej
+   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Jakub Bujak}
@@ -1085,6 +1191,8 @@ for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
    \item Implementacja generowania typów języka C dla zdefiniowanych w NianioLangu typów \texttt{own}
    \item Generowanie funkcji umożliwiających dostęp do zmiennych typu \texttt{own} i ich modyfikację
    \item Opis zmian w systemie typów w pracy licencjackiej
+   \item Testy wydajności po wprowadzonych zmianach
+   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Marian Dziubiak}
@@ -1092,6 +1200,8 @@ for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
    \item Implementacja uzupełniania drzewa AST typami wywnioskowanymi w procesie kontroli typów
    \item Modyfikacja typów funkcji bibliotecznyh w związku z rozdzieleniem typu \texttt{ptd::sim}
    \item Opis w pracy licencjackiej metodyki pracy używanej podzcas projektu
+   \item Wykres liczby zmian wpływających na główną gałąź 
+   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Marek Puzyna}
@@ -1100,6 +1210,7 @@ for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
    \item Implementacja generowania wywołań funkcji zwalniających pamięć dla zmiennnych typu \texttt{own} wychodzących
      z zasięgu
    \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
+   \item Korekty pracy licencjackiej
   \end{itemize}
 \end{itemize}
 
@@ -1114,6 +1225,7 @@ for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
 \bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler -- GitHub,
 data dostępu 17.05.2018}
 \bibitem{cormen} Thomas H. Cormen, Charles E. Leiserson, Ron Rivest, Clifford Stein \textit{Wprowadzenie do algorytmów}, Wydawnictwo Naukowe PWN (2013)
+\bibitem{dragonbook} Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman \textit{Kompilatory. Reguły, metody i narzędzia}
 
 
 \end{thebibliography}
