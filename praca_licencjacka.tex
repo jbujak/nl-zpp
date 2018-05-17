@@ -113,7 +113,11 @@
 
 %tu idzie streszczenie na strone poczatkowa
 \begin{abstract}
-W pracy opisujemy...
+W pracy opisany został proces projektowania i implementacji rozszerzenia języka NianioLang mającego umożliwić
+kompilację jego zmiennych do efektywnych konstrukcji języka C przy zachowaniu jego podstawowych cech.
+W pierwszej części pracy krótko opisany został sam język NianioLang i stan kompilatora zastany w chwili
+rozpoczynania projektu. W dalszych rozdziałach zostały opisane zmiany w systemie typów, jakie były potrzebne
+do osiągnięcia zamierzonych celów i sposób implementacji tych zmian w kompilatorze.
 \end{abstract}
 
 \tableofcontents
@@ -144,16 +148,19 @@ Celem twórców języka jest dostarczenie narzędzia umożliwiającego operowani
 o semantyce zbliżonej do języków funkcyjnych, ale prostszego w użyciu.
 Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce, w przypadku kompilacji do C,
 zaimplementowano system zarządzania obiektami
-w pamięci przez zliczanie referencji, aby pozbyć sie jednego z najczęstszych źródeł błędów, występujących przy programowaniu niskopoziomowym.
+w pamięci przez zliczanie referencji, aby pozbyć się jednego z najczęstszych źródeł błędów, występujących przy programowaniu niskopoziomowym.
 Takie zabiegi zmniejszają nieco wydajność języka, ale jego twórcy doszli do wniosku, że zysk z wysokopoziomowego podejścia
 do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
 Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB.com).
 Kod źródłowy kompilatora jest dostępny na platformie GitHub\cite{github_repo_nianiolang_original} na licencji MIT.
 
+Szczegółowe informacje na temat założeń NianioLanga i jego składni można znaleźć na oficjalnej
+stronie projektu \cite{nianiolang_org}.
+
 \section{Typy w NianioLangu}
-W NianioLangu mamy doczynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
-co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudowancyh typów: 
+W NianioLangu mamy do czynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
+co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudowanych typów: 
 \begin{itemize}
   \item \texttt{ptd::sim} -- liczby całkowite, zmiennoprzecinkowe oraz ciągi znaków
   \item \texttt{ptd::rec} -- rekordy, czyli odpowiedniki struktur znanych np. z C
@@ -182,7 +189,7 @@ Podstawowymi założeniami systemu typów w NianioLangu są: niemutowalność st
 
 W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
 a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
-W rozdziale \hyperref[sec:compiler]{Kompilator NianioLanga} opisana została implementacja powyższych typów w języku C.
+W rozdziale \nameref{sec:compiler} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
 Celem projektu była modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz
@@ -244,14 +251,14 @@ przeglądy kodu poprzez tematyczny podział zmian.
 GitHub oprócz repozytorium kodu, udostępnia również narzędzia do zarządzania zadaniami
 w projekcie, co zostało wykorzystane. Każde duże i średnie zadanie było zapisywane
 w systemie zgłoszeń. Po ustaleniu osoby wykonującej zadanie było ono przypisywane
-na tę osobę, a po wgraniu zmian na główną gałąz zadanie było zamykane.
+na tę osobę, a po wgraniu zmian na główną gałąź zadanie było zamykane.
 Dzięki temu w dowolnej chwili możliwe było określenie nad czym pracuje dany członek
 zespołu i jakie otwarte zadania pozostały do przydzielenia.
 
 \section{Zgłaszanie zmian i code review}
 Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. Pull Request,
 czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszczone
-w głównej gałęzi projektu, musiały być zatwierdzone przez conajmniej jednego członka
+w głównej gałęzi projektu, musiały być zatwierdzone przez co najmniej jednego członka
 zespołu, innego niż ten który zgłosił PR. GitHub udostępnia widok naniesionych zmian
 wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
 był dialog między recenzentem kodu, a jego twórcą, tak aby ostatecznie zatwierdzone
@@ -312,7 +319,7 @@ jest jednak obsługiwana, stanie się to dopiero podczas sprawdzania poprawnośc
 \section{Analiza semantyczna}
 Drugim etapem kompilacji jest sprawdzenie poprawności typów. Wbrew nazwie etap ten nie ma na celu wyłącznie sprawdzenia, czy program jest poprawny
 typowo -- do drzewa programu wpisywane są informacje o uzyskanych typach. Jest to konieczne, by móc dopasować typy NianioLanga do typów języka
-wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \hyperref[sec:own_to_im]{Konwersja own $\rightarrow$ im}.
+wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \nameref{sec:own_to_im}.
 
 Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy definicje funkcji nie dublują się, oraz w końcu czy używane typy zgodne
 są z oczekiwanymi. Trzeci element rozumiany jest dwojako. Po pierwsze, jeżeli dana zmienna ma zadeklarowany przez użytkownika typ, sprawdza się, czy
@@ -439,7 +446,7 @@ optymalizacji, co opisane jest w kolejnych rozdziałach.
 Z powodu dużego zakresu zmian przeprowadzonych w ramach niniejszej pracy, ważnym zadaniem było wyodrębnienie
 podstawowych cech NianioLanga, które nie mogą ulec zmianie w wyniku jego rozwoju. Takimi cechami są:
 \begin{itemize}
- \item Niezmienialność strukur -- wartość zmiennej nie może ulec zmianie pomiędzy dwiema kolejnymi jawnymi
+ \item Niezmienialność struktur -- wartość zmiennej nie może ulec zmianie pomiędzy dwiema kolejnymi jawnymi
  modyfikacjami
  \item Ścisła opcjonalność typów -- poprawny program po usunięciu wszystkich informacji o typach musi pozostać
  poprawny, a jego semantyka nie może się zmienić
@@ -499,7 +506,7 @@ Szczególnym przypadkiem użycia dla nowych typów miał być opis stanu we wzor
 Abstrahując od szczegółów, istotą wzorca nianio jest utrzymywanie stanu aplikacji w jednej zmiennej
 i modyfikowanie go jedynie poprzez polecenia wysyłane do funkcji nianio (przykład znajduje się
 na listingu \ref{lst:nianio}). W przypadku bardziej skompilowanych aplikacji o złożonym stanie,
-zmienna \texttt{state} może być bardzo głęboko zagnieżdzona, a ponieważ modyfikacja liści jest najczęściej
+zmienna \texttt{state} może być bardzo głęboko zagnieżdżona, a ponieważ modyfikacja liści jest najczęściej
 występującą operacją we wzorcu nianio, więc czas dostępu do liści zagnieżdżonej
 struktury ma duże znaczenie.
 
@@ -540,7 +547,7 @@ def f(int *a, int *b) {
 }
 \end{lstlisting}
  \item Podobnie, zabronione są wszelkie operacje, w wyniku których mogłoby dojść do uzyskania dostępu
- do jednej wartości z dwóch różnych zmiennych jednocześnie. W sytacjach tego wymagających możliwe jest tymczasowe
+ do jednej wartości z dwóch różnych zmiennych jednocześnie. W sytuacjach tego wymagających możliwe jest tymczasowe
  przeniesienie własności z jednej zmiennej na drugą. Taka sytuacja występuje na przykład podczas iteracji
  tablicy asocjacyjnej pętlą \texttt{forh} (listing \ref{lst:forh}).
 \begin{lstlisting}[caption={Odwołanie do zmiennej, która utraciła własność},label={lst:forh}]
@@ -579,7 +586,7 @@ Możliwe typy rejestrów to:
 
 Ponieważ w wersji nlasma sprzed wprowadzenia typów \texttt{own} wszystkie rejestry były jednego typu, więc
 dodanie rejestrów typowanych wymagało zdefiniowania zachowania typów na poziomie nlasma.
-Pierwszym elementem, który należało uwzglednić była kwestia wykonywania operacji na rejestrach różnych typów.
+Pierwszym elementem, który należało uwzględnić była kwestia wykonywania operacji na rejestrach różnych typów.
 W celu uproszczenia semantyki nlasma została podjęta decyzja, żeby jedyną instrukcją, która może powodować
 rzutowanie pomiędzy różnymi typami była instrukcja \texttt{move}.
 Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator trafi na instrukcję z argumentem
@@ -669,7 +676,7 @@ arr[x->i];
 
 \section{Tłumaczenie dostępów do zmiennych na kod nlasm}
 Jedną z głównych zalet nlasma jest prostota jego pojedynczych instrukcji, dzięki czemu większość
-pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla wszystkich językow docelowych.
+pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla wszystkich języków docelowych.
 Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, to instrukcja NianioLanga
 \texttt{a->b[0] = 1} zostanie przetłumaczona do ciągu poleceń nlasma
 \texttt{get\_hash\_val}, \texttt{get\_frm\_idx}, \texttt{set\_at\_index}, \texttt{set\_hash\_val} zgodnie
@@ -818,7 +825,7 @@ co przełożyło się na wydajniejszy kod wynikowy.
 
 \subsection{Liczby całkowite}
 Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
-do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji artytmetycznych,
+do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji arytmetycznych,
 które na obecnych procesorach wykonują się w niewielkiej liczbie cykli. Użycie typu języka C
 dedykowanego dla liczb całkowitych umożliwia też kompilatorowi \texttt{gcc} lepszą optymalizację
 na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
@@ -832,7 +839,7 @@ zachować bezpieczeństwo języka i uchronić programistę przed błedami, takim
 Z tego względu została podjęta decyzja o niepowielaniu istniejącej implementacji i wykorzystaniu
 tej już istniejącej.
 \subsection{Wartości logiczne}
-Jak zostało to opisane w rozdziale \hyperref[sec:c_types_implementation]{Implementacja typów NianioLanga w C}, dotychczasowa implementacja wartości logicznych opierała się na dwuwartościowych
+Jak zostało to opisane w rozdziale \nameref{sec:c_types_implementation}, dotychczasowa implementacja wartości logicznych opierała się na dwuwartościowych
 języka NianioLang. Z uwagi na to, że warianty są dość wysokopoziomowym mechanizmem, bez
 bezpośredniego odzwierciedlenia w języku C, kod wynikowy generowany dla wartości logicznych nie był
 efektywny.
@@ -987,8 +994,44 @@ aby każda zmiana miała odzwierciedlenie w module generowania kodu. Ze względu
 Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem projektu, a analiza przypadków użycia wykazała, że narzut czasowy jest w pełni akceptowalny.
 
 \chapter{Efekty optymalizacji i wnioski}
+\section{Sposób testowania}
+Aby zbadać przyrost wydajności wynikający z użycia nowych typów przygotowany został szereg prograów mających
+przetestować koszt użycia poszczególnych konstrukcji języka.
+Każdy program został napisany w trzech wersjach: w wersji z typami \texttt{ptd}, w wersji z typami \texttt{own}
+i równoważny program napisany w języku C.
+Programy używające typów \texttt{ptd} były kompilowane kompilatorem NL w wersji sprzed wprowadzonych zmian,
+programy używające typów \texttt{own} były kompilowane wersją kompilatora NL z uwzlęgnieniem zmian, a programy w języku C
+kompilowane były kompilatorem \texttt{gcc} w wersji 8.1.0.
 \section{Porównanie czasu wykonania programów}
+\subsection{Narzut czasowy pętli}
+Aby zbadać zmianę narzutu czasowego pętli, czyli czasu, który program poświęca na modyfikację iteratora i sprawdzanie
+warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania programu wykonującego pustą pętlę
+o $10^8$ iteracjach. Programym, na których wykonane zostały testy są zamieszczone na listingach, a w tabeli
+\ref{tab:loop}
+przestawione zostały uśrednione wyniki 10 testów.
 
+\begin{table}[t]
+\caption{Przyrost wydajności programów NianioLanga}
+\label{tab:loop}
+\begin{tabular}{|l|r|r|r|}
+ \hline 
+  Test & Czas wykonania \texttt{ptd} & Czas wykonania \texttt{own} & Czas wykonania C\\
+ \hline 
+  Iterator -- liczba całkowita (\ref{lst:int_loop}) & 9s & 0.3s & 0.2s \\
+  \hline
+  Iterator -- pole w rekordzie (\ref{lst:rec_loop}) & 71s & 0.6s & 0.3s \\
+  \hline
+\end{tabular}
+\end{table}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy},label={lst:int_loop}]
+rep var i (1000000000) {
+}
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu},label={lst:rec_loop}]
+a = {b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
+}
+\end{lstlisting}
 \chapter{Wkład poszczególnych członków zespołu}
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
@@ -1019,8 +1062,6 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
      z zasięgu
    \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
   \end{itemize}
-
-
 \end{itemize}
 
 
@@ -1029,8 +1070,10 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{Bibliografia}
 
-\bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} - 2006}.
-\bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler - GitHub}
+\bibitem{nianiolang_org} \href{http://www.nianiolang.org}{nianiolang.org, data dostępu 17.05.2018}
+\bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} (2006), data dostępu 17.05.2018}.
+\bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler -- GitHub,
+data dostępu 17.05.2018}
 \bibitem{cormen} Thomas H. Cormen, Charles E. Leiserson, Ron Rivest, Clifford Stein \textit{Wprowadzenie do algorytmów}, Wydawnictwo Naukowe PWN (2013)
 
 
