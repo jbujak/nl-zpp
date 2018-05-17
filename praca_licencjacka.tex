@@ -975,8 +975,44 @@ aby każda zmiana miała odzwierciedlenie w module generowania kodu. Ze względu
 Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem projektu, a analiza przypadków użycia wykazała, że narzut czasowy jest w pełni akceptowalny.
 
 \chapter{Efekty optymalizacji i wnioski}
+\section{Sposób testowania}
+Aby zbadać przyrost wydajności wynikający z użycia nowych typów przygotowany został szereg prograów mających
+przetestować koszt użycia poszczególnych konstrukcji języka.
+Każdy program został napisany w trzech wersjach: w wersji z typami \texttt{ptd}, w wersji z typami \texttt{own}
+i równoważny program napisany w języku C.
+Programy używające typów \texttt{ptd} były kompilowane kompilatorem NL w wersji sprzed wprowadzonych zmian,
+programy używające typów \texttt{own} były kompilowane wersją kompilatora NL z uwzlęgnieniem zmian, a programy w języku C
+kompilowane były kompilatorem \texttt{gcc} w wersji 8.1.0.
 \section{Porównanie czasu wykonania programów}
+\subsection{Narzut czasowy pętli}
+Aby zbadać zmianę narzutu czasowego pętli, czyli czasu, który program poświęca na modyfikację iteratora i sprawdzanie
+warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania programu wykonującego pustą pętlę
+o $10^8$ iteracjach. Programym, na których wykonane zostały testy są zamieszczone na listingach, a w tabeli
+\ref{tab:loop}
+przestawione zostały uśrednione wyniki 10 testów.
 
+\begin{table}[t]
+\caption{Przyrost wydajności programów NianioLanga}
+\label{tab:loop}
+\begin{tabular}{|l|r|r|r|}
+ \hline 
+  Test & Czas wykonania \texttt{ptd} & Czas wykonania \texttt{own} & Czas wykonania C\\
+ \hline 
+  Iterator -- liczba całkowita (\ref{lst:int_loop}) & 9s & 0.3s & 0.2s \\
+  \hline
+  Iterator -- pole w rekordzie (\ref{lst:rec_loop}) & 71s & 0.6s & 0.3s \\
+  \hline
+\end{tabular}
+\end{table}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy},label={lst:int_loop}]
+rep var i (1000000000) {
+}
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu},label={lst:rec_loop}]
+a = {b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) {
+}
+\end{lstlisting}
 \chapter{Wkład poszczególnych członków zespołu}
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
@@ -1007,8 +1043,6 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
      z zasięgu
    \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
   \end{itemize}
-
-
 \end{itemize}
 
 
