@@ -151,18 +151,18 @@ Celem twórców języka jest dostarczenie narzędzia umożliwiającego operowani
 o semantyce zbliżonej do języków funkcyjnych, ale prostszego w użyciu.
 Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce, w przypadku kompilacji do C,
 zaimplementowano system zarządzania obiektami
-w pamięci przez zliczanie referencji, aby pozbyć się jednego z najczęstszych źródeł błędów, występujących przy programowaniu niskopoziomowym.
-Takie zabiegi zmniejszają nieco wydajność języka, ale jego twórcy doszli do wniosku, że zysk z wysokopoziomowego podejścia
+w pamięci przez zliczanie referencji, aby pozbyć się jednego z najczęstszych źródeł błędów występujących przy programowaniu niskopoziomowym.
+zabiegi zmniejszają wydajność języka, jendak jego twórcy założyli, że zysk z wysokopoziomowego podejścia
 do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
 Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB.com).
 Kod źródłowy kompilatora jest dostępny na platformie GitHub\cite{github_repo_nianiolang_original} na licencji MIT.
 
 Szczegółowe informacje na temat założeń NianioLanga i jego składni można znaleźć na oficjalnej
-stronie projektu \cite{nianiolang_org}.
+stronie projektu\cite{nianiolang_org}.
 
 \section{Typy w NianioLangu}
-W NianioLangu mamy do czynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika, to właściwie aliasy na typy wbudowane,
+W NianioLangu mamy do czynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika to w rzeczywistości aliasy na typy wbudowane,
 co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudowanych typów: 
 \begin{itemize}
   \item \texttt{ptd::sim} -- liczby całkowite, zmiennoprzecinkowe oraz ciągi znaków
@@ -187,15 +187,15 @@ Podstawowymi założeniami systemu typów w NianioLangu są: niemutowalność st
  \item Opcjonalne typowanie oznacza gwarancję, że dodanie lub usunięcie typów z programu nie zmieni jego semantyki.
  W skrajnym przypadku można usunąć z programu całą informację o typach i będzie on działał bez zmian
  (oczywiście może to być ze szkodą dla łatwości utrzymania lub wydajności). Jest to podejście przeciwne do stosowanego
- w takich językach jak C++, czy Haskell, których złożone systemy typów mają istotny wpływ na semantykę programu.
+ w takich językach jak C++ czy Java, których złożone systemy typów mają istotny wpływ na semantykę programu.
 \end{itemize}
 
-W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, aby zbudować skomplikowane aplikacje,
-a jednocześnie dość proste, żeby rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
+W wielu językach istnieje znacznie więcej wbudowanych typów, jednak powyższe są wystarczające, by budować skomplikowane aplikacje,
+a jednocześnie dość proste, by rozpoczęcie programowania w NianioLangu nie było dla programisty wyzwaniem.
 W rozdziale \textit{\nameref{sec:compiler}} opisana została implementacja powyższych typów w języku C.
 
 \section{Cele projektu}
-Celem projektu była modyfikacja kompilatora NianioLanga, w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz
+Celem projektu była modyfikacja kompilatora NianioLanga w taki sposób, aby kod wynikowy w C zawierał mniejszą liczbę wywołań funkcji oraz
 skomplikowanych
 struktur dla prostych typów istniejących już w języku C.
 Dzięki temu zmniejszony został czas wykonania aplikacji, pozwalając kompilatorowi GCC na zastosowanie dodatkowych optymalizacji.
@@ -205,7 +205,7 @@ Dzięki nałożonym na nie ograniczeniom możliwe jest znaczne zwiększenie wyda
 niezmienionej semantyki języka.
 Jednocześnie zmienione zostały pewne podstawowe typy, mianowicie \texttt{ptd::sim} został rozbity na
 \texttt{ptd::int} oraz \texttt{ptd::string}, oraz wprowadzony został typ \texttt{ptd::bool}.
-Liczby całkowite i wartości boole'owskie mają w języku C natywną reprezentację i używając ich bezpośrednio
+Liczby całkowite i wartości boolowskie mają w języku C natywną reprezentację i używając ich bezpośrednio
 uzyskujemy prostszy kod wynikowy w C, który jest łatwiejszy do optymalizacji przez kompilator GCC.
 
 Skutkiem zmian jakie musiały zostać wprowadzone by osiągnąć cel projektu było utracenie możliwości
@@ -214,9 +214,9 @@ To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 
 \section{Podstawowe pojęcia}
 Jesli nie zaznaczono inaczej, pojęcia dotyczące kompilacji rozumiane są zgodnie z definicjami
-podanymi w książce \cite{dragonbook}.
+podanymi w książce\cite{dragonbook}. W przypadku poniższych pojęć posługujemy się podanymi niżej definicjami, gdyż w bardziej naturalny sposób oddają sposób funkcjonowania kompilatora.
 \begin{itemize}
-  \item[] \textbf{AST} (ang. \textit{Abstract syntax tree}) -- drzewo składni abstrakcyjnej,
+  \item[] \textbf{AST} (ang. \textit{abstract syntax tree}) -- drzewo składni abstrakcyjnej,
     reprezentacja programu w formie drzewa, w którym każdy węzeł
     reprezentuje konstrukcję języka, a jego synowie reprezentują części składowe tej konstrukcji
   \item[] \textbf{nlasm} -- język maszyny rejestrowej, będący językiem pośrednim w kompilatorze NianioLanga
@@ -224,9 +224,8 @@ podanymi w książce \cite{dragonbook}.
   AST
   \item[] \textbf{analiza semantyczna} -- proces sprawdzania programu na poziomie znaczenia poszczególnych instrukcji
   oraz zbierania informacji potrzebnych na kolejnych etapach
-  \item[] \textbf{generacja kodu pośredniego} -- proces tłumaczenia drzewa AST na język pośredni, w kompilatorze
-  NianioLanga nazywana \textbf{translacją}
-  \item[] \textbf{generacja} -- proces tłumaczenia języka pośredniego na język docelowy
+  \item[] \textbf{translacja} -- proces tłumaczenia drzewa AST na język pośredni
+  \item[] \textbf{generowanie} -- proces tłumaczenia języka pośredniego na język docelowy
 \end{itemize}
 
 \chapter{Metodyka pracy}
@@ -244,9 +243,9 @@ do implementacji kolejnych elementów projektu.
 \end{figure}
 
 \section{Programowanie zwinne}
-Metodyka pracy, z której korzystaliśmy, najbliższa była metodyce programowania zwinnego (ang. \textit{Agile}).
-Praca toczyła się w iteracjach i była podzielona tak, że na końu każdej iteracji gotowa była implementacja
-nowego typu. Fragmenty kody NianioLanga korzystające z tych typów oraz odpowiadające im pogramy wynikowe w języku
+Metodyka pracy, z której korzystaliśmy, najbliższa była metodyce programowania zwinnego (ang. \textit{agile}).
+Praca toczyła się w iteracjach, a każda iteracja dostarczała implementację nowego typu.
+Fragmenty kodu NianioLanga korzystające z tych typów oraz odpowiadające im pogramy wynikowe w języku
 C były na bieżąco przesyłane do zleceniodawcy i konsultowane z nim.
 
 Metodyka ta została wybrana ze względu na brak jasnego początkowego zakresu pracy.
@@ -259,7 +258,7 @@ i szybko na nie reagować.
 \section{Korzystanie z systemu kontroli wersji}
 Podczas pracy zespołowej niezmiernie istotna jest wymiana i zarządzanie fragmentami kodu,
 jakie piszą poszczególni członkowie zespołu. Ponieważ każdy w zespole pracował już
-wcześniej z systemem kontroli wersji Git, to został on użyty w tym projekcie.
+wcześniej z systemem kontroli wersji Git, został on użyty w tym projekcie.
 Dodatkowym atutem tego systemu kontroli wersji jest szeroka dostępność darmowych
 publicznych repozytoriów kodu online. Kod projektu umieszczony został na portalu
 GitHub, który jest największym serwisem pozwalającym na hostowanie kodu online.
@@ -270,30 +269,30 @@ zostało uznane tworzenie osobnych gałęzi kodu dla każdego zadania.
 Umożliwiło to pracę nad kilkoma niezależnymi zadaniami jednocześnie i ułatwiło
 przeglądy kodu poprzez tematyczny podział zmian.
 
-GitHub oprócz repozytorium kodu, udostępnia również narzędzia do zarządzania zadaniami
+GitHub, oprócz repozytorium kodu, udostępnia również narzędzia do zarządzania zadaniami
 w projekcie, co zostało wykorzystane. Każde duże i średnie zadanie było zapisywane
 w systemie zgłoszeń. Po ustaleniu osoby wykonującej zadanie było ono przypisywane
-na tę osobę, a po wgraniu zmian na główną gałąź zadanie było zamykane.
+na tę osobę, a po wgraniu zmian na główną gałąź zamykane.
 Dzięki temu w dowolnej chwili możliwe było określenie nad czym pracuje dany członek
 zespołu i jakie otwarte zadania pozostały do przydzielenia.
 
 \section{Zgłaszanie zmian i code review}
-Po napisaniu kodu rozwiązującego dane zadanie, zgłaszany był tzw. pull request,
+Po napisaniu kodu rozwiązującego dane zadanie zgłaszany był tzw. pull request,
 czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszczone
-w głównej gałęzi projektu, musiały być zatwierdzone przez co najmniej jednego członka
-zespołu, innego niż ten który zgłosił pull request. GitHub udostępnia widok naniesionych zmian
+w głównej gałęzi projektu musiały być zatwierdzone przez co najmniej jednego członka
+zespołu, innego niż ten, który zgłosił pull request. GitHub udostępnia widok naniesionych zmian
 wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
-był dialog między recenzentem kodu, a jego twórcą, tak aby ostatecznie zatwierdzone
+był dialog między recenzentem kodu a jego twórcą tak, aby ostatecznie zatwierdzone
 zmiany spełniały oczekiwania obu stron.
 
 \section{Testowanie i ciągła integracja}
 W projekcie została wykorzystana praktyka ciągłej integracji z wykorzystaniem systemu Travis.
-Został on wybrany, ponieważ jest dostępny za darmo i umożliwia łatwą integrację z repozytorium kodu
+Został on wybrany, ponieważ jest dostępny bez dodatkowych kosztów i umożliwia łatwą integrację z repozytorium kodu
 na platformie GitHub.
 
 Każdorazowo po przesłaniu zmian do repozytorium uruchamiany był skrypt sprawdzający, czy dana wersja kompilatora
 kompiluje się i przechodzi szereg testów automatycznych.
-Zmiany, w wyniku których testy nie przechodziły nie mogły być scalane z główną gałęzią.
+Zmiany, w wyniku których program nie przechodził weryfikacji testami, nie mogły być scalane z główną gałęzią.
 
 Testy na początku projektu obejmowały całość istniejącego języka.
 Za każdym razem, kiedy były dodawane nowe typy lub nowe operacje na już istniejących typach,
@@ -302,19 +301,19 @@ W ten sposób można było łatwo sprawdzić, czy nowe zmiany nie wpłynęły ne
 
 \section{Techniki komunikacji w zespole}
 Większość komunikacji w zespole odbywała się online przez portal społecznościowy Facebook.
-W początkowej fazie projektu, głównym tematem dyskusji była specyfika języka NianioLang,
+W początkowej fazie projektu głównym tematem dyskusji była specyfika języka NianioLang,
 z którym większość członków zespołu miała po raz pierwszy styczność.
-Na dalszym etapie projektu, na konwersacji grupowej na tym portalu, zespół
+Na dalszym etapie projektu, przy użyciu konwersacji grupowej na tym portalu, zespół
 ustalał większość detali implementacyjnych przed rozpoczęciem ich wdrażania.
 Ten środek komunikacji był najchętniej wykorzystywany ze względu na najkrótszy czas
 reakcji członków zespołu.
 
 Drugim kanałem komunikacji były zadania i pull requesty na GitHubie. Zadania w prosty sposób
-opisywały co i kto ma zrobić, a opisy pull requestów określały co zostało przez daną osobę zrobione.
+opisywały przydział i zakres, a opisy pull requestów określały, co zostało przez daną osobę zrobione.
 
 Ostatnim sposobem komunikacji były cotygodniowe spotkania podczas zajęć z Zespołowego
-Projektu Programistycznego, po których członkowie zespołu spędzali 10-20 minut na ustalaniu
-kto wybiera które zadanie, a w przypadku pytań lub problemów, na ich rozwiązaniu.
+Projektu Programistycznego, po których członkowie zespołu spędzali chwilę na ustalaniu
+szczegółów planu pracy przez kolejny tydzień, a w przypadku pytań lub problemów, na ich rozwiązaniu.
 
 \chapter{Kompilator NianioLanga}
 \label{sec:compiler}
@@ -360,7 +359,7 @@ Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy
 są z oczekiwanymi. Trzeci element rozumiany jest dwojako. Po pierwsze, jeżeli dana zmienna ma zadeklarowany przez użytkownika typ, sprawdza się, czy
 używana jest ona wyłącznie przez funkcje, które takiego typu oczekują.  Ze względu na nietrywialny system typów wydzielone są specjalne funkcje
 sprawdzające czy i w jakim zakresie dwa typy są zgodne. Przykładowo jeżeli \texttt{im} używany jest w kontekście \texttt{hash}, to zgodnym typem jest
-\texttt{hash}. Jeżeli zaś funkcja oczekuje \texttt{int} a podawany jest \texttt{array}, to zgłaszany jest błąd. W tym kontekście o typach myśleć można
+\texttt{hash}. Jeżeli zaś funkcja oczekuje \texttt{int} a podawany jest \texttt{array}, to zgłaszany jest błąd. W czasie działania tej części kompilatora o typach myśleć można
 jako o zbiorach możliwych wartości, na których wykonywane są operacje, przede wszystkim przecięcia.
 
 Drugie rozumienie, które stosuje type checker, jest podobne do pierwszego, lecz w kontekście wnioskowania typów na podstawie wykonywanych na nich
@@ -383,7 +382,7 @@ najprostszy, z drugiej w pewnym sensie zachowa strukturę programu wyjściowego.
 Funkcje w nlasmie nie operują na zmiennych, lecz na rejestrach. Każdy rejestr ma swój unikalny w obrębie funkcji numer oraz typ. Także argumenty
 funkcji są rejestrami. Wprowadzenie typów do nlasma było jednym z elementów projektu, gdyż o ile poprzednio wszystkie zmienne konwertowane były do
 typu \texttt{im}, o tyle teraz przechować należy strukturę typów \texttt{own} czy \texttt{int}. Typy w nlasmie mają charakter wyłącznie informacyjny,
-to znaczy nie mają żadnego znaczenia semantycznego.
+to znaczy nie mają żadnego znaczenia semantycznego. Są używane na dalszych etapach kompilacji.
 
 Najważniejszą cechą nlasma jest nie drzewiasta, lecz liniowa struktura programu. Oznacza to, że argumentami wywołań mogą być wyłącznie rejestry, a nie
 zmienne czy inne wywołania. W znacznym stopniu ułatwia to dalszą pracę kompilatora, przede wszystkim z powodu mniejszej liczby problemów dotyczących na
@@ -413,8 +412,8 @@ Przykładowe komendy nlasma:
 \section{Translacja drzewa AST do nlasma}
 \label{sec:translation}
 Drzewo AST, reprezentujące funkcję języka nianiolang, jest w sposób rekurencyjny tłumaczone na ciąg komend nlasma. Sposobem działania 
-komendy nlasma przypominają rozkazy maszynowe: identyfikator komendy + identyfikatory rejestrów. Zgodnie ze specyfikacją języka nlasm, każdemu argumentowi funkcji jak 
-i każdej zmiennej lokalnej jest przydzielany rejestr odpowiedniego typu. Ze względu na strukturę języka nlasm brak w nim jakichkolwiek rozgałęzień kodu, 
+komendy nlasma przypominają rozkazy maszynowe: identyfikator komendy + identyfikatory rejestrów. Zgodnie ze specyfikacją języka nlasm, każdemu argumentowi funkcji, jak 
+i każdej zmiennej lokalnej, jest przydzielany rejestr odpowiedniego typu. Ze względu na strukturę języka nlasm brak w nim jakichkolwiek rozgałęzień kodu, 
 więc każda instrukcja warunkowa czy pętla jest tłumaczona na odpowiedni ciąg komend, zawierający warunkowy skok (komendę \texttt{if\_goto}) do 
 odpowiedniej etykiety. Przypisanie wartości jednej zmiennej do innej jest realizowane za pomocą komendy \texttt{move}. 
 
@@ -423,7 +422,7 @@ danym wierzchołku na podstawie podwyrażeń. Na przykład dla wyrażeń arytmet
 stosujemy komendę \texttt{bin\_op}, która dla danych trzech rejestrów: docelowego, lewej strony i prawej strony wyrażenia, a także operatora, oblicza 
 wartość i zapisuje w odpowiednim rejestrze. Dla operacji posiadających skutki uboczne (np. zapisanie wartości do zmiennej) stosujemy tzw. obliczanie 
 z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia, która w takim przypadku powinna być zmienną bądź ciągiem 
-dostępów do elementów talic/haszy/rekordów, kończących się wartością, oblicza ciąg zstępujący odwołań do elementów kolekcji. To translator realizuje za 
+dostępów do elementów talic/haszy/rekordów kończącym się wartością, oblicza on ciąg zstępujący odwołań do elementów kolekcji. To translator realizuje za 
 pomocą wywołań określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
 komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funcje te tworzą kopię elementu kolekcji, którą zapisują w 
 odpowiednim rejestrze. Po zapisaniu nowej wartości translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
@@ -442,7 +441,7 @@ ustawiające wartości stałych. Warto wspomnieć, że pliki \texttt{.c} i \text
 kolejnością semantyczną, to znaczy na przykład generowanie wszelkich informacji o funkcji można oddelegować do raz wywoływanej procedury.
 
 
-Drugim etapem jest wygenerowanie kodu odpowiedzialnego za obsługę typów, czyli ich deklaracje, definicje oraz potrzebne do obsługi funkcje. Przed
+Drugim etapem jest wygenerowanie kodu odpowiedzialnego za obsługę typów, czyli ich deklaracje, definicje, oraz potrzebne do obsługi funkcje. Przed
 zmianami wprowadzonymi w ramach tego projektu etap ten nie występował, gdyż kod C używał ogólnego typu \texttt{ImmT}, który obsługiwać można
 biblioteką standardową NianioLanga. Obecnie, ponieważ dla każdego typu \texttt{own} tworzony jest oddzielny typ na poziomie C, a funkcje go
 obsługujące generowane są na poziomie NianioLanga, to podejście zostało zmienione. Ze względu na fakt, że definicje w NianioLangu nie muszą występować
@@ -501,32 +500,32 @@ Zachowanie powyższych cech zostało uznane za priorytet i miało wpływ na wiel
 decyzji.
 
 \section{Rozdzielenie typu \texttt{ptd::sim}}
-Najpoważniejszą zmianą, jaka zaszła w systemie typów w wynik niniejszego projektu było rozdzielenie
-typu \texttt{ptd::sim} na typy \texttt{ptd::int} i \texttt{ptd::string} oraz rezygnacja ze wsparcia
-języka dla liczba zmiennoprzecinkowych. Zmiana ta niesie ze sobą duże konsekwencje, przede wszystkim łamie
-ona kompatybilność wsteczną, przez co duża część dotychczas poprawnych programów nie da się skompilować nową
+Najpoważniejszą zmianą, jaka zaszła w systemie typów w wyniku niniejszego projektu, było rozdzielenie
+typu \texttt{ptd::sim} na typy \texttt{ptd::int} i \texttt{ptd::string}, oraz rezygnacja ze wsparcia
+języka dla liczb zmiennoprzecinkowych. Zmiana ta niesie ze sobą duże konsekwencje, przede wszystkim łamie
+ona kompatybilność wsteczną, przez co duża część dotychczas poprawnych programów nie daje się skompilować nową
 wersją kompilatora. Decyzja o wprowadzeniu tej zmiany była podjęta z dwóch powodów:
 \begin{itemize}
- \item Po pierwsze, wbrew początkowym założeniom języka, semantyka typów liczb całkowitych i łańcuchów znaków
+ \item Wbrew początkowym założeniom języka, semantyka typów liczb całkowitych i łańcuchów znaków
  okazała się zupełnie inna. Pierwszy z nich jest wykorzystywany do operacji arytmetycznych i indeksowania tablic,
  podczas gdy drugi służy do indeksowania tablic asocjacyjnych. Obszary ich zastosowań są w dużej części rozłączne
  i brak kontroli rzutowania pomiędzy nimi prowadzi nieraz do błędnego modelowania dziedziny, co w efekcie
  może skutkować trudnymi do wykrycia błędami.
- \item Po drugie, narzut związany z przechowywaniem i sprawdzaniem typu zmiennej jest bardzo duży, zwłaszcza
+ \item Narzut związany z przechowywaniem i sprawdzaniem typu zmiennej jest bardzo duży, zwłaszcza
  w przypadku liczb całkowitych. Rozdzielenie typu prostego na dwa typy umożliwiło generowanie bardziej
  wyspecjalizowanego kodu, co w efekcie znacząco przyspieszyło programy wynikowe.
 \end{itemize}
 Usunięcie obsługi liczb zmiennoprzecinkowych wynikało z analizy istniejącego kodu i było wykonane niejako
-przy okacji. W trakcie analizy okazało się, że programy niemal nie korzystają w operacji na liczbach
+przy okazji. W trakcie analizy okazało się, że programy niemal nie korzystają z operacji na liczbach
 zmiennoprzecinkowych, a ich uwzględnienie w języku znacząco komplikuje kod kompilatora. Jednocześnie,
 z uwagi na łatwość integracji programów napisanych w NianioLangu z programami napisanymi w C, obsługa
 liczb zmiennoprzecinkowych może zostać w razie potrzeby dodana w formie biblioteki.
 
 \section{Typy \texttt{own}}
-\subsection{Powody wprowadzenie typów \texttt{own}}
+\subsection{Powody wprowadzenia typów \texttt{own}}
 Drugą dużą zmianą wprowadzoną w systemie typów było dodanie całkiem nowej przestrzeni typów \texttt{own} obok
-istniejącej przestrzeni \texttt{ptd}. Celem nowych typów miała być możliwość efektywnej kompilacji do
-prostych konstrukcji języka C, co miało pozwolić na generowanie efektywniejszych programów wynikowych. 
+istniejącej przestrzeni \texttt{ptd}. Celem nowych typów jest możliwość efektywnej kompilacji do
+prostych konstrukcji języka C, pozwala na generowanie efektywniejszych programów wynikowych. 
 
 \begin{wrapfigure}[19]{r}{.5\textwidth}
 \begin{lstlisting}[caption={Przykład funkcji nianio},label={lst:nianio},aboveskip=-15pt]
@@ -548,38 +547,37 @@ def inc_num(ref state : @nianio::state, inc) {
 }
 \end{lstlisting}
 \end{wrapfigure}
-Szczególnym przypadkiem użycia dla nowych typów miał być opis stanu we wzorcu nianio.
+Szczególnym przypadkiem użycia dla nowych typów jest opis stanu we wzorcu nianio.
 Abstrahując od szczegółów, istotą wzorca nianio jest utrzymywanie stanu aplikacji w jednej zmiennej
 i modyfikowanie go jedynie poprzez polecenia wysyłane do funkcji nianio (przykład znajduje się
 na listingu \ref{lst:nianio}). W przypadku bardziej skompilowanych aplikacji o złożonym stanie,
 zmienna \texttt{state} może być bardzo głęboko zagnieżdżona, a ponieważ modyfikacja liści jest najczęściej
-występującą operacją we wzorcu nianio, więc czas dostępu do liści zagnieżdżonej
+występującą operacją we wzorcu nianio, czas dostępu do liści zagnieżdżonej
 struktury ma duże znaczenie.
 
-Inną często wykonywaną operacją jest przekazywanie stanu lub jego części przez wartość-wynik do innej funkcji,
-żeby uczytelnić funkcję nianio przez wydzielenie z niej szczegółów implementacji. Z tego względu zmienna
-przechowująca stan powinna móc być niskim kosztem przekazywana przez wartość-wynik. 
+Inną często wykonywaną operacją jest przekazywanie stanu lub jego części do innej funkcji. Z tego względu zmienna
+przechowująca stan powinna móc być niskim kosztem przekazywana do innych funkcji. 
 
-Typy \texttt{own} powinny więc spełniać powyższe wymagania, zachowując jednocześnie podstawowe cechy NianioLanga.
+Typy \texttt{own} realizują powyższe wymagania, zachowując jednocześnie podstawowe cechy NianioLanga.
 
 \subsection{Ograniczenia typów \texttt{own} wynikające z założeń NianioLanga}
 Ponieważ nie było możliwe spełnienie wymagań stawianych przed typami \texttt{own} przy zachowaniu pełni
 możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać ograniczone w następujący sposób:
 \begin{itemize}
  \item Zakaz kopiowania zmiennych -- dla zmiennych \texttt{a,b} typu \texttt{own} przypisanie
- \texttt{a = b} nie jest poprawną instrukcją i powinno zostać wyłapane podczas sprawdzania typów.
+ \texttt{a = b} nie jest poprawną instrukcją i jest wyłapywane podczas sprawdzania typów.
  Wynika to z faktu, że głębokie kopiowanie jest bardzo kosztowną operacją, a kopiowanie leniwe wymaga
- utrzymywania licznika referencji, którego zmienne typu \texttt{own} nie powinny mieć.
+ utrzymywania licznika referencji, którego zmienne typu \texttt{own} nie mają.
  Jednocześnie w podstawowym przypadku użycia -- we wzorcu nianio -- nie ma potrzeby kopiowania stanu.
  Istnieje w nim tylko jedna kopia zmiennej stanowej, przekazywana do kolejnych funkcji i modyfikowana w miejscu.
  \item Zakaz wielokrotnego przekazywania argumentów przez \texttt{ref} -- dla zmiennej \texttt{a} typu
  \texttt{own} wywołania \texttt{f(ref a, ref a)} oraz \texttt{f(ref a, ref a->b)} nie są poprawnymi wyrażeniami.
  Argumenty \texttt{ref} to argumenty przekazywane przez wartość-wynik.
- Semantyka takiego przekazywania argumentów wygląda tak, że przed wywołaniem funkcji przekazywana zmienna
- est kopiowana do argumentu, a po zakończeniu wywołania następuje kopiowanie z powrotem.
+ Semantyka takiego przekazywania argumentów wygląda następująco: przed wywołaniem funkcji wartość przekazywanej
+ zmiennej jest kopiowana, a po zakończeniu wywołania następuje kopiowanie do pamięci funkcji wywołującej.
  Zapobiega to naruszeniu niezmienialności struktur,
- które miałoby miejsce gdyby argumenty były przekazywane przez referencję (listing \ref{lst:ref}).
- Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja takiej semantyki wymaga
+ co miałoby miejsce gdyby argumenty były przekazywane przez wskaźnik (listing \ref{lst:ref}).
+ Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja, takiej semantyki wymaga
  faktycznego skopiowania zmiennej do argumentów, co jest zabronione w przypadku zmiennych typu \texttt{own}.
 \begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref}]
 int main() [
@@ -592,7 +590,7 @@ def f(int *a, int *b) {
 	printf("%d\n", a); // 2
 }
 \end{lstlisting}
- \item Podobnie, zabronione są wszelkie operacje, w wyniku których mogłoby dojść do uzyskania dostępu
+ \item Podobnie zabronione są wszelkie operacje, w wyniku których mogłoby dojść do uzyskania dostępu
  do jednej wartości z dwóch różnych zmiennych jednocześnie. W sytuacjach tego wymagających możliwe jest tymczasowe
  przeniesienie własności z jednej zmiennej na drugą. Taka sytuacja występuje na przykład podczas iteracji
  tablicy asocjacyjnej pętlą \texttt{forh} (listing \ref{lst:forh}).
@@ -608,45 +606,44 @@ forh var key, ref value (h) {
 
 \chapter{Rozszerzenie nlasma}
 \section{Przekazywanie informacji o typach z drzewa AST}
-Pierwszą zmianą, jaka została wprowadzona w nlasmie było dodanie informacji o typach do jego rejestrów.
+Pierwszą zmianą, jaka została wprowadzona w nlasmie, było dodanie informacji o typach do jego rejestrów.
 Było to konieczne, aby umożliwić generowanie poprawnych typów w kodzie C, ponieważ generator kodu wynikowego
 nie ma już dostępu do drzewa AST -- cała potrzebna mu informacja musi być zawarta w kodzie pośrednim.
-W związku z tym do każdego rejestru nlasma została dodana informacja o jego typie.
 W trakcie tworzenia wynikowego kodu C generator bierze pod uwagę tę informację i dobiera typ zmiennych języka C
 w zależności od typów rejestrów.
 
 Typy rejestrów zostały uproszczone w stosunku do typów obliczanych podczas etapu sprawdzania typów.
 Możliwe typy rejestrów to:
 \begin{itemize}
- \item \texttt{im} -- dla wszystkich zmiennych typu \texttt{im}. Przed wprowadzeniem typowanych rejestrów
- każdy rejestr był tego typu.
- \item \texttt{int} -- dla zmiennych całkowitoliczbowych.
+ \item \texttt{im} -- dla wszystkich zmiennych typu \texttt{im}; przed wprowadzeniem typowanych rejestrów
+ każdy rejestr był tego typu
+ \item \texttt{int} -- dla zmiennych całkowitoliczbowych
  \item \texttt{string} -- dla łańcuchów znaków
  \item \texttt{bool} -- dla wartości logicznych
- \item \texttt{rec} -- dla rekordów typu \texttt{own}
- \item \texttt{arr} -- dla tablic typu \texttt{own}
- \item \texttt{variant} -- dla wariantów typu \texttt{own}
+ \item \texttt{rec} -- dla zmiennych typu \texttt{own::rec}
+ \item \texttt{arr} -- dla zmiennych typu \texttt{own::arr}
+ \item \texttt{variant} -- dla zmiennych typu \texttt{own::var}
  \item \texttt{hash} -- dla zmiennych typu \texttt{own::hash}
 \end{itemize}
 
 
-Ponieważ w wersji nlasma sprzed wprowadzenia typów \texttt{own} wszystkie rejestry były jednego typu, więc
+Ponieważ w wersji nlasma sprzed wprowadzenia typów \texttt{own} wszystkie rejestry były jednego typu,
 dodanie rejestrów typowanych wymagało zdefiniowania zachowania typów na poziomie nlasma.
-Pierwszym elementem, który należało uwzględnić była kwestia wykonywania operacji na rejestrach różnych typów.
+Pierwszym elementem, który należało uwzględnić, była kwestia wykonywania operacji na rejestrach różnych typów.
 W celu uproszczenia semantyki nlasma została podjęta decyzja, żeby jedyną instrukcją, która może powodować
-rzutowanie pomiędzy różnymi typami była instrukcja \texttt{move}.
+rzutowanie pomiędzy różnymi typami, była instrukcja \texttt{move}.
 Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator trafi na instrukcję z argumentem
 o niepoprawnym typie, zgłosi błąd.
 
-Drugą ważną kwestią była decyzja co do przeniesienia opcjonalności typów
+Drugą ważną kwestią była decyzja przeniesienia opcjonalności typów
 na poziom nlasma. Ponieważ w kompilatorze istnieje możliwość bezpośredniej interpretacji nlasma bez kompilacji,
 opcjonalność typów na poziomie nlasma okazała się koniecznością, którą należało uwzględnić podczas projektowania
-rozszerzenia nlasma o rejestry typowane.
+rozszerzenia o rejestry typowane.
 
 Przykłady poprawnego i niepoprawnego kodu nlasm znajdują się na listingach
 \ref{lst:reg_types_1} i \ref{lst:reg_types_2}.
 Polecenie \texttt{get\_frm\_idx}, które służy do dostępu do elementu tablicy pod konkretnym indeksem, oczekuje,
-że rejestr, w którym przechowywany jest indeks będzie typu \texttt{int}.
+że rejestr, w którym przechowywany jest indeks, będzie typu \texttt{int}.
 Jeśli rejestr z indeksem jest innego typu, należy wcześniej wykonać rzutowanie.
 
 \noindent\begin{minipage}[t]{.45\textwidth}
@@ -702,13 +699,13 @@ Jeśli rejestr z indeksem jest innego typu, należy wcześniej wykonać rzutowan
 
 Należy jednak zaznaczyć, że opisane wyżej konwersje przy użyciu polecenia \texttt{move} dotyczą jedynie
 rzutowania pomiędzy typem \texttt{im} a typami \texttt{int}, \texttt{string} i \texttt{bool}.
-Decyzja taka została podjęta, ponieważ konwersje te są stosunkowo tanie i bardzo szeroko wykorzystywane
+Decyzja taka została podjęta, ponieważ konwersje te są stosunkowo tanie i bardzo szeroko wykorzystywane.
 Inne konwersje muszą być obsłużone na etapie sprawdzania typów.
 
-Przykład programu, dla którego zostanie wygenerowane rzutowanie podobne do przedstawionego wyżej
-znajduje się na listingu \ref{lst:reg_im}.
-Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, więc jest typu \texttt{im},
-a zatem także rejestr, w którym jest przechowywana musi być typu \texttt{im}.
+Przykład programu, dla którego zostanie wygenerowane rzutowanie podobne do przedstawionego wyżej,
+znajduje się w listingu \ref{lst:reg_im}.
+Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, jest typu \texttt{im},
+a zatem także rejestr, w którym jest przechowywana, musi być typu \texttt{im}.
 Jednak, jak zostało wspomniane wyżej, rejestr użyty do indeksowania tablicy musi być typu \texttt{int}.
 Wymusza to wprowadzenie rejestru pomocniczego tego typu i użycie rzutowania przy pomocy polecenia \texttt{move},
 analogicznie jak na listingu \ref{lst:reg_types_2}.
@@ -725,27 +722,27 @@ arr[x->i];
 \section{Tłumaczenie dostępów do zmiennych na kod nlasm}
 Jedną z głównych zalet nlasma jest prostota jego pojedynczych instrukcji, dzięki czemu większość
 pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla wszystkich języków docelowych.
-Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, to instrukcja NianioLanga
+Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, instrukcja NianioLanga
 \texttt{a->b[0] = 1} zostanie przetłumaczona do ciągu poleceń nlasma
 \texttt{get\_hash\_val}, \texttt{get\_frm\_idx}, \texttt{set\_at\_index}, \texttt{set\_hash\_val} zgodnie
 z opisem z rozdziału \textit{\nameref{sec:translation}}.
 
-Niestety to podejście nie jest odpowiednie w przypadku dostępów do zmiennych typu own.
-Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} jest taka, że wartość pobierana
+Niestety to podejście nie jest odpowiednie w przypadku dostępów do zmiennych typu \texttt{own}.
+Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} sprawia, że wartość pobierana
 z hasha lub tablicy jest leniwie kopiowana do rejestru docelowego, dzięki czemu także na poziomie nlasma
 nie występuje pojęcie referencji, a niezmienialność wartości jest zachowana.
 Leniwe kopiowanie zmiennych typu \texttt{own} nie jest możliwe, więc należało wybrać inny sposób na
 tłumaczenie dostępów do zmiennych \texttt{own} w efektywny sposób.
 
-Ponieważ celem typów \texttt{own} jest ich efektywna kompilacja do języka C, więc potrzebne było
-wprowadzenie do nlasma w jakiś sposób pojęcia referencji w sposób współgrający z jego dotychczasową filozofią.
+Ponieważ celem typów \texttt{own} jest ich efektywna kompilacja do języka C, potrzebne było
+wprowadzenie do nlasma pojęcia referencji w sposób współgrający z jego dotychczasową filozofią.
 W tym celu zostały wprowadzone polecenia \texttt{use\_field}, \texttt{use\_index}, \texttt{use\_hash\_index} oraz
 \texttt{use\_variant}, umożliwiające pobranie referencji do elementu z wnętrza odpowiednio rekordu, tablicy, hasha
 i wariantu, oraz odpowiadające im polecenia \texttt{release\_*}.
 
-Polecenia \texttt{use\_*} oprócz pobrania referencji powodują także przeniesienie własności zmiennej z rejestru
-źródłowego na rejestr docelowy, a polecenia \texttt{release\_*} służą do zwrócenia własności po zakończeniu
-operacji. Kod nlasm, w którym następuje odwołanie do rejestru, który nie ma w tym momencie własności zmiennej,
+Polecenia \texttt{use\_*}, oprócz pobrania referencji, powodują także przeniesienie wartości zmiennej z rejestru
+źródłowego na rejestr docelowy, a polecenia \texttt{release\_*} służą do zwrócenia wartości po zakończeniu
+operacji. Kod nlasm, w którym następuje odwołanie do rejestru, który nie ma w danym momencie wartości,
 jest uznawany za niepoprawny. Dzięki takiemu rozwiązaniu w poprawnym kodzie nlasma nie ma możliwości wystąpienia
 współbieżnego dostępu do wartości poprzez różne referencje do niej.
 
@@ -851,8 +848,8 @@ pracy.
 \section{Pozostałe nowe polecenia}
 Oprócz poleceń pozwalających na dostęp do zmiennych typu \texttt{own} do nlasma zostały dodane także inne 
 polecenia, które wcześniej były realizowane jako wywołania funkcji bibliotecznych.
-Są to polecenia \texttt{array\_len} i \texttt{array\_push}, pozwalające na obsługę tablic typu \texttt{own}
-oraz rodzina poleceń \texttt{hash\_*\_iter} pozwalających na implementację pętli \texttt{forh},
+Są to polecenia \texttt{array\_len} i \texttt{array\_push}, pozwalające na obsługę tablic typu \texttt{own},
+oraz rodzina poleceń \texttt{hash\_*\_iter}, pozwalających na implementację pętli \texttt{forh},
 służącej do iterowania po elementach hasha.
 
 Każde z powyższych poleceń było w poprzedniej wersji kompilatora generowane jako polecenie \texttt{call},
@@ -861,15 +858,15 @@ którego argumentem była nazwa konkretnej funkcji bibliotecznej realizującej d
 na to, że w przypadku typów \texttt{own} dla każdego typu generowane są osobne funkcje o unikalnych
 nazwach tworzonych przez generator i nieznanych w momencie tłumaczenia drzewa AST do kodu nlasma.
 Dzięki dodaniu nowych poleceń możliwe było zaimplementowanie generowania nazw tych funkcji w momencie
-generowania kodu C, kiedy ich nazwy sa już znane.
+generowania kodu C, kiedy ich nazwy są już znane.
 
 \chapter{Nowe implementacje typów}
-Aby zmiana systemu typów mogła przyczynić się do zwiększonej wydajności NianioLanga, konieczna była uważna
+Aby zmiana systemu typów mogła przyczynić się do zwiększonej wydajności NianioLanga konieczna była uważna
 implementacja generowania operacji na nich wykonywanych.
 Poniżej opisane zostały modyfikacje dotyczące kodu generowanego dla poszczególnych wprowadzonych typów.
 \section{Typy proste}
-Pierwszą zmianą, jaka została wprowadzona w generatorze kodu, było uproszczenie,
-tam gdzie to możliwe, kodu generowanego dla operacji na typach prostych.
+Pierwszą zmianą, jaka została wprowadzona w generatorze kodu, było uproszczenie
+tam, gdzie to możliwe, kodu generowanego dla operacji na typach prostych.
 Rozdzielenie typu \texttt{ptd::sim} na osobne typy dla liczb naturalnych,
 łańcuchów znaków i wartości logicznych umożliwiło bardziej precyzyjny dobór instrukcji języka C,
 co przełożyło się na wydajniejszy kod wynikowy.
@@ -878,14 +875,14 @@ co przełożyło się na wydajniejszy kod wynikowy.
 Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
 do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji arytmetycznych,
 które na obecnych procesorach wykonują się w niewielkiej liczbie cykli. Użycie typu języka C
-dedykowanego dla liczb całkowitych umożliwia też kompilatorowi \texttt{gcc} lepszą optymalizację
+dedykowanego dla liczb całkowitych, umożliwia to kompilatorowi \texttt{gcc} lepszą optymalizację
 na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
 \subsection{Łańcuchów znaków}
 Implementacja łańcuchów znaków nie została zmieniona w stosunku do istniejącej wcześniej.
 Decyzja ta była spowodowana efektywnością już istniejącej implementacji -- łańcuchy znaków
 są kompilowane to tablic typu \texttt{char[]}, opakowanych w struktury zawierające
-rozmiar i pojemność tablicy. Dostęp takich zmiennych odbywa się poprzez specjalne funkcje,
-zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut potrzebny żeby
+rozmiar i pojemność tablicy. Dostęp do takich zmiennych odbywa się poprzez specjalne funkcje,
+zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut, potrzebny by
 zachować bezpieczeństwo języka i uchronić programistę przed błedami, takimi jak przepełnienie bufora.
 Z tego względu została podjęta decyzja o niepowielaniu istniejącej implementacji i wykorzystaniu
 tej już istniejącej.
@@ -928,12 +925,11 @@ wielu struktur jest z góry znany) oraz zapewnia statyczną kontrolę typów tak
 NianioLanga już na etapie kompilacji.
 \subsection{Tablice}
 Definicje typów \texttt{own::arr} kompilowane są do struktury zawierającej rozmiar tablicy, jej
-maksymalną pojemność i wskaźnik na jej pierwszy element. Do programu wynikowego
-dodawane są również funkcje,
-pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
+maksymalną pojemność i wskaźnik na jej początek. Do programu wynikowego
+dodawane są również funkcje pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
 o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
 została zaimplementowana w sposób opisany w książce
-\textit{Wprowadzenie do algorytmów} \cite{cormen}: po przekroczeniu połowy dostępnego miejsca
+\textit{Wprowadzenie do algorytmów}\cite{cormen}: po przekroczeniu połowy dostępnego miejsca
 tablica zostaje powiększona dwukrotnie. Dzięki takiej implementacji operacja
 ta działa w zamortyzowanym czasie stałym.
 
@@ -941,7 +937,7 @@ Dla każdego typu tablicowego zostaje także wygenerowana funkcja zwalniająca p
 przez tablicę. Wywołuje ona odpowiednią funkcję zwalniającą pamięć dla każdego elementu,
 a następnie zwalnia pamięć, w której znajdowały się elementy tablicy.
 \subsection{Rekordy}
-Rekord był typem, od którego zaczęła się idea typów \texttt{own}. Było tak, ponieważ rekordy jako jedyny
+Rekord był typem, od którego zaczęła się idea typów \texttt{own}. Wynika to z faktu, że rekordy jako jedyny
 typ złożony posiadają bezpośrednie odzwierciedlenie w typach języka C, czyli \texttt{struct}.
 Każda definicja typu rekordowego z rodziny \texttt{own} jest kompilowana do definicji typu \texttt{struct}
 w języku C. Każde pole rekordu odpowiada osobnemu polu struktury o odpowiadającym typie i nazwie.
@@ -979,7 +975,7 @@ rozpoznawanie wariantu i skróciło czas wykonania instrukcji \texttt{match} (po
 odróżniania wariantów używała nazwy wariantu z kodu, co wymuszało kosztowne porównywanie łańcuchów znaków
 w trakcie działania programu).
 \subsection{Tablice asocjacyjne}
-Tablice asocjacyjne, nazywane w NianioLangu hashami, to struktury podobne do tablic, ale indeksowane dowolnymi
+Tablice asocjacyjne, znane także jako hashe, to struktury podobne do tablic, ale indeksowane dowolnymi
 ciągami znaków. Są one zdecydowanie bardziej wysokopoziomowe od wcześniej opisanych struktur i nie mają
 oczywistego odpowiednika w języku C, więc zysk ze skompilowania ich jako typy \texttt{own} nie jest istotny.
 Niemniej jednak zostały one uwzględnione, ponieważ ze względu na ograniczenia typów \texttt{own} nie mogą
@@ -1001,7 +997,7 @@ nazw \texttt{ptd}, musimy go przekonwertować.
 Analiza przypadków użycia konwersji pokazała, że konwersja z typów \texttt{ptd} na typy \texttt{own} nie ma 
 szczególnego zastosowania i nie musi być przez język obsługiwana, przede wszystkim dlatego,
 że tworzenie typu statycznego z typu dynamicznego w pewnym sensie mija się z celem korzystania z typów statycznych w ogóle,
-gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::im}, a potem konstruowanie z nich obiektów typu \texttt{own} byłby zbyt duży.
+gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::im}, a potem konstruowanie z nich obiektów typu \texttt{own}, byłby zbyt duży.
 W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
 gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
 
@@ -1032,10 +1028,10 @@ wykonać należy pełną instrukcję \texttt{match}.
 
 Trzecim elementem jest wstrzyknięcie kodu. Sprawdzanie typów rozdzielone jest od wpisywania ich do drzewa AST
 i w trakcie tego wpisywania podmieniane są wywołania funkcji-wydmuszki na wywołania
-odpowiedniej funkcji o automatycznie generowanej nazwie. Generowana nazwa jest tworzona na postawie nazwy dla typów nazwanych, oraz na podstawie zawartości
-dla typów anonimowych -- uzyskujemy w ten sposób deduplikację kodu, generując w kodzie wynikowym C tylko jedną funkcję dla danego typu.
+odpowiedniej funkcji o automatycznie generowanej nazwie. Generowana nazwa jest tworzona na postawie nazwy dla typów nazwanych, na podstawie zawartości
+dla typów anonimowych -- uzyskujemy w ten sposób deduplikację kodu, generując w kodzie wynikowym C tylko jedną funkcję dla danego typu w obrębie modułu.
 
-Pozostaje jeszcze problem dodania definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
+Czwartym elementem jest dodanie definicji nowych funkcji do drzewa AST. Wygenerowany kod jest parsowany do samodzielnego modułu,
 który przechodzi przez type checker w sposób podobny do normalnego kodu. Po przejściu przez type checker moduły są łączone w jeden. Gdy cały program przejdzie przez type checker
 dalsza kompilacja przebiega tak, jak gdyby użytkownik sam utworzył sztucznie wygenerowane funkcje.
 
@@ -1047,15 +1043,15 @@ Ponadto zmniejszanie czasu kompilacji programów nie było głównym celem proje
 
 \chapter{Efekty optymalizacji i wnioski}
 \section{Sposób testowania}
-Aby zbadać przyrost wydajności wynikający z użycia nowych typów przygotowany został szereg prograów mających
-przetestować koszt użycia poszczególnych konstrukcji języka.
+Aby zbadać przyrost wydajności wynikający z użycia nowych typów, przygotowany został szereg programów testujących
+koszt użycia poszczególnych konstrukcji języka.
 Każdy program został napisany w trzech wersjach: w wersji z typami \texttt{ptd}, w wersji z typami \texttt{own}
 i równoważny program napisany w języku C.
 
 Testy te były kompilowane zgodnie z tabelą \ref{tab:compilers} na komputerze z procesorem 
 Intel\textsuperscript{\tiny{\textregistered}} Core\textsuperscript{\tiny{TM}} i5-5200U 2.20GHz,
 zaopatrzonym w 16GB pamięci RAM. System zainstalowany na komputerze to Arch Linux x86\_64
-z jądrem w wersji 4.16.8-1-ARCH. Czas wykonania mierzony był poleceniem \texttt{time}
+z jądrem w wersji 4.16.8-1-ARCH. Czas wykonania mierzony był poleceniem \texttt{time}.
 
 \begin{table}[h]
 \caption{Wersje kompilatorów użyte do testów}
@@ -1077,10 +1073,10 @@ z jądrem w wersji 4.16.8-1-ARCH. Czas wykonania mierzony był poleceniem \textt
 \subsection{Narzut czasowy pętli}
 Aby zbadać zmianę narzutu czasowego pętli, czyli czasu, który program poświęca na modyfikację iteratora i sprawdzanie
 warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania programu wykonującego pustą pętlę
-o $10^8$ iteracjach. Programym, na których wykonane zostały testy są zamieszczone na listingach
+o $10^8$ iteracjach. Programy, na których wykonane zostały testy są zamieszczone na listingach
 \ref{lst:int_loop_nl} -- \ref{lst:rec_loop_c}, a w tabeli
 \ref{tab:loop}
-przestawione zostały uśrednione wyniki 10 testów.
+przestawione zostały uśrednione wyniki 1000 testów.
 
 \begin{table}[h]
 \caption{Średni czas wykonania pętli}
@@ -1177,13 +1173,16 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
 \end{table}
 
 \chapter{Wkład poszczególnych członków zespołu}
+Ze względu na charakter projektu nie występował jednoznaczny podział pracy na części możliwe do przypisania konkretnym członkom.
+Kod programu oraz treść pracy pisane, a także korygowane były przez wszystkich członków zespołu. Poniżej wymienione są jedynie zadania,
+w których praca wykonana została w większości przez jedną osobę.
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
   \begin{itemize}
    \item Implementacja konwersji typów \texttt{own} na typy \texttt{im}
    \item Implementacja skryptu do testowania zmian wydajności w czasie trwania projektu
+   \item Implementacja sortowania kolejności deklaracji oraz definicji typów w C
    \item Opis konwersji typów \texttt{own} na typy \texttt{im} w pracy licencjackiej
-   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Jakub Bujak}
@@ -1192,7 +1191,6 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
    \item Generowanie funkcji umożliwiających dostęp do zmiennych typu \texttt{own} i ich modyfikację
    \item Opis zmian w systemie typów w pracy licencjackiej
    \item Testy wydajności po wprowadzonych zmianach
-   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Marian Dziubiak}
@@ -1201,7 +1199,6 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
    \item Modyfikacja typów funkcji bibliotecznyh w związku z rozdzieleniem typu \texttt{ptd::sim}
    \item Opis w pracy licencjackiej metodyki pracy używanej podzcas projektu
    \item Wykres liczby zmian wpływających na główną gałąź 
-   \item Korekty pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Marek Puzyna}
@@ -1210,7 +1207,6 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
    \item Implementacja generowania wywołań funkcji zwalniających pamięć dla zmiennnych typu \texttt{own} wychodzących
      z zasięgu
    \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
-   \item Korekty pracy licencjackiej
   \end{itemize}
 \end{itemize}
 
