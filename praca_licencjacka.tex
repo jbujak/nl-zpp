@@ -358,18 +358,18 @@ wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \textit{\nameref{
 Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy definicje funkcji nie dublują się, oraz w końcu czy używane typy zgodne
 są z oczekiwanymi. Trzeci element rozumiany jest dwojako. Po pierwsze, jeżeli dana zmienna ma zadeklarowany przez użytkownika typ, sprawdza się, czy
 używana jest ona wyłącznie przez funkcje, które takiego typu oczekują.  Ze względu na nietrywialny system typów wydzielone są specjalne funkcje
-sprawdzające czy i w jakim zakresie dwa typy są zgodne. Przykładowo jeżeli \texttt{im} używany jest w kontekście \texttt{hash}, to zgodnym typem jest
-\texttt{hash}. Jeżeli zaś funkcja oczekuje \texttt{int} a podawany jest \texttt{array}, to zgłaszany jest błąd. W czasie działania tej części kompilatora o typach myśleć można
+sprawdzające czy i w jakim zakresie dwa typy są zgodne. Przykładowo jeżeli \texttt{ptd::im} używany jest w kontekście \texttt{ptd::hash}, to zgodnym typem jest
+\texttt{ptd::hash}. Jeżeli zaś funkcja oczekuje \texttt{ptd::sim} a podawany jest \texttt{ptd::array}, to zgłaszany jest błąd. W czasie działania tej części kompilatora o typach myśleć można
 jako o zbiorach możliwych wartości, na których wykonywane są operacje, przede wszystkim przecięcia.
 
 Drugie rozumienie, które stosuje type checker, jest podobne do pierwszego, lecz w kontekście wnioskowania typów na podstawie wykonywanych na nich
-operacji. Jeżeli dana zmienna inicjalizowana jest jako \texttt{int}, a następnie używana jako \texttt{hash}, to zgłaszany jest błąd. Warto zaznaczyć,
-że operacje na typach wywnioskowanych są subtelniejsze, gdyż wiele typów jest konwertowalnych na \texttt{im} oraz w drugą stronę, przez co nie jest
+operacji. Jeżeli dana zmienna inicjalizowana jest jako \texttt{ptd::sim}, a następnie używana jako \texttt{ptd::hash}, to zgłaszany jest błąd. Warto zaznaczyć,
+że operacje na typach wywnioskowanych są subtelniejsze, gdyż wiele typów jest konwertowalnych na \texttt{ptd::im}, oraz w drugą stronę, przez co nie jest
 możliwa całkowita, ścisła kontrola typów, ta ma miejsce dopiero w runtime. Ponownie, wydzielone są funkcje operujące na typach w analogii do zbiorów.
 
 Samą budowę type checker ma podobną w pewnym sensie do parsera. W rekurencyjny sposób sprawdzamy, jakie typy mają poszczególne elementy drzewa oraz
 czy są one poprawne. Tak jak w parserze zapisane jest, że operator \texttt{+} zawiera słowo kluczowe \texttt{+}, tak odpowiednia funkcja w type
-checkerze wie, że argumenty tego operatora muszą mieć typ zwracany \texttt{int}. Ponownie pozwala to na podział funkcji w taki sposób, by każda
+checkerze wie, że argumenty tego operatora muszą zwracać liczbę całkowitą. Ponownie pozwala to na podział funkcji w taki sposób, by każda
 dotyczyła jednego, jasno wyszczególnionego elementu.
 \section{Architektura nlasma}
 nlasm to język stosowany w kompilatorze jako język pośredni pomiędzy NianioLangiem a językiem docelowy.
@@ -381,7 +381,7 @@ najprostszy, z drugiej w pewnym sensie zachowa strukturę programu wyjściowego.
 
 Funkcje w nlasmie nie operują na zmiennych, lecz na rejestrach. Każdy rejestr ma swój unikalny w obrębie funkcji numer oraz typ. Także argumenty
 funkcji są rejestrami. Wprowadzenie typów do nlasma było jednym z elementów projektu, gdyż o ile poprzednio wszystkie zmienne konwertowane były do
-typu \texttt{im}, o tyle teraz przechować należy strukturę typów \texttt{own} czy \texttt{int}. Typy w nlasmie mają charakter wyłącznie informacyjny,
+typu \texttt{ptd::im}, o tyle teraz przechować należy strukturę typów \texttt{own} czy \texttt{ptd::int}. Typy w nlasmie mają charakter wyłącznie informacyjny,
 to znaczy nie mają żadnego znaczenia semantycznego. Są używane na dalszych etapach kompilacji.
 
 Najważniejszą cechą nlasma jest nie drzewiasta, lecz liniowa struktura programu. Oznacza to, że argumentami wywołań mogą być wyłącznie rejestry, a nie
@@ -411,7 +411,7 @@ Przykładowe komendy nlasma:
 \end{itemize}
 \section{Translacja drzewa AST do nlasma}
 \label{sec:translation}
-Drzewo AST, reprezentujące funkcję języka nianiolang, jest w sposób rekurencyjny tłumaczone na ciąg komend nlasma. Sposobem działania 
+Drzewo AST, reprezentujące funkcję języka NianioLang, jest w sposób rekurencyjny tłumaczone na ciąg komend nlasma. Sposobem działania 
 komendy nlasma przypominają rozkazy maszynowe: identyfikator komendy + identyfikatory rejestrów. Zgodnie ze specyfikacją języka nlasm, każdemu argumentowi funkcji, jak 
 i każdej zmiennej lokalnej, jest przydzielany rejestr odpowiedniego typu. Ze względu na strukturę języka nlasm brak w nim jakichkolwiek rozgałęzień kodu, 
 więc każda instrukcja warunkowa czy pętla jest tłumaczona na odpowiedni ciąg komend, zawierający warunkowy skok (komendę \texttt{if\_goto}) do 
@@ -615,7 +615,7 @@ w zależności od typów rejestrów.
 Typy rejestrów zostały uproszczone w stosunku do typów obliczanych podczas etapu sprawdzania typów.
 Możliwe typy rejestrów to:
 \begin{itemize}
- \item \texttt{im} -- dla wszystkich zmiennych typu \texttt{im}; przed wprowadzeniem typowanych rejestrów
+ \item \texttt{im} -- dla wszystkich zmiennych typu \texttt{ptd::im}; przed wprowadzeniem typowanych rejestrów
  każdy rejestr był tego typu
  \item \texttt{int} -- dla zmiennych całkowitoliczbowych
  \item \texttt{string} -- dla łańcuchów znaków
@@ -704,13 +704,13 @@ Inne konwersje muszą być obsłużone na etapie sprawdzania typów.
 
 Przykład programu, dla którego zostanie wygenerowane rzutowanie podobne do przedstawionego wyżej,
 znajduje się w listingu \ref{lst:reg_im}.
-Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, jest typu \texttt{im},
+Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, jest typu \texttt{ptd::im},
 a zatem także rejestr, w którym jest przechowywana, musi być typu \texttt{im}.
 Jednak, jak zostało wspomniane wyżej, rejestr użyty do indeksowania tablicy musi być typu \texttt{int}.
 Wymusza to wprowadzenie rejestru pomocniczego tego typu i użycie rzutowania przy pomocy polecenia \texttt{move},
 analogicznie jak na listingu \ref{lst:reg_types_2}.
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Indeksowanie tablicy zmienną typu \texttt{im}},label={lst:reg_im}]
+\begin{lstlisting}[caption={Indeksowanie tablicy zmienną typu \texttt{ptd::im}},label={lst:reg_im}]
 var x;
 var arr = [1,2,3];
 x->i = 'a';
@@ -722,7 +722,7 @@ arr[x->i];
 \section{Tłumaczenie dostępów do zmiennych na kod nlasm}
 Jedną z głównych zalet nlasma jest prostota jego pojedynczych instrukcji, dzięki czemu większość
 pracy związanej z generowaniem kodu wynikowego można wykonać wspólnie dla wszystkich języków docelowych.
-Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{im}, instrukcja NianioLanga
+Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{ptd::im}, instrukcja NianioLanga
 \texttt{a->b[0] = 1} zostanie przetłumaczona do ciągu poleceń nlasma
 \texttt{get\_hash\_val}, \texttt{get\_frm\_idx}, \texttt{set\_at\_index}, \texttt{set\_hash\_val} zgodnie
 z opisem z rozdziału \textit{\nameref{sec:translation}}.
@@ -747,9 +747,9 @@ jest uznawany za niepoprawny. Dzięki takiemu rozwiązaniu w poprawnym kodzie nl
 współbieżnego dostępu do wartości poprzez różne referencje do niej.
 
 Dzięki dodaniu do nlasma pojęcia referencji znacząco zmniejszył się koszt modyfikacji elementów w głęboko
-zagnieżdżonych strukturach. W odróżnieniu od implementacji dla typów \texttt{im}, zmienne typu \texttt{own}
+zagnieżdżonych strukturach. W odróżnieniu od implementacji dla typów \texttt{ptd::im}, zmienne typu \texttt{own}
 są modyfikowane w miejscu -- podczas modyfikacji nie są tworzone żadne dodatkowe struktury, a jedynie
-kolejne rejestry wskaźnikowe. Rozwiązanie dla typów \texttt{im} przypomina podejście funkcyjne:
+kolejne rejestry wskaźnikowe. Rozwiązanie dla typów \texttt{ptd::im} przypomina podejście funkcyjne:
 najpierw dany element jest krok po kroku wyjmowany poprzez odpakowywanie kolejnych struktur
 (polecenia \texttt{get\_*}), następnie jest on modyfikowany, a na końcu jest pakowany z powrotem (polecenia
 \texttt{set\_*}). W odróżnieniu od tego, rozwiązanie dla typów \texttt{own} jest podobne do podejścia
@@ -875,7 +875,7 @@ co przełożyło się na wydajniejszy kod wynikowy.
 Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
 do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji arytmetycznych,
 które na obecnych procesorach wykonują się w niewielkiej liczbie cykli. Użycie typu języka C
-dedykowanego dla liczb całkowitych, umożliwia to kompilatorowi \texttt{gcc} lepszą optymalizację
+dedykowanego dla liczb całkowitych, umożliwia to kompilatorowi GCC lepszą optymalizację
 na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
 \subsection{Łańcuchów znaków}
 Implementacja łańcuchów znaków nie została zmieniona w stosunku do istniejącej wcześniej.
@@ -896,7 +896,7 @@ efektywny.
 W wyniku przeprowadzonych zmian wartości logiczne są kompilowane do zmiennych typu \texttt{bool},
 zdefiniowanego w pliku \texttt{stdbool.h} biblioteki standardowej języka C.
 Podobnie, jak w przypadku liczb całkowitych zapewnia to dobrą wydajność operacji logicznych
-ze względu na bezpośrednie wsparcie procesora i kompilatora \texttt{gcc}.
+ze względu na bezpośrednie wsparcie procesora i kompilatora GCC.
 
 \subsection{Ograniczenia kompilacji typów prostych}
 \begin{wrapfigure}[10]{r}{.4\textwidth}
@@ -921,7 +921,7 @@ typu oraz funkcji na nim operujących. Jest to główna różnica w stosunku do 
 \texttt{ptd}, dla których zdefiniowany był jeden polimorficzny typ \texttt{ImmT}.
 Takie podejście umożliwia bardziej efektywną alokację pamięci przez kompilator (ponieważ rozmiar
 wielu struktur jest z góry znany) oraz zapewnia statyczną kontrolę typów także przez kompilator
-\texttt{gcc}, pozwalając wykrywać wiele błędów w kodzie generowanym przez kompilator
+GCC, pozwalając wykrywać wiele błędów w kodzie generowanym przez kompilator
 NianioLanga już na etapie kompilacji.
 \subsection{Tablice}
 Definicje typów \texttt{own::arr} kompilowane są do struktury zawierającej rozmiar tablicy, jej
@@ -1021,7 +1021,7 @@ Następnie, podczas sprawdzania typów funkcji, za każdym razem, gdy napotykana
 Typy te są również rekurencyjnie sprawdzane, czy nie zawierają innych typów \texttt{own}, do których także należy stworzyć stosowne funkcje.
 
 Drugim elementem rozwiązania jest generowanie kodu. Tworzona jest zmienna tekstowa, która następnie wypełniana jest instrukcjami tworzącymi obiekt \texttt{ptd::im}.
-Ponieważ typy mogą być zagnieżdżone, w razie potrzeb wywołują one inne funkcje konwertujące wewnętrzne obiekty \texttt{own} na \texttt{im}.
+Ponieważ typy mogą być zagnieżdżone, w razie potrzeb wywołują one inne funkcje konwertujące wewnętrzne obiekty \texttt{own} na \texttt{ptd::im}.
 Warto podkreślić, że w przypadku typów \texttt{own::rec} oraz \texttt{own::var} funkcje rzutujące nawet podobne typy są istotnie różne.
 Rzutując rekordy należy explicite przypisać wszystkie pola, nie jest możliwe zrobienie tego w ogólny sposób pętlą, zaś rzutując warianty
 wykonać należy pełną instrukcję \texttt{match}.
@@ -1179,10 +1179,10 @@ w których praca wykonana została w większości przez jedną osobę.
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
   \begin{itemize}
-   \item Implementacja konwersji typów \texttt{own} na typy \texttt{im}
+   \item Implementacja konwersji typów \texttt{own} na typy \texttt{ptd::im}
    \item Implementacja skryptu do testowania zmian wydajności w czasie trwania projektu
    \item Implementacja sortowania kolejności deklaracji oraz definicji typów w C
-   \item Opis konwersji typów \texttt{own} na typy \texttt{im} w pracy licencjackiej
+   \item Opis konwersji typów \texttt{own} na typy \texttt{ptd::im} w pracy licencjackiej
   \end{itemize}
 
   \item[] \textbf{Jakub Bujak}
