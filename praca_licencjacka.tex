@@ -125,6 +125,22 @@
   keywordsprefix={},
 }
 
+\lstdefinelanguage{my_c}{
+  morecomment = [l]{\/\/},
+  morestring=[b]',
+  sensitive = true,
+  classoffset=0,
+  morekeywords={
+    return, if, else, while, continue, for, rep
+  },
+  classoffset=1, keywordstyle=\color{purple},
+  morekeywords={
+	int, void, struct
+  },
+  alsoletter={:},
+  keywordsprefix={},
+}
+
 
 % koniec definicji
 
@@ -598,12 +614,12 @@ możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać o
  co miałoby miejsce gdyby argumenty były przekazywane przez wskaźnik (listing \ref{lst:ref}).
  Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja, takiej semantyki wymaga
  faktycznego skopiowania zmiennej do argumentów, co jest zabronione w przypadku zmiennych typu \texttt{own}.
-\begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref},language=C]
+\begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref},language=my_c]
 int main() [
 	var a = 1;
 	f(&a, &a);
 }
-def f(int *a, int *b) {
+void f(int *a, int *b) {
 	printf("%d\n", a); // 1
 	*b++;
 	printf("%d\n", a); // 2
@@ -1079,11 +1095,11 @@ z jądrem w wersji 4.16.8-1-ARCH. Czas wykonania mierzony był poleceniem \textt
   \hline
   \textbf{Przedmiot testów} & \textbf{Wersja kompilatora} & \textbf{Polecenie kompilacji} \\
   \hline
-  Testy wykorzystujące typy \texttt{ptd} & \texttt{NL}, wersja z 15.02.2017 & \texttt{./mk\_cache.exe ----c \&\& gcc -O0} \\
+  Testy wykorzystujące typy \texttt{ptd} & \texttt{NL}, wersja z 15.02.2017 & \texttt{./mk\_cache.exe ----c \&\& gcc} \\
   \hline
-  Testy wykorzystujące typy \texttt{own} & \texttt{NL}, wersja z 17.05.2018 & \texttt{./mk\_cache.exe ----c \&\& gcc -O0} \\
+  Testy wykorzystujące typy \texttt{own} & \texttt{NL}, wersja z 17.05.2018 & \texttt{./mk\_cache.exe ----c \&\& gcc} \\
   \hline
-  Testy w języku C & \texttt{gcc 8.1.0} & \texttt{gcc -O0} \\
+  Testy w języku C & \texttt{gcc 8.1.0} & \texttt{gcc} \\
   \hline
 \end{tabular}
 \end{table}
@@ -1094,12 +1110,13 @@ Aby zbadać zmianę narzutu czasowego pętli, czyli czasu, który program poświ
 warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania programu wykonującego pustą pętlę
 o $10^8$ iteracjach. Programy, na których wykonane zostały testy są zamieszczone na listingach
 \ref{lst:int_loop_nl} -- \ref{lst:rec_loop_c}, a w tabeli
-\ref{tab:loop}
+\ref{tab:loop1}
 przestawione zostały uśrednione wyniki 10 testów.
 Optymalizacje kompilatora zostały w tych testach wyłączone, ponieważ dla typów \texttt{own}
 skutkowały całkowitym usunięciem pętli.
 
 \begin{table}[h]
+\label{tab:loop1}
 \caption{Średni czas wykonania pętli}
 \begin{tabularx}{\textwidth}{|c|R|R|R|}
  \hline 
@@ -1108,39 +1125,15 @@ skutkowały całkowitym usunięciem pętli.
   \cline{2-4}
   & \multicolumn{1}{|c|}{\texttt{ptd}} & \multicolumn{1}{|c|}{\texttt{own}} & \multicolumn{1}{|c|}{\texttt{C}}\\
  \hline 
-  Iterator -- liczba całkowita & 9,066 s & 0,2627 s & 0,234 s \\
+  Iterator -- liczba całkowita & 9,066 s & 0,263 s & 0,234 s \\
   \hline
   Iterator -- pole w rekordzie & 60,137 s & 0,896 s & 0,234 s \\
   \hline
 \end{tabularx}
 \end{table}
 
-\begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Iterator całkowitoliczbowy NL},label={lst:int_loop_nl},language=nl]
-rep var i (1000000000) { }
-\end{lstlisting}
-\begin{lstlisting}[caption={Iterator całkowitoliczbowy C},label={lst:int_loop_c},language=nl]
-for (int i = 0; i < 100000000; i++) {}
-\end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{ptd}},label={lst:rec_loop_ptd},language=nl]
-var a = {b => { c => 0 } };
-for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
-\end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{own}},label={lst:rec_loop_own},language=nl]
-var a : own::rec({ b => own::rec({
-		c => ptd::int()
-	}) }) = { b => { c => 0 } };
-for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
-\end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu C},label={lst:rec_loop_c},language=C]
-struct s { struct { int c; } b; } a;
-for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
-\end{lstlisting}
-\end{minipage}
-
 \begin{table}[h]
 \caption{Czasy wykonania poszczególnych testów pętli}
-\label{tab:loop}
 \begin{tabularx}{\textwidth}{|c|R|R|R|}
  \hline 
   \multirow{2}{*}{\textbf{Test}}
@@ -1193,6 +1186,217 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
 \end{tabularx}
 \end{table}
 
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy NL},label={lst:int_loop_nl},language=nl]
+rep var i (1000000000) { }
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy C},label={lst:int_loop_c},language=nl]
+for (int i = 0; i < 100000000; i++) {}
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{ptd}},label={lst:rec_loop_ptd},language=nl]
+var a = {b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{own}},label={lst:rec_loop_own},language=nl]
+var a : own::rec({ b => own::rec({
+		c => ptd::int()
+	}) }) = { b => { c => 0 } };
+for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
+\end{lstlisting}
+\begin{lstlisting}[caption={Iterator będący polem rekordu C},label={lst:rec_loop_c},language=my_c]
+struct s { struct { int c; } b; } a;
+for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
+\end{lstlisting}
+\end{minipage}
+
+\subsection{Sortowanie punktów na płaszczyźnie}
+Sortowanie to jeden z podstawowych algorytmów w informatyce.
+Nieraz zdarza się, że do rozwiązania danego problemu potrzebne jest posortowanie nie samych liczb, lecz jakichś
+bardziej skomplikowanych struktur.
+Na przykład jednym z elementów rozwiązania zadania Autobus z XII Olimpiady Informatycznej\cite{autobus}
+jest posortowanie listy
+punktów na płaszczyźnie biorą pod uwagę najpierw współrzędną pionową, a następnie poziomą.
+
+Poniżej przedstawione zostały czasy wykonania programu sortującego tablicę o rozmiarze $10^6$ przy użyciu algorytmu
+sortowania przez scalanie (ang. \textit{merge sort}). Pliki w języku C były kompilowane na dwa sposoby: z optymalizacją
+wyłączoną (flaga \texttt{-O0}) i włączoną (flaga \texttt{-O2}).
+
+Ponieważ czas działania algorytmu sortowania przez scalanie nie zależny istotnie od danych wejściowych,
+dane zostały generowane w prosty sposób: współrzędne $i$-tego punktu to \mbox{($i$ mod 91, $i$ mod 103)}.
+
+\begin{table}[h]
+\caption{Średni czas sortowania listy punktów na płaszczyźnie}
+\label{tab:sort}
+\begin{tabularx}{\textwidth}{|c|R|R|R|}
+ \hline 
+  \multirow{2}{*}{\textbf{Test}}
+  & \multicolumn{3}{|c|}{\textbf{Czas wykonania}} \\
+  \cline{2-4}
+  & \multicolumn{1}{|c|}{\texttt{ptd}} & \multicolumn{1}{|c|}{\texttt{own}} & \multicolumn{1}{|c|}{\texttt{C}}\\
+ \hline 
+  Bez optymalizacji GCC (\texttt{gcc -O0}) & 61,546 s & 2,116 s & 0,192 s \\
+  \hline
+  Z optymalizacją GCC (\texttt{gcc -O2}) & 32,783 s & 0,298 s & 0,073 s \\
+  \hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\caption{Czasy wykonania poszczególnych testów sortowania}
+\begin{tabularx}{\textwidth}{|c|R|R|R|}
+ \hline 
+  \multirow{2}{*}{\textbf{Test}}
+  & \multicolumn{3}{|c|}{\textbf{Czas wykonania}} \\
+  \cline{2-4}
+  & \multicolumn{1}{|c|}{\texttt{ptd}} & \multicolumn{1}{|c|}{\texttt{own}} & \multicolumn{1}{|c|}{\texttt{C}}\\
+ \hline 
+
+  \multirow{10}{*}{Bez optymalizacji GCC}
+  & 61,245 s & 2,088 s & 0,189 s \\
+  \cline{2-4}
+  & 62,432 s & 2,151 s & 0,192 s \\
+  \cline{2-4}
+  & 62,177 s & 2,094 s & 0,191 s \\
+  \cline{2-4}
+  & 61,937 s & 2,097 s & 0,192 s \\
+  \cline{2-4}
+  & 61,386 s & 2,100 s & 0,195  s \\
+  \cline{2-4}
+  & 61,762 s & 2,118 s & 0,195 s \\
+  \cline{2-4}
+  & 60,906 s & 2,110 s & 0,192 s \\
+  \cline{2-4}
+  & 60,904 s & 2,084 s & 0,189 s \\
+  \cline{2-4}
+  & 61,358 s & 2,200 s & 0,188 s \\
+  \cline{2-4}
+  & 61,368 s & 2,143 s & 0,198 s \\
+  \hline
+  \multirow{10}{*}{Z optymalizacją GCC }
+  & 32,608 s & 0,302 s & 0,071 s \\
+  \cline{2-4}
+  & 32,979 s & 0,297 s & 0,073 s \\
+  \cline{2-4}
+  & 32,942 s & 0,295 s & 0,073 s \\
+  \cline{2-4}
+  & 32,461 s & 0,295 s & 0,072 s \\
+  \cline{2-4}
+  & 33,131 s & 0,311 s & 0,073 s \\
+  \cline{2-4}
+  & 32,421 s & 0,300 s & 0,073 s \\
+  \cline{2-4}
+  & 32,860 s & 0,295 s & 0,072 s \\
+  \cline{2-4}
+  & 32,578 s & 0,293 s & 0,073 s \\
+  \cline{2-4}
+  & 33,042 s & 0,296 s & 0,073 s \\
+  \cline{2-4}
+  & 32,808 s & 0,292 s & 0,073 s \\
+  \hline
+\end{tabularx}
+\end{table}
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Definicje typów \texttt{ptd} do algorytmu merge sort},label={lst:sort_ptd},language=nl]
+def main::arr() {
+	return ptd::arr(@main::element);
+}
+def main::element() {
+	return ptd::rec({
+		x => ptd::sim(),
+		y => ptd::sim(),
+	});
+}
+\end{lstlisting}
+\begin{lstlisting}[caption={Definicje typów \texttt{own} do algorytmu merge sort},label={lst:sort_own},language=nl]
+def main::arr() {
+	return own::arr(@main::element);
+}
+def main::element() {
+	return own::rec({
+		x => ptd::int(),
+		y => ptd::int(),
+	});
+}
+\end{lstlisting}
+\begin{lstlisting}[caption={Algorytm merge sort w NianioLangu},label={lst:sort_nl},language=nl]
+def merge_sort(ref arr : @main::arr, l : ptd::int(), r : ptd::int()) {
+	return if (l == r);
+	var mid = (l + r) / 2;
+	merge_sort_aux(ref arr, l, mid);
+	merge_sort_aux(ref arr, mid + 1, r);
+	var tmp : @main::arr = [];
+	var l_ptr = l;
+	var r_ptr = mid + 1;
+	rep var i (r-l+1) {
+		if (r_ptr == r + 1 ||
+				(l_ptr <= mid &&
+					((arr[l_ptr]->y < arr[r_ptr]->y) ||
+					(arr[l_ptr]->y == arr[r_ptr]->y && arr[l_ptr]->x < arr[r_ptr]->y))
+				)) {
+			tmp []= { x => arr[l_ptr]->x, y => arr[l_ptr]->y };
+			l_ptr++;
+		} else {
+			tmp []= { x => arr[r_ptr]->x, y => arr[r_ptr]->y };
+			r_ptr++;
+		}
+	}
+	rep var i (r-l+1) {
+		arr[l+i]->x = tmp[i]->x;
+		arr[l+i]->y = tmp[i]->y;
+	}
+}
+\end{lstlisting}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Algorytm merge sort w C},label={lst:sort_c},language=my_c]
+struct element {
+	int x;
+	int y;
+};
+void merge_sort_aux(struct element *arr, int l, int r) {
+	if (l == r) return;
+	int mid = (l + r) / 2;
+	merge_sort_aux(arr, l, mid);
+	merge_sort_aux(arr, mid + 1, r);
+	int l_ptr = l;
+	int r_ptr = r;
+	struct element *tmp = malloc(sizeof(struct element) * (r-l+1));
+	for (int i = 0; i < r-l+1; i++) {
+		if (r_ptr == r + 1 ||
+				(l_ptr <= mid &&
+				 	((arr[l_ptr].y < arr[r_ptr].y) ||
+					(arr[l_ptr].y == arr[r_ptr].y && arr[l_ptr].x < arr[r_ptr].y))
+				)) {
+			tmp[i] = arr[l_ptr];
+			tmp[i] = arr[l_ptr];
+			l_ptr++;
+		} else {
+			tmp[i] = arr[r_ptr];
+			tmp[i] = arr[r_ptr];
+			r_ptr++;
+		}
+	}
+	for (int i = 0; i < r-l+1; i++) {
+		arr[i] = tmp[i];
+	}
+	free(tmp);
+}
+\end{lstlisting}
+\end{minipage}
+
+\section{Podsumowanie wyników}
+Jak wynika z powyższych testów, użycie nowych typów \texttt{own} w miejsce istniejących umożliwia istotne przyspieszenie
+programu wynikowego -- na testach jest to od 30 do 100 razy szybciej.
+Co więcej, typy te umożliwiają także bardziej efektywną optymalizację przez GCC na dalszym etapie.
+W testach sortowania optymalizacja GCC dla typów \texttt{ptd} skróciła czas wykonania jedynie dwukrotnie, podczas
+gdy dla typów \texttt{own} czas ten skrócił się aż siedmiokrotnie.
+
+Ten wynik nie jest jednak możliwy do osiągnięcia w każdej sytuacji.
+Ograniczenia typów \texttt{own} sprawiają, że nie ma sensu ich stosować, kiedy potrzebne jest częste kopiowanie danych
+pomiędzy różnymi zmiennnymi -- wtedy lepiej sprawdzą się typy \texttt{ptd}.
+
 \chapter{Wkład poszczególnych członków zespołu}
 Ze względu na charakter projektu nie występował jednoznaczny podział pracy na części możliwe do przypisania konkretnym członkom.
 Kod programu oraz treść pracy pisane i korygowane były przez wszystkich członków zespołu. Poniżej wymienione są jedynie zadania,
@@ -1237,12 +1441,14 @@ w których praca wykonana została w większości przez jedną osobę.
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{Bibliografia}
 
-\bibitem{nianiolang_org} \href{http://www.nianiolang.org}{nianiolang.org, data dostępu 17.05.2018}
-\bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} (2006), data dostępu 17.05.2018}.
-\bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler -- GitHub,
-data dostępu 17.05.2018}
+\bibitem{nianiolang_org} \href{http://www.nianiolang.org}{nianiolang.org} data dostępu 17.05.2018
+\bibitem{wzorzec_nianio} \href{https://www.mimuw.edu.pl/~chrzaszc/BPJ20067/nianio.pdf}{LK, \textit{Wzorzec ,,Nianio'' przykład} (2006)}, data dostępu 17.05.2018
+\bibitem{github_repo_nianiolang_original} \href{https://github.com/nianiolang/nl}{NianioLang Compiler -- GitHub}
+data dostępu 17.05.2018
 \bibitem{cormen} Thomas H. Cormen, Charles E. Leiserson, Ron Rivest, Clifford Stein \textit{Wprowadzenie do algorytmów}, Wydawnictwo Naukowe PWN (2013)
 \bibitem{dragonbook} Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman \textit{Kompilatory. Reguły, metody i narzędzia}
+\bibitem{autobus}\href{https://main.edu.pl/pl/archive/oi/12/aut}{https://main.edu.pl/pl/archive/oi/12/aut},
+data dostępu 22.05.2018
 
 
 \end{thebibliography}
