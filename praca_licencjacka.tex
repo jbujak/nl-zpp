@@ -297,7 +297,7 @@ zespołu i jakie otwarte zadania pozostały do przydzielenia.
 \section{Zgłaszanie zmian i code review}
 Po napisaniu kodu rozwiązującego dane zadanie zgłaszany był tzw. pull request,
 czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszczone
-w głównej gałęzi projektu musiały być zatwierdzone przez co najmniej jednego członka
+w głównej gałęzi projektu, musiały być zatwierdzone przez co najmniej jednego członka
 zespołu, innego niż ten, który zgłosił pull request. GitHub udostępnia widok naniesionych zmian
 wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
 był dialog między recenzentem kodu a jego twórcą tak, aby ostatecznie zatwierdzone
@@ -373,7 +373,7 @@ Drugim etapem kompilacji jest sprawdzenie poprawności typów. Wbrew nazwie etap
 typowo -- do drzewa programu wpisywane są informacje o uzyskanych typach. Jest to konieczne, by móc dopasować typy NianioLanga do typów języka
 wynikowego. Ponadto zachodzi tutaj analiza opisana w rozdziale \textit{\nameref{sec:own_to_im}}.
 
-Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy definicje funkcji nie dublują się, oraz w końcu czy używane typy zgodne
+Na tym etapie sprawdza się, czy zaimportowane moduły faktycznie istnieją, czy definicje funkcji nie dublują się oraz w końcu czy używane typy zgodne
 są z oczekiwanymi. Trzeci element rozumiany jest dwojako. Po pierwsze, jeżeli dana zmienna ma zadeklarowany przez użytkownika typ, sprawdza się, czy
 używana jest ona wyłącznie przez funkcje, które takiego typu oczekują.  Ze względu na nietrywialny system typów wydzielone są specjalne funkcje
 sprawdzające czy i w jakim zakresie dwa typy są zgodne. Przykładowo jeżeli \texttt{ptd::im} używany jest w kontekście \texttt{ptd::hash}, to zgodnym typem jest
@@ -593,7 +593,7 @@ możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać o
  \texttt{own} wywołania \texttt{f(ref a, ref a)} oraz \texttt{f(ref a, ref a->b)} nie są poprawnymi wyrażeniami.
  Argumenty \texttt{ref} to argumenty przekazywane przez wartość-wynik.
  Semantyka takiego przekazywania argumentów wygląda następująco: przed wywołaniem funkcji wartość przekazywanej
- zmiennej jest kopiowana, a po zakończeniu wywołania następuje kopiowanie do pamięci funkcji wywołującej.
+ zmiennej jest kopiowana, a po zakończeniu wywołania następuje kopiowanie do funkcji wywołującej.
  Zapobiega to naruszeniu niezmienialności struktur,
  co miałoby miejsce gdyby argumenty były przekazywane przez wskaźnik (listing \ref{lst:ref}).
  Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja, takiej semantyki wymaga
@@ -722,7 +722,7 @@ Decyzja taka została podjęta, ponieważ konwersje te są stosunkowo tanie i ba
 Inne konwersje muszą być obsłużone na etapie sprawdzania typów.
 
 Przykład programu, dla którego zostanie wygenerowane rzutowanie podobne do przedstawionego wyżej,
-znajduje się w listingu \ref{lst:reg_im}.
+znajduje się na listingu \ref{lst:reg_im}.
 Ponieważ wartość \texttt{x->i} może być zarówno napisem, jak i liczbą całkowitą, jest typu \texttt{ptd::im},
 a zatem także rejestr, w którym jest przechowywana, musi być typu \texttt{im}.
 Jednak, jak zostało wspomniane wyżej, rejestr użyty do indeksowania tablicy musi być typu \texttt{int}.
@@ -747,7 +747,7 @@ Na przykład, jeśli zmienne \texttt{a} i \texttt{b} są typu \texttt{ptd::im}, 
 z opisem z rozdziału \textit{\nameref{sec:translation}}.
 
 Niestety to podejście nie jest odpowiednie w przypadku dostępów do zmiennych typu \texttt{own}.
-Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} sprawia, że wartość pobierana
+Semantyka poleceń \texttt{get\_hash\_val} i \texttt{get\_frm\_idx} jest taka, że wartość pobierana
 z hasha lub tablicy jest leniwie kopiowana do rejestru docelowego, dzięki czemu także na poziomie nlasma
 nie występuje pojęcie referencji, a niezmienialność wartości jest zachowana.
 Leniwe kopiowanie zmiennych typu \texttt{own} nie jest możliwe, więc należało wybrać inny sposób na
@@ -759,9 +759,9 @@ W tym celu zostały wprowadzone polecenia \texttt{use\_field}, \texttt{use\_inde
 \texttt{use\_variant}, umożliwiające pobranie referencji do elementu z wnętrza odpowiednio rekordu, tablicy, hasha
 i wariantu, oraz odpowiadające im polecenia \texttt{release\_*}.
 
-Polecenia \texttt{use\_*}, oprócz pobrania referencji, powodują także przeniesienie wartości zmiennej z rejestru
-źródłowego na rejestr docelowy, a polecenia \texttt{release\_*} służą do zwrócenia wartości po zakończeniu
-operacji. Kod nlasm, w którym następuje odwołanie do rejestru, który nie ma w danym momencie wartości,
+Polecenia \texttt{use\_*}, oprócz pobrania referencji, powodują także przeniesienie własności zmiennej z rejestru
+źródłowego na rejestr docelowy, a polecenia \texttt{release\_*} służą do zwrócenia własności po zakończeniu
+operacji. Kod nlasm, w którym następuje odwołanie do rejestru, który nie ma w danym momencie własności,
 jest uznawany za niepoprawny. Dzięki takiemu rozwiązaniu w poprawnym kodzie nlasma nie ma możliwości wystąpienia
 współbieżnego dostępu do wartości poprzez różne referencje do niej.
 
@@ -894,7 +894,7 @@ co przełożyło się na wydajniejszy kod wynikowy.
 Wartości typu \texttt{ptd::int}, czyli liczby całkowite, w wyniku wprowadzonych zmian są kompilowane
 do zmiennych języka C o typie \texttt{int}. Zapewnia to dobrą wydajność operacji arytmetycznych,
 które na obecnych procesorach wykonują się w niewielkiej liczbie cykli. Użycie typu języka C
-dedykowanego dla liczb całkowitych, umożliwia to kompilatorowi GCC lepszą optymalizację
+dedykowanego dla liczb całkowitych umożliwia też kompilatorowi GCC lepszą optymalizację
 na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czasie kompilacji).
 \subsection{Łańcuchów znaków}
 Implementacja łańcuchów znaków nie została zmieniona w stosunku do istniejącej wcześniej.
@@ -1095,7 +1095,7 @@ warunku pętli, zostały wykonane testy polegające na mierzeniu czasu wykonania
 o $10^8$ iteracjach. Programy, na których wykonane zostały testy są zamieszczone na listingach
 \ref{lst:int_loop_nl} -- \ref{lst:rec_loop_c}, a w tabeli
 \ref{tab:loop}
-przestawione zostały uśrednione wyniki 1000 testów.
+przestawione zostały uśrednione wyniki 10 testów.
 Optymalizacje kompilatora zostały w tych testach wyłączone, ponieważ dla typów \texttt{own}
 skutkowały całkowitym usunięciem pętli.
 
