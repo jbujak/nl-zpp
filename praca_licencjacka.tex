@@ -27,6 +27,7 @@
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
 
 
+
 \lstset{
   aboveskip=3mm,
   belowskip=3mm,
@@ -35,8 +36,8 @@
   basicstyle={\small\ttfamily},
   numberstyle=\tiny\color{gray},
   keywordstyle=\color{blue},
-  commentstyle=\color{dkgreen},
-  stringstyle=\color{mauve},
+  commentstyle=\color{cyan},
+  stringstyle=\color{red},
   breaklines=true,
   breakatwhitespace=true,
   tabsize=4,
@@ -107,6 +108,23 @@
 
 % Tu jest dobre miejsce na Twoje własne makra i~środowiska:
 \newtheorem{defi}{Definicja}[section]
+
+\lstdefinelanguage{nl}{
+  morecomment = [l]{\#},
+  morestring=[b]',
+  sensitive = true,
+  classoffset=0,
+  morekeywords={
+    return, match, case, if, elsif, else, while, continue, try, for, fora, forh, rep
+  },
+  classoffset=1, keywordstyle=\color{purple},
+  morekeywords={
+	def, var,
+  },
+  alsoletter={:},
+  keywordsprefix={},
+}
+
 
 % koniec definicji
 
@@ -529,7 +547,7 @@ istniejącej przestrzeni \texttt{ptd}. Celem nowych typów jest możliwość efe
 prostych konstrukcji języka C, co pozwala na generowanie efektywniejszych programów wynikowych.
 
 \begin{wrapfigure}[19]{r}{.5\textwidth}
-\begin{lstlisting}[caption={Przykład funkcji nianio},label={lst:nianio},aboveskip=-15pt]
+\begin{lstlisting}[caption={Przykład funkcji nianio},label={lst:nianio},aboveskip=-15pt,language=nl]
 def nianio::state() {
     return ptd::rec({
         num => ptd::int(),
@@ -580,7 +598,7 @@ możliwości typów \texttt{ptd}, użycie typów \texttt{own} musiało zostać o
  co miałoby miejsce gdyby argumenty były przekazywane przez wskaźnik (listing \ref{lst:ref}).
  Jednak, w przypadku przekazywania jednego argumentu wielokrotnie implementacja, takiej semantyki wymaga
  faktycznego skopiowania zmiennej do argumentów, co jest zabronione w przypadku zmiennych typu \texttt{own}.
-\begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref}]
+\begin{lstlisting}[caption={Naruszenie niezmienialności wartości w C},label={lst:ref},language=C]
 int main() [
 	var a = 1;
 	f(&a, &a);
@@ -595,7 +613,7 @@ def f(int *a, int *b) {
  do jednej wartości z dwóch różnych zmiennych jednocześnie. W sytuacjach tego wymagających możliwe jest tymczasowe
  przeniesienie własności z jednej zmiennej na drugą. Taka sytuacja występuje na przykład podczas iteracji
  tablicy asocjacyjnej pętlą \texttt{forh} (listing \ref{lst:forh}).
-\begin{lstlisting}[caption={Odwołanie do zmiennej, która utraciła własność},label={lst:forh}]
+\begin{lstlisting}[caption={Odwołanie do zmiennej, która utraciła własność},label={lst:forh},language=nl]
 var h : own::hash(ptd::int());
 forh var key, ref value (h) {
 	value++; # Ok
@@ -711,7 +729,7 @@ Jednak, jak zostało wspomniane wyżej, rejestr użyty do indeksowania tablicy m
 Wymusza to wprowadzenie rejestru pomocniczego tego typu i użycie rzutowania przy pomocy polecenia \texttt{move},
 analogicznie jak na listingu \ref{lst:reg_types_2}.
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Indeksowanie tablicy zmienną typu \texttt{ptd::im}},label={lst:reg_im}]
+\begin{lstlisting}[caption={Indeksowanie tablicy zmienną typu \texttt{ptd::im}},label={lst:reg_im},language=nl]
 var x;
 var arr = [1,2,3];
 x->i = 'a';
@@ -765,7 +783,7 @@ Przykład modyfikacji zmiennej typu \texttt{own} przetłumaczonej na nowe polece
 \ref{lst:own_access_nlasm}.
 
 \noindent\begin{minipage}[t]{.45\textwidth}
-\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} w NianioLangu}]
+\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} w NianioLangu},language=nl]
 # a : own::rec({
 #    b => own::arr(ptd::int()),
 # })
@@ -901,7 +919,7 @@ ze względu na bezpośrednie wsparcie procesora i kompilatora GCC.
 
 \subsection{Ograniczenia kompilacji typów prostych}
 \begin{wrapfigure}[10]{r}{.4\textwidth}
-\begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable},aboveskip=-15pt]
+\begin{lstlisting}[caption={Zmienna kompilowana do typu \texttt{ImmT}},label={lst:immt_variable},aboveskip=-15pt,language=nl]
 var x;
 x = 'a';
 x = 1;
@@ -950,7 +968,7 @@ operatory \texttt{.} i \texttt{->} języka C, co jest znacznym usprawnieniem w s
 używającej w tym celu tablic haszujących.
 \subsection{Typy wariantowe}
 \begin{wrapfigure}[12]{r}{.4\textwidth}
-\begin{lstlisting}[caption={Rekurencyjna definicja struktury drzewiastej},label={lst:tree},aboveskip=-15pt]
+\begin{lstlisting}[caption={Rekurencyjna definicja struktury drzewiastej},label={lst:tree},aboveskip=-15pt,language=nl]
 def tree::node() {
     return own::var({
         node => own::rec({
@@ -1096,23 +1114,23 @@ przestawione zostały uśrednione wyniki 1000 testów.
 \end{table}
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Iterator całkowitoliczbowy NL},label={lst:int_loop_nl}]
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy NL},label={lst:int_loop_nl},language=nl]
 rep var i (1000000000) { }
 \end{lstlisting}
-\begin{lstlisting}[caption={Iterator całkowitoliczbowy C},label={lst:int_loop_c}]
+\begin{lstlisting}[caption={Iterator całkowitoliczbowy C},label={lst:int_loop_c},language=nl]
 for (int i = 0; i < 100000000; i++) {}
 \end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{ptd}},label={lst:rec_loop_ptd}]
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{ptd}},label={lst:rec_loop_ptd},language=nl]
 var a = {b => { c => 0 } };
 for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
 \end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{own}},label={lst:rec_loop_own}]
+\begin{lstlisting}[caption={Iterator będący polem rekordu NL \texttt{own}},label={lst:rec_loop_own},language=nl]
 var a : own::rec({ b => own::rec({
 		c => ptd::int()
 	}) }) = { b => { c => 0 } };
 for (a->b->c = 0; a->b->c < 100000000; a->b->c++) { }
 \end{lstlisting}
-\begin{lstlisting}[caption={Iterator będący polem rekordu C},label={lst:rec_loop_c}]
+\begin{lstlisting}[caption={Iterator będący polem rekordu C},label={lst:rec_loop_c},language=C]
 struct s { struct { int c; } b; } a;
 for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
 \end{lstlisting}
