@@ -152,7 +152,7 @@ o semantyce zbliżonej do języków funkcyjnych, ale prostszego w użyciu.
 Konstrukcje takie jak wskaźniki zostały usunięte, a w ich miejsce, w przypadku kompilacji do C,
 zaimplementowano system zarządzania obiektami
 w pamięci przez zliczanie referencji, aby pozbyć się jednego z najczęstszych źródeł błędów występujących przy programowaniu niskopoziomowym.
-zabiegi zmniejszają wydajność języka, jendak jego twórcy założyli, że zysk z wysokopoziomowego podejścia
+Powyższe zabiegi zmniejszają wydajność języka, jednak jego twórcy założyli, że zysk z wysokopoziomowego podejścia
 do pisania aplikacji jest wystarczająco duży, aby tworzenie aplikacji w NianioLangu było opłacalne.
 
 Kompilator NianioLanga jest rozwijany przez firmę Atinea, która używa NianioLanga w swoich projektach (m.in. InstaDB.com).
@@ -244,7 +244,7 @@ do implementacji kolejnych elementów projektu.
 
 \section{Programowanie zwinne}
 Metodyka pracy, z której korzystaliśmy, najbliższa była metodyce programowania zwinnego (ang. \textit{agile}).
-Praca toczyła się w iteracjach, a każda iteracja dostarczała implementację nowego typu.
+Praca toczyła się w iteracjach, a wynikiem każdej z nich była implementacja nowego typu.
 Fragmenty kodu NianioLanga korzystające z tych typów oraz odpowiadające im pogramy wynikowe w języku
 C były na bieżąco przesyłane do zleceniodawcy i konsultowane z nim.
 
@@ -382,7 +382,8 @@ najprostszy, z drugiej w pewnym sensie zachowa strukturę programu wyjściowego.
 Funkcje w nlasmie nie operują na zmiennych, lecz na rejestrach. Każdy rejestr ma swój unikalny w obrębie funkcji numer oraz typ. Także argumenty
 funkcji są rejestrami. Wprowadzenie typów do nlasma było jednym z elementów projektu, gdyż o ile poprzednio wszystkie zmienne konwertowane były do
 typu \texttt{ptd::im}, o tyle teraz przechować należy strukturę typów \texttt{own} czy \texttt{ptd::int}. Typy w nlasmie mają charakter wyłącznie informacyjny,
-to znaczy nie mają żadnego znaczenia semantycznego. Są używane na dalszych etapach kompilacji.
+to znaczy nie mają żadnego znaczenia semantycznego. Są używane na dalszych etapach kompilacji
+w celu optymalizacji kodu wynikowego.
 
 Najważniejszą cechą nlasma jest nie drzewiasta, lecz liniowa struktura programu. Oznacza to, że argumentami wywołań mogą być wyłącznie rejestry, a nie
 zmienne czy inne wywołania. W znacznym stopniu ułatwia to dalszą pracę kompilatora, przede wszystkim z powodu mniejszej liczby problemów dotyczących na
@@ -422,7 +423,7 @@ danym wierzchołku na podstawie podwyrażeń. Na przykład dla wyrażeń arytmet
 stosujemy komendę \texttt{bin\_op}, która dla danych trzech rejestrów: docelowego, lewej strony i prawej strony wyrażenia, a także operatora, oblicza 
 wartość i zapisuje w odpowiednim rejestrze. Dla operacji posiadających skutki uboczne (np. zapisanie wartości do zmiennej) stosujemy tzw. obliczanie 
 z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia, która w takim przypadku powinna być zmienną bądź ciągiem 
-dostępów do elementów talic/haszy/rekordów kończącym się wartością, oblicza on ciąg zstępujący odwołań do elementów kolekcji. To translator realizuje za 
+dostępów do elementów talic/haszy/rekordów kończącym się wartością, obliczany jest ciąg zstępujący odwołań do elementów kolekcji. Translator realizuje to za
 pomocą wywołań określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
 komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funcje te tworzą kopię elementu kolekcji, którą zapisują w 
 odpowiednim rejestrze. Po zapisaniu nowej wartości translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
@@ -525,7 +526,7 @@ liczb zmiennoprzecinkowych może zostać w razie potrzeby dodana w formie biblio
 \subsection{Powody wprowadzenia typów \texttt{own}}
 Drugą dużą zmianą wprowadzoną w systemie typów było dodanie całkiem nowej przestrzeni typów \texttt{own} obok
 istniejącej przestrzeni \texttt{ptd}. Celem nowych typów jest możliwość efektywnej kompilacji do
-prostych konstrukcji języka C, pozwala na generowanie efektywniejszych programów wynikowych. 
+prostych konstrukcji języka C, co pozwala na generowanie efektywniejszych programów wynikowych.
 
 \begin{wrapfigure}[19]{r}{.5\textwidth}
 \begin{lstlisting}[caption={Przykład funkcji nianio},label={lst:nianio},aboveskip=-15pt]
@@ -883,7 +884,7 @@ Decyzja ta była spowodowana efektywnością już istniejącej implementacji -- 
 są kompilowane to tablic typu \texttt{char[]}, opakowanych w struktury zawierające
 rozmiar i pojemność tablicy. Dostęp do takich zmiennych odbywa się poprzez specjalne funkcje,
 zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut, potrzebny by
-zachować bezpieczeństwo języka i uchronić programistę przed błedami, takimi jak przepełnienie bufora.
+zachować bezpieczeństwo języka i uchronić programistę przed błędami, takimi jak przepełnienie bufora.
 Z tego względu została podjęta decyzja o niepowielaniu istniejącej implementacji i wykorzystaniu
 tej już istniejącej.
 \subsection{Wartości logiczne}
@@ -1174,7 +1175,7 @@ for (a.b.c = 0; a.b.c < 1000000000; a.b.c++) { }
 
 \chapter{Wkład poszczególnych członków zespołu}
 Ze względu na charakter projektu nie występował jednoznaczny podział pracy na części możliwe do przypisania konkretnym członkom.
-Kod programu oraz treść pracy pisane, a także korygowane były przez wszystkich członków zespołu. Poniżej wymienione są jedynie zadania,
+Kod programu oraz treść pracy pisane i korygowane były przez wszystkich członków zespołu. Poniżej wymienione są jedynie zadania,
 w których praca wykonana została w większości przez jedną osobę.
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
