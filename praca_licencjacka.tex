@@ -166,7 +166,7 @@ do osiągnięcia zamierzonych celów i sposób implementacji tych zmian w kompil
   NianioLang jest językiem programowania ogólnego przeznaczenia. Jego twórcą jest
   założyciel firmy Atinea, na zlecenie której realizowana jest poniższa
   praca -- Andrzej Gąsienica-Samek.
-  Istniejący kompilator umożliwia translację NianioLanga do kilku języków,
+  Istniejący kompilator umożliwiał translację NianioLanga do kilku języków,
   między innymi do Javy, JavaScriptu i C.
   Ze względu na chęć uproszczenia kompilacji NianioLanga
   utworzono środowisko uruchomieniowe dostarczające odpowiednie abstrakcje
@@ -316,7 +316,7 @@ czyli żądanie zatwierdzenia zmian. Aby zmiany zostały zatwierdzone i umieszcz
 w głównej gałęzi projektu, musiały być zatwierdzone przez co najmniej jednego członka
 zespołu, innego niż ten, który zgłosił pull request. GitHub udostępnia widok naniesionych zmian
 wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Możliwy więc
-był dialog między recenzentem kodu a jego twórcą tak, aby ostatecznie zatwierdzone
+był dialog między recenzentem kodu a jego twórcą, tak aby ostatecznie zatwierdzone
 zmiany spełniały oczekiwania obu stron.
 
 \section{Testowanie i ciągła integracja}
@@ -399,7 +399,7 @@ jako o zbiorach możliwych wartości, na których wykonywane są operacje, przed
 Drugie rozumienie, które stosuje type checker, jest podobne do pierwszego, lecz w kontekście wnioskowania typów na podstawie wykonywanych na nich
 operacji. Jeżeli dana zmienna inicjalizowana jest jako \texttt{ptd::sim}, a następnie używana jako \texttt{ptd::hash}, to zgłaszany jest błąd. Warto zaznaczyć,
 że operacje na typach wywnioskowanych są subtelniejsze, gdyż wiele typów jest konwertowalnych na \texttt{ptd::im}, oraz w drugą stronę, przez co nie jest
-możliwa całkowita, ścisła kontrola typów, ta ma miejsce dopiero w runtime. Ponownie, wydzielone są funkcje operujące na typach w analogii do zbiorów.
+możliwa całkowita, ścisła kontrola typów, ta ma miejsce dopiero podczas wykonywania programu. Ponownie, wydzielone są funkcje operujące na typach w analogii do zbiorów.
 
 Samą budowę type checker ma podobną w pewnym sensie do parsera. W rekurencyjny sposób sprawdzamy, jakie typy mają poszczególne elementy drzewa oraz
 czy są one poprawne. Tak jak w parserze zapisane jest, że operator \texttt{+} zawiera słowo kluczowe \texttt{+}, tak odpowiednia funkcja w type
@@ -478,8 +478,8 @@ kolejnością semantyczną, to znaczy na przykład generowanie wszelkich informa
 
 Drugim etapem jest wygenerowanie kodu odpowiedzialnego za obsługę typów, czyli ich deklaracje, definicje, oraz potrzebne do obsługi funkcje. Przed
 zmianami wprowadzonymi w ramach tego projektu etap ten nie występował, gdyż kod C używał ogólnego typu \texttt{ImmT}, który obsługiwać można
-biblioteką standardową NianioLanga. Obecnie, ponieważ dla każdego typu \texttt{own} tworzony jest oddzielny typ na poziomie C, a funkcje go
-obsługujące generowane są na poziomie NianioLanga, to podejście zostało zmienione. Ze względu na fakt, że definicje w NianioLangu nie muszą występować
+biblioteką standardową NianioLanga. Obecnie to podejście zostało zmienione, ponieważ dla każdego typu \texttt{own} tworzony jest oddzielny typ na poziomie C, a funkcje go
+obsługujące generowane są na poziomie NianioLanga. Ze względu na fakt, że definicje w NianioLangu nie muszą występować
 w określonej kolejności, lecz w C już tak, konieczne jest sortowanie topologiczne, z uwzględnieniem możliwości wyodrębnionej deklaracji typu. Jest to
 potrzebne do obsługi sytuacji, w której typ \texttt{A} potrzebuje w swojej definicji posługiwać się w pełni typem \texttt{B}, który z kolei posługuje
 się wskaźnikiem na typ \texttt{A}.
@@ -962,7 +962,7 @@ NianioLanga już na etapie kompilacji.
 Definicje typów \texttt{own::arr} kompilowane są do struktury zawierającej rozmiar tablicy, jej
 maksymalną pojemność i wskaźnik na jej początek. Do programu wynikowego
 dodawane są również funkcje pozwalające na dodawanie nowego elementu na koniec tablicy, pobieranie wskaźnika do elementu
-o danych indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
+o danym indeksie oraz na pobieranie rozmiaru tablicy. Operacja dodawania elementu na koniec tablicy
 została zaimplementowana w sposób opisany w książce
 \textit{Wprowadzenie do algorytmów}\cite{cormen}: po przekroczeniu połowy dostępnego miejsca
 tablica zostaje powiększona dwukrotnie. Dzięki takiej implementacji operacja
@@ -1215,13 +1215,13 @@ Nieraz zdarza się, że do rozwiązania danego problemu potrzebne jest posortowa
 bardziej skomplikowanych struktur.
 Na przykład jednym z elementów rozwiązania zadania Autobus z XII Olimpiady Informatycznej\cite{autobus}
 jest posortowanie listy
-punktów na płaszczyźnie biorą pod uwagę najpierw współrzędną pionową, a następnie poziomą.
+punktów na płaszczyźnie biorąc pod uwagę najpierw współrzędną pionową, a następnie poziomą.
 
 Poniżej przedstawione zostały czasy wykonania programu sortującego tablicę o rozmiarze $10^6$ przy użyciu algorytmu
 sortowania przez scalanie (ang. \textit{merge sort}). Pliki w języku C były kompilowane na dwa sposoby: z optymalizacją
 wyłączoną (flaga \texttt{-O0}) i włączoną (flaga \texttt{-O2}).
 
-Ponieważ czas działania algorytmu sortowania przez scalanie nie zależny istotnie od danych wejściowych,
+Ponieważ czas działania algorytmu sortowania przez scalanie nie jest zależny istotnie od danych wejściowych,
 dane zostały generowane w prosty sposób: współrzędne $i$-tego punktu to \mbox{($i$ mod 91, $i$ mod 103)}.
 
 \begin{table}[h]
@@ -1387,7 +1387,7 @@ void merge_sort_aux(struct element *arr, int l, int r) {
 \end{minipage}
 
 \section{Podsumowanie wyników}
-Jak wynika z powyższych testów, użycie nowych typów \texttt{own} w miejsce istniejących umożliwia istotne przyspieszenie
+Jak wynika z powyższych testów, użycie nowych typów \texttt{own} w miejsce istniejących umożliwia istotne przyśpieszenie
 programu wynikowego -- na testach jest to od 30 do 100 razy szybciej.
 Co więcej, typy te umożliwiają także bardziej efektywną optymalizację przez GCC na dalszym etapie.
 W testach sortowania optymalizacja GCC dla typów \texttt{ptd} skróciła czas wykonania jedynie dwukrotnie, podczas
