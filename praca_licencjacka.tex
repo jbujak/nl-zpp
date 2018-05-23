@@ -248,7 +248,7 @@ To zadanie pozostaje jednak poza zakresem niniejszej pracy.
 
 \section{Podstawowe pojęcia}
 Jesli nie zaznaczono inaczej, pojęcia dotyczące kompilacji rozumiane są zgodnie z definicjami
-podanymi w książce\cite{dragonbook}. W przypadku poniższych pojęć posługujemy się podanymi niżej definicjami, gdyż w bardziej naturalny sposób oddają sposób funkcjonowania kompilatora.
+podanymi w książce\cite{dragonbook}. W przypadku poniższych pojęć posługujemy się podanymi wraz z nimi definicjami, gdyż w bardziej naturalny sposób oddają sposób funkcjonowania kompilatora.
 \begin{itemize}
   \item[] \textbf{AST} (ang. \textit{abstract syntax tree}) -- drzewo składni abstrakcyjnej,
     reprezentacja programu w formie drzewa, w którym każdy węzeł
@@ -1036,7 +1036,7 @@ gdyż narzut wydajnościowy związany z tworzeniem obiektów typu \texttt{ptd::i
 W drugą stronę zaś konwersja pozwala na łączenie nowego kodu ze starym oraz odejście od statycznego typowania w chwili,
 gdy chcemy korzystać z funkcji obsługujących wiele typów, na przykład implementując kontenery.
 
-Istnieje wiele sposobów na implementację konwersji. Pierwszy z nich polega na zapisaniu w bibliotece C języka ogólnej funkcji konwertujących obiekty \texttt{own} na obiekty \texttt{ptd::im}.
+Istnieje wiele sposobów na implementację konwersji. Pierwszy z nich polega na zapisaniu w bibliotece języka C ogólnej funkcji konwertujących obiekty \texttt{own} na obiekty \texttt{ptd::im}.
 Podejście to ma jednak wiele wad, przede wszystkim trudność implementacji, dużą podatność na błędy oraz wątpliwą przenośność rozwiązania.
 Szczególnie trzeci argument jest ważny, gdyż dalsze kierunki rozwoju języka prawdopodobnie przewidują przywrócenie do kompilatora możliwości kompilowania na inne języki niż C.
 
@@ -1116,8 +1116,8 @@ Optymalizacje kompilatora zostały w tych testach wyłączone, ponieważ dla typ
 skutkowały całkowitym usunięciem pętli.
 
 \begin{table}[h]
-\label{tab:loop1}
 \caption{Średni czas wykonania pętli}
+\label{tab:loop1}
 \begin{tabularx}{\textwidth}{|c|R|R|R|}
  \hline 
   \multirow{2}{*}{\textbf{Test}}
