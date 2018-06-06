@@ -1,0 +1,209 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+\usepackage[OT4]{polski}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{graphicx}\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{hyperref}
+\usetheme{Warsaw}
+\graphicspath{ {files/} }
+
+\tikzstyle{line} = [draw, -latex]
+\tikzstyle{path} = [draw, -latex, style={decorate,decoration={snake}}]
+\tikzstyle{state} = [circle,draw=black,minimum size=0.6cm]
+\tikzstyle{finish_state} = [circle,draw=black,double=white,double distance=1pt,minimum size=0.9cm]
+\usetikzlibrary{shapes,arrows,automata,decorations.pathmorphing}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+  language=C,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4,
+  escapeinside=``
+}
+
+\lstdefinelanguage
+	[x86fp]{Assembler}
+	[x86masm]{Assembler} 
+	{morekeywords={movss, xmm0, rip, rbp}}
+   
+\lstdefinelanguage
+   [my]{C}
+   []{C} 
+   {morekeywords={bool}}
+   
+   
+   \lstdefinelanguage{llvm}{
+  morecomment = [l]{;},
+  morestring=[b]", 
+  sensitive = true,
+  classoffset=0,
+  morekeywords={
+    define, declare, global, constant,
+    internal, external, private,
+    linkonce, linkonce_odr, weak, weak_odr, appending,
+    common, extern_weak,
+    thread_local, dllimport, dllexport,
+    hidden, protected, default,
+    except, deplibs,
+    volatile, fastcc, coldcc, cc, ccc,
+    x86_stdcallcc, x86_fastcallcc,
+    ptx_kernel, ptx_device,
+    signext, zeroext, inreg, sret, nounwind, noreturn,
+    nocapture, byval, nest, readnone, readonly, noalias, uwtable,
+    inlinehint, noinline, alwaysinline, optsize, ssp, sspreq,
+    noredzone, noimplicitfloat, naked, alignstack,
+    module, asm, align, tail, to,
+    addrspace, section, alias, sideeffect, c, gc,
+    target, datalayout, triple,
+    blockaddress
+  },
+  classoffset=1, keywordstyle=\color{purple},
+  morekeywords={
+    fadd, sub, fsub, mul, fmul,
+    sdiv, udiv, fdiv, srem, urem, frem,
+    and, or, xor,
+    icmp, fcmp,
+    eq, ne, ugt, uge, ult, ule, sgt, sge, slt, sle,
+    oeq, ogt, oge, olt, ole, one, ord, ueq, ugt, uge,
+    ult, ule, une, uno,
+    nuw, nsw, exact, inbounds,
+    phi, call, select, shl, lshr, ashr, va_arg,
+    trunc, zext, sext,
+    fptrunc, fpext, fptoui, fptosi, uitofp, sitofp,
+    ptrtoint, inttoptr, bitcast,
+    ret, br, indirectbr, switch, invoke, unwind, unreachable,
+    malloc, alloca, free, load, store, getelementptr,
+    extractelement, insertelement, shufflevector,
+    extractvalue, insertvalue,
+  },
+  alsoletter={\%},
+  keywordsprefix={\%},
+}
+
+
+\lstdefinelanguage{nl}{
+  morecomment = [l]{\#},
+  morestring=[b]', 
+  sensitive = true,
+  classoffset=0,
+  morekeywords={
+    return, match, case, if, elsif, else, while, continue, try,
+  },
+  classoffset=1, keywordstyle=\color{purple},
+  morekeywords={
+	def, var,
+  },
+  alsoletter={:},
+  keywordsprefix={},
+}
+
+\begin{document}
+	\begin{frame}
+		\frametitle{ZPP -- NianioLang}
+		\center{Kompilacja NianioLanga do  efektywnych konstrukcji języka C}
+		
+		\center{15.06.2018}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{NianioLang}
+		\begin{itemize}
+		 \item Język imperatywny bez wskaźników
+		 \item Niemutowalne zmienne
+		 \item Opcjonalne typowanie
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Cel projektu}
+		Umożliwienie generowania efektywnego kodu wynikowego C
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Nowe typy \texttt{own}}
+		\begin{itemize}
+		 \item Brak kopiowania
+		 \item Jeden właściciel w dowolnej chwili
+		 \item Zmienne kompilowane to prostych struktur języka C
+		 \item Zmienne na stosie tam, gdzie to możliwe
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}[fragile]
+		\frametitle{Porównanie kodu wynikowego}
+		\center{\texttt{a[0]->b++}}
+			\pause
+		\begin{columns}
+			\begin{column}{0.50\textwidth}
+				\lstset{language=C}
+				\begin{lstlisting}
+move(&nl_2,get_const(0));
+move(&nl_1,get_arr(nl_0, nl_2));
+
+move(&nl_3,get_const("b"));
+move(&nl_3,get_hash(nl_1, nl_3));
+
+move(&nl_4,get_const(1));
+move(&nl_3,add(nl_3, nl_4));
+
+
+move(&nl_5,get_const("b"));
+set_hash(&nl_1,nl_5,nl_3);
+set_arr(&nl_0,nl_2,nl_1);
+				\end{lstlisting}
+			\end{column}
+			\pause
+			\begin{column}{0.50\textwidth}
+				\lstset{language=C}
+				\begin{lstlisting}
+nl_int_2 = 0;
+nl_rec_ptr_1 = type0get_ptr(&nl_arr_0, nl_int_2);
+nl_int_ptr_3 = &(nl_rec_ptr_1->b0field);
+
+
+nl_int_4 = 1;
+(*nl_int_ptr_3) = (*nl_int_ptr_3) + nl_int_4;
+`\phantom{a}`
+`\phantom{a}`
+`\phantom{a}`
+				\end{lstlisting}
+			\end{column}
+		\end{columns}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{Efekty pracy}
+		\begin{itemize}
+			\item Przyspieszenie w stosunku do starych typów 10-100 razy
+			\item Testy automatyczne dla nowych typów
+			\item Skompilowanie kompilatora nim samym
+		\end{itemize}
+
+	\end{frame}
+	
+	\begin{frame}[c]
+		\begin{center}
+			\Huge \color{blue} Demo
+		\end{center}
+	\end{frame}
+\end{document}
