@@ -1,0 +1,7 @@
+#!/bin/bash
+rm .unlock -f
+while [[ ! -f .unlock ]]
+do
+	sleep 0.1
+done
+time $1

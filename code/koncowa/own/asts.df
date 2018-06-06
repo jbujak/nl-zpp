@@ -1,0 +1,1522 @@
+{
+	fun_def => [
+		{
+			access => ov::mk("pub"),
+			args => [
+			],
+			cmd => {
+				cmd => ov::mk("block", [
+					{
+						cmd => ov::mk("return", {
+							debug => {
+								begin => {
+									line => "7",
+									position => "9",
+								},
+								end => {
+									line => "9",
+									position => "5",
+								},
+							},
+							type => ov::mk("tct_ref", "ptd::meta_type"),
+							value => ov::mk("fun_val", {
+								args => [
+									{
+										expected_type => ov::mk("tct_ref", "ptd::meta_type"),
+										mod => ov::mk("none"),
+										val => {
+											debug => {
+												begin => {
+													line => "7",
+													position => "18",
+												},
+												end => {
+													line => "9",
+													position => "4",
+												},
+											},
+											type => ov::mk("tct_ref", "ptd::meta_type"),
+											value => ov::mk("fun_val", {
+												args => [
+													{
+														expected_type => ov::mk("tct_hash", ov::mk("tct_ref", "ptd::meta_type")),
+														mod => ov::mk("none"),
+														val => {
+															debug => {
+																begin => {
+																	line => "7",
+																	position => "27",
+																},
+																end => {
+																	line => "9",
+																	position => "3",
+																},
+															},
+															type => ov::mk("tct_empty"),
+															value => ov::mk("hash_decl", [
+																{
+																	key => {
+																		debug => {
+																			begin => {
+																				line => "8",
+																				position => "4",
+																			},
+																			end => {
+																				line => "8",
+																				position => "6",
+																			},
+																		},
+																		type => ov::mk("tct_string"),
+																		value => ov::mk("hash_key", "b"),
+																	},
+																	val => {
+																		debug => {
+																			begin => {
+																				line => "8",
+																				position => "9",
+																			},
+																			end => {
+																				line => "8",
+																				position => "19",
+																			},
+																		},
+																		type => ov::mk("tct_ref", "ptd::meta_type"),
+																		value => ov::mk("fun_val", {
+																			args => [
+																			],
+																			module => "ptd",
+																			name => "int",
+																		}),
+																	},
+																},
+															]),
+														},
+													},
+												],
+												module => "own",
+												name => "rec",
+											}),
+										},
+									},
+								],
+								module => "own",
+								name => "arr",
+							}),
+						}),
+						debug => {
+							begin => {
+								line => "7",
+								position => "2",
+							},
+							end => {
+								line => "9",
+								position => "6",
+							},
+						},
+					},
+				]),
+				debug => {
+					begin => {
+						line => "6",
+						position => "18",
+					},
+					end => {
+						line => "10",
+						position => "2",
+					},
+				},
+			},
+			defines_type => ov::mk("yes", ov::mk("tct_own_arr", ov::mk("tct_own_rec", {
+				b => ov::mk("tct_int"),
+			}))),
+			line => "6",
+			name => "type",
+			ret_type => {
+				tct_type => ov::mk("tct_im"),
+				type => ov::mk("none"),
+			},
+		},
+		{
+			access => ov::mk("pub"),
+			args => [
+			],
+			cmd => {
+				cmd => ov::mk("block", [
+					{
+						cmd => ov::mk("var_decl", {
+							name => "a",
+							tct_type => ov::mk("type", ov::mk("tct_ref", "main::type")),
+							type => ov::mk("type", {
+								debug => {
+									begin => {
+										line => "13",
+										position => "10",
+									},
+									end => {
+										line => "13",
+										position => "22",
+									},
+								},
+								type => ov::mk("tct_empty"),
+								value => ov::mk("unary_op", {
+									op => "\@",
+									val => {
+										debug => {
+											begin => {
+												line => "13",
+												position => "11",
+											},
+											end => {
+												line => "13",
+												position => "22",
+											},
+										},
+										type => ov::mk("tct_empty"),
+										value => ov::mk("fun_label", {
+											module => "main",
+											name => "type",
+										}),
+									},
+								}),
+							}),
+							value => ov::mk("value", {
+								debug => {
+									begin => {
+										line => "13",
+										position => "24",
+									},
+									end => {
+										line => "13",
+										position => "26",
+									},
+								},
+								type => ov::mk("tct_ref", "main::type"),
+								value => ov::mk("arr_decl", [
+								]),
+							}),
+						}),
+						debug => {
+							begin => {
+								line => "13",
+								position => "2",
+							},
+							end => {
+								line => "13",
+								position => "27",
+							},
+						},
+					},
+					{
+						cmd => ov::mk("rep", {
+							cmd => {
+								cmd => ov::mk("block", [
+									{
+										cmd => ov::mk("value", {
+											debug => {
+												begin => {
+													line => "15",
+													position => "5",
+												},
+												end => {
+													line => "15",
+													position => "18",
+												},
+											},
+											type => ov::mk("tct_void"),
+											value => ov::mk("bin_op", {
+												left => {
+													debug => {
+														begin => {
+															line => "15",
+															position => "3",
+														},
+														end => {
+															line => "15",
+															position => "5",
+														},
+													},
+													type => ov::mk("tct_ref", "main::type"),
+													value => ov::mk("var", "a"),
+												},
+												op => "[]=",
+												right => {
+													debug => {
+														begin => {
+															line => "15",
+															position => "9",
+														},
+														end => {
+															line => "15",
+															position => "18",
+														},
+													},
+													type => ov::mk("tct_own_rec", {
+														b => ov::mk("tct_int"),
+													}),
+													value => ov::mk("hash_decl", [
+														{
+															key => {
+																debug => {
+																	begin => {
+																		line => "15",
+																		position => "11",
+																	},
+																	end => {
+																		line => "15",
+																		position => "13",
+																	},
+																},
+																type => ov::mk("tct_string"),
+																value => ov::mk("hash_key", "b"),
+															},
+															val => {
+																debug => {
+																	begin => {
+																		line => "15",
+																		position => "16",
+																	},
+																	end => {
+																		line => "15",
+																		position => "17",
+																	},
+																},
+																type => ov::mk("tct_int"),
+																value => ov::mk("var", "i"),
+															},
+														},
+													]),
+												},
+											}),
+										}),
+										debug => {
+											begin => {
+												line => "15",
+												position => "3",
+											},
+											end => {
+												line => "15",
+												position => "19",
+											},
+										},
+									},
+									{
+										cmd => ov::mk("if", {
+											cond => {
+												debug => {
+													begin => {
+														line => "16",
+														position => "24",
+													},
+													end => {
+														line => "16",
+														position => "28",
+													},
+												},
+												type => ov::mk("tct_bool"),
+												value => ov::mk("bin_op", {
+													left => {
+														debug => {
+															begin => {
+																line => "16",
+																position => "15",
+															},
+															end => {
+																line => "16",
+																position => "24",
+															},
+														},
+														type => ov::mk("tct_int"),
+														value => ov::mk("bin_op", {
+															left => {
+																debug => {
+																	begin => {
+																		line => "16",
+																		position => "11",
+																	},
+																	end => {
+																		line => "16",
+																		position => "15",
+																	},
+																},
+																type => ov::mk("tct_int"),
+																value => ov::mk("bin_op", {
+																	left => {
+																		debug => {
+																			begin => {
+																				line => "16",
+																				position => "8",
+																			},
+																			end => {
+																				line => "16",
+																				position => "11",
+																			},
+																		},
+																		type => ov::mk("tct_own_rec", {
+																			b => ov::mk("tct_int"),
+																		}),
+																		value => ov::mk("bin_op", {
+																			left => {
+																				debug => {
+																					begin => {
+																						line => "16",
+																						position => "7",
+																					},
+																					end => {
+																						line => "16",
+																						position => "8",
+																					},
+																				},
+																				type => ov::mk("tct_ref", "main::type"),
+																				value => ov::mk("var", "a"),
+																			},
+																			op => "ARRAY_INDEX",
+																			right => {
+																				debug => {
+																					begin => {
+																						line => "16",
+																						position => "9",
+																					},
+																					end => {
+																						line => "16",
+																						position => "10",
+																					},
+																				},
+																				type => ov::mk("tct_int"),
+																				value => ov::mk("var", "i"),
+																			},
+																		}),
+																	},
+																	op => "->",
+																	right => {
+																		debug => {
+																			begin => {
+																				line => "16",
+																				position => "13",
+																			},
+																			end => {
+																				line => "16",
+																				position => "15",
+																			},
+																		},
+																		type => ov::mk("tct_string"),
+																		value => ov::mk("hash_key", "b"),
+																	},
+																}),
+															},
+															op => "%",
+															right => {
+																debug => {
+																	begin => {
+																		line => "16",
+																		position => "17",
+																	},
+																	end => {
+																		line => "16",
+																		position => "24",
+																	},
+																},
+																type => ov::mk("tct_int"),
+																value => ov::mk("const", "100000"),
+															},
+														}),
+													},
+													op => "==",
+													right => {
+														debug => {
+															begin => {
+																line => "16",
+																position => "27",
+															},
+															end => {
+																line => "16",
+																position => "28",
+															},
+														},
+														type => ov::mk("tct_int"),
+														value => ov::mk("const", "0"),
+													},
+												}),
+											},
+											else => {
+												cmd => ov::mk("nop"),
+												debug => {
+													begin => {
+														line => "19",
+														position => "2",
+													},
+													end => {
+														line => "19",
+														position => "2",
+													},
+												},
+											},
+											elsif => [
+											],
+											if => {
+												cmd => ov::mk("block", [
+													{
+														cmd => ov::mk("value", {
+															debug => {
+																begin => {
+																	line => "17",
+																	position => "4",
+																},
+																end => {
+																	line => "17",
+																	position => "18",
+																},
+															},
+															type => ov::mk("tct_im"),
+															value => ov::mk("fun_val", {
+																args => [
+																	{
+																		expected_type => ov::mk("tct_string"),
+																		mod => ov::mk("none"),
+																		val => {
+																			debug => {
+																				begin => {
+																					line => "17",
+																					position => "14",
+																				},
+																				end => {
+																					line => "17",
+																					position => "17",
+																				},
+																			},
+																			type => ov::mk("tct_string"),
+																			value => ov::mk("string", {
+																				arr => [
+																					"=",
+																				],
+																				last => ov::mk("end"),
+																			}),
+																		},
+																	},
+																],
+																module => "nl",
+																name => "print",
+															}),
+														}),
+														debug => {
+															begin => {
+																line => "17",
+																position => "4",
+															},
+															end => {
+																line => "17",
+																position => "19",
+															},
+														},
+													},
+												]),
+												debug => {
+													begin => {
+														line => "16",
+														position => "30",
+													},
+													end => {
+														line => "18",
+														position => "4",
+													},
+												},
+											},
+										}),
+										debug => {
+											begin => {
+												line => "16",
+												position => "3",
+											},
+											end => {
+												line => "18",
+												position => "4",
+											},
+										},
+									},
+								]),
+								debug => {
+									begin => {
+										line => "14",
+										position => "23",
+									},
+									end => {
+										line => "19",
+										position => "3",
+									},
+								},
+							},
+							count => {
+								debug => {
+									begin => {
+										line => "14",
+										position => "13",
+									},
+									end => {
+										line => "14",
+										position => "21",
+									},
+								},
+								type => ov::mk("tct_int"),
+								value => ov::mk("const", "10000000"),
+							},
+							iter => {
+								name => "i",
+								tct_type => ov::mk("type", ov::mk("tct_int")),
+								type => ov::mk("none"),
+								value => ov::mk("none"),
+							},
+							short => ov::mk("FALSE"),
+						}),
+						debug => {
+							begin => {
+								line => "14",
+								position => "2",
+							},
+							end => {
+								line => "19",
+								position => "3",
+							},
+						},
+					},
+					{
+						cmd => ov::mk("value", {
+							debug => {
+								begin => {
+									line => "20",
+									position => "2",
+								},
+								end => {
+									line => "20",
+									position => "25",
+								},
+							},
+							type => ov::mk("tct_im"),
+							value => ov::mk("fun_val", {
+								args => [
+									{
+										expected_type => ov::mk("tct_string"),
+										mod => ov::mk("none"),
+										val => {
+											debug => {
+												begin => {
+													line => "20",
+													position => "12",
+												},
+												end => {
+													line => "20",
+													position => "24",
+												},
+											},
+											type => ov::mk("tct_string"),
+											value => ov::mk("fun_val", {
+												args => [
+												],
+												module => "string",
+												name => "lf",
+											}),
+										},
+									},
+								],
+								module => "nl",
+								name => "print",
+							}),
+						}),
+						debug => {
+							begin => {
+								line => "20",
+								position => "2",
+							},
+							end => {
+								line => "20",
+								position => "26",
+							},
+						},
+					},
+				]),
+				debug => {
+					begin => {
+						line => "12",
+						position => "18",
+					},
+					end => {
+						line => "21",
+						position => "2",
+					},
+				},
+			},
+			defines_type => ov::mk("no"),
+			line => "12",
+			name => "main",
+			ret_type => {
+				tct_type => ov::mk("tct_im"),
+				type => ov::mk("none"),
+			},
+		},
+		{
+			access => ov::mk("pub"),
+			args => [
+				{
+					mod => ov::mk("ref"),
+					name => "arg",
+					tct_type => ov::mk("type", ov::mk("tct_ref", "main::type")),
+					type => ov::mk("type", {
+						debug => {
+							begin => {
+								line => "1",
+								position => "36",
+							},
+							end => {
+								line => "1",
+								position => "47",
+							},
+						},
+						type => ov::mk("tct_empty"),
+						value => ov::mk("unary_op", {
+							op => "\@",
+							val => {
+								debug => {
+									begin => {
+										line => "1",
+										position => "37",
+									},
+									end => {
+										line => "1",
+										position => "47",
+									},
+								},
+								type => ov::mk("tct_empty"),
+								value => ov::mk("fun_label", {
+									module => "main",
+									name => "type",
+								}),
+							},
+						}),
+					}),
+				},
+			],
+			cmd => {
+				cmd => ov::mk("block", [
+					{
+						cmd => ov::mk("var_decl", {
+							name => "a",
+							tct_type => ov::mk("type", ov::mk("tct_arr", ov::mk("tct_rec", {
+								b => ov::mk("tct_int"),
+							}))),
+							type => ov::mk("type", {
+								debug => {
+									begin => {
+										line => "1",
+										position => "100",
+									},
+									end => {
+										line => "1",
+										position => "140",
+									},
+								},
+								type => ov::mk("tct_empty"),
+								value => ov::mk("fun_val", {
+									args => [
+										{
+											expected_type => ov::mk("tct_im"),
+											mod => ov::mk("none"),
+											val => {
+												debug => {
+													begin => {
+														line => "1",
+														position => "109",
+													},
+													end => {
+														line => "1",
+														position => "138",
+													},
+												},
+												type => ov::mk("tct_empty"),
+												value => ov::mk("fun_val", {
+													args => [
+														{
+															expected_type => ov::mk("tct_im"),
+															mod => ov::mk("none"),
+															val => {
+																debug => {
+																	begin => {
+																		line => "1",
+																		position => "118",
+																	},
+																	end => {
+																		line => "1",
+																		position => "137",
+																	},
+																},
+																type => ov::mk("tct_empty"),
+																value => ov::mk("hash_decl", [
+																	{
+																		key => {
+																			debug => {
+																				begin => {
+																					line => "1",
+																					position => "119",
+																				},
+																				end => {
+																					line => "1",
+																					position => "121",
+																				},
+																			},
+																			type => ov::mk("tct_empty"),
+																			value => ov::mk("hash_key", "b"),
+																		},
+																		val => {
+																			debug => {
+																				begin => {
+																					line => "1",
+																					position => "124",
+																				},
+																				end => {
+																					line => "1",
+																					position => "134",
+																				},
+																			},
+																			type => ov::mk("tct_empty"),
+																			value => ov::mk("fun_val", {
+																				args => [
+																				],
+																				module => "ptd",
+																				name => "int",
+																			}),
+																		},
+																	},
+																]),
+															},
+														},
+													],
+													module => "ptd",
+													name => "rec",
+												}),
+											},
+										},
+									],
+									module => "ptd",
+									name => "arr",
+								}),
+							}),
+							value => ov::mk("value", {
+								debug => {
+									begin => {
+										line => "1",
+										position => "142",
+									},
+									end => {
+										line => "1",
+										position => "144",
+									},
+								},
+								type => ov::mk("tct_arr", ov::mk("tct_rec", {
+									b => ov::mk("tct_int"),
+								})),
+								value => ov::mk("arr_decl", [
+								]),
+							}),
+						}),
+						debug => {
+							begin => {
+								line => "1",
+								position => "92",
+							},
+							end => {
+								line => "1",
+								position => "145",
+							},
+						},
+					},
+					{
+						cmd => ov::mk("fora", {
+							array => {
+								debug => {
+									begin => {
+										line => "1",
+										position => "160",
+									},
+									end => {
+										line => "1",
+										position => "163",
+									},
+								},
+								type => ov::mk("tct_ref", "main::type"),
+								value => ov::mk("var", "arg"),
+							},
+							cmd => {
+								cmd => ov::mk("block", [
+									{
+										cmd => ov::mk("value", {
+											debug => {
+												begin => {
+													line => "1",
+													position => "168",
+												},
+												end => {
+													line => "1",
+													position => "214",
+												},
+											},
+											type => ov::mk("tct_void"),
+											value => ov::mk("bin_op", {
+												left => {
+													debug => {
+														begin => {
+															line => "1",
+															position => "166",
+														},
+														end => {
+															line => "1",
+															position => "168",
+														},
+													},
+													type => ov::mk("tct_arr", ov::mk("tct_rec", {
+														b => ov::mk("tct_int"),
+													})),
+													value => ov::mk("var", "a"),
+												},
+												op => "[]=",
+												right => {
+													debug => {
+														begin => {
+															line => "1",
+															position => "172",
+														},
+														end => {
+															line => "1",
+															position => "214",
+														},
+													},
+													type => ov::mk("tct_rec", {
+														b => ov::mk("tct_int"),
+													}),
+													value => ov::mk("fun_val", {
+														args => [
+															{
+																expected_type => ov::mk("tct_own_rec", {
+																	b => ov::mk("tct_int"),
+																}),
+																mod => ov::mk("ref"),
+																val => {
+																	debug => {
+																		begin => {
+																			line => "1",
+																			position => "209",
+																		},
+																		end => {
+																			line => "1",
+																			position => "213",
+																		},
+																	},
+																	type => ov::mk("tct_im"),
+																	value => ov::mk("var", "elem"),
+																},
+															},
+														],
+														module => "",
+														name => "conv_to_im0RBanon_type00int0b0RE",
+													}),
+												},
+											}),
+										}),
+										debug => {
+											begin => {
+												line => "1",
+												position => "166",
+											},
+											end => {
+												line => "1",
+												position => "215",
+											},
+										},
+									},
+								]),
+								debug => {
+									begin => {
+										line => "1",
+										position => "165",
+									},
+									end => {
+										line => "1",
+										position => "216",
+									},
+								},
+							},
+							iter => {
+								name => "elem",
+								tct_type => ov::mk("type", ov::mk("tct_own_rec", {
+									b => ov::mk("tct_int"),
+								})),
+								type => ov::mk("none"),
+								value => ov::mk("none"),
+							},
+							short => ov::mk("FALSE"),
+						}),
+						debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+					{
+						cmd => ov::mk("return", {
+							debug => {
+								begin => {
+									line => "1",
+									position => "224",
+								},
+								end => {
+									line => "1",
+									position => "225",
+								},
+							},
+							type => ov::mk("tct_arr", ov::mk("tct_rec", {
+								b => ov::mk("tct_int"),
+							})),
+							value => ov::mk("var", "a"),
+						}),
+						debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				]),
+				debug => {
+					begin => {
+						line => "1",
+						position => "91",
+					},
+					end => {
+						line => "1",
+						position => "227",
+					},
+				},
+			},
+			defines_type => ov::mk("no"),
+			line => "1",
+			name => "conv_to_im0type",
+			ret_type => {
+				tct_type => ov::mk("tct_arr", ov::mk("tct_rec", {
+					b => ov::mk("tct_int"),
+				})),
+				type => ov::mk("type", {
+					debug => {
+						begin => {
+							line => "1",
+							position => "51",
+						},
+						end => {
+							line => "1",
+							position => "91",
+						},
+					},
+					type => ov::mk("tct_empty"),
+					value => ov::mk("fun_val", {
+						args => [
+							{
+								expected_type => ov::mk("tct_im"),
+								mod => ov::mk("none"),
+								val => {
+									debug => {
+										begin => {
+											line => "1",
+											position => "60",
+										},
+										end => {
+											line => "1",
+											position => "89",
+										},
+									},
+									type => ov::mk("tct_empty"),
+									value => ov::mk("fun_val", {
+										args => [
+											{
+												expected_type => ov::mk("tct_im"),
+												mod => ov::mk("none"),
+												val => {
+													debug => {
+														begin => {
+															line => "1",
+															position => "69",
+														},
+														end => {
+															line => "1",
+															position => "88",
+														},
+													},
+													type => ov::mk("tct_empty"),
+													value => ov::mk("hash_decl", [
+														{
+															key => {
+																debug => {
+																	begin => {
+																		line => "1",
+																		position => "70",
+																	},
+																	end => {
+																		line => "1",
+																		position => "72",
+																	},
+																},
+																type => ov::mk("tct_empty"),
+																value => ov::mk("hash_key", "b"),
+															},
+															val => {
+																debug => {
+																	begin => {
+																		line => "1",
+																		position => "75",
+																	},
+																	end => {
+																		line => "1",
+																		position => "85",
+																	},
+																},
+																type => ov::mk("tct_empty"),
+																value => ov::mk("fun_val", {
+																	args => [
+																	],
+																	module => "ptd",
+																	name => "int",
+																}),
+															},
+														},
+													]),
+												},
+											},
+										],
+										module => "ptd",
+										name => "rec",
+									}),
+								},
+							},
+						],
+						module => "ptd",
+						name => "arr",
+					}),
+				}),
+			},
+		},
+		{
+			access => ov::mk("priv"),
+			args => [
+				{
+					mod => ov::mk("ref"),
+					name => "arg",
+					tct_type => ov::mk("type", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+					type => ov::mk("type", {
+						debug => {
+							begin => {
+								line => "2",
+								position => "48",
+							},
+							end => {
+								line => "2",
+								position => "77",
+							},
+						},
+						type => ov::mk("tct_empty"),
+						value => ov::mk("fun_val", {
+							args => [
+								{
+									expected_type => ov::mk("tct_im"),
+									mod => ov::mk("none"),
+									val => {
+										debug => {
+											begin => {
+												line => "2",
+												position => "57",
+											},
+											end => {
+												line => "2",
+												position => "76",
+											},
+										},
+										type => ov::mk("tct_empty"),
+										value => ov::mk("hash_decl", [
+											{
+												key => {
+													debug => {
+														begin => {
+															line => "2",
+															position => "58",
+														},
+														end => {
+															line => "2",
+															position => "60",
+														},
+													},
+													type => ov::mk("tct_empty"),
+													value => ov::mk("hash_key", "b"),
+												},
+												val => {
+													debug => {
+														begin => {
+															line => "2",
+															position => "63",
+														},
+														end => {
+															line => "2",
+															position => "73",
+														},
+													},
+													type => ov::mk("tct_empty"),
+													value => ov::mk("fun_val", {
+														args => [
+														],
+														module => "ptd",
+														name => "int",
+													}),
+												},
+											},
+										]),
+									},
+								},
+							],
+							module => "own",
+							name => "rec",
+						}),
+					}),
+				},
+			],
+			cmd => {
+				cmd => ov::mk("block", [
+					{
+						cmd => ov::mk("var_decl", {
+							name => "r",
+							tct_type => ov::mk("type", ov::mk("tct_rec", {
+								b => ov::mk("tct_int"),
+							})),
+							type => ov::mk("type", {
+								debug => {
+									begin => {
+										line => "2",
+										position => "120",
+									},
+									end => {
+										line => "2",
+										position => "150",
+									},
+								},
+								type => ov::mk("tct_empty"),
+								value => ov::mk("fun_val", {
+									args => [
+										{
+											expected_type => ov::mk("tct_im"),
+											mod => ov::mk("none"),
+											val => {
+												debug => {
+													begin => {
+														line => "2",
+														position => "129",
+													},
+													end => {
+														line => "2",
+														position => "148",
+													},
+												},
+												type => ov::mk("tct_empty"),
+												value => ov::mk("hash_decl", [
+													{
+														key => {
+															debug => {
+																begin => {
+																	line => "2",
+																	position => "130",
+																},
+																end => {
+																	line => "2",
+																	position => "132",
+																},
+															},
+															type => ov::mk("tct_empty"),
+															value => ov::mk("hash_key", "b"),
+														},
+														val => {
+															debug => {
+																begin => {
+																	line => "2",
+																	position => "135",
+																},
+																end => {
+																	line => "2",
+																	position => "145",
+																},
+															},
+															type => ov::mk("tct_empty"),
+															value => ov::mk("fun_val", {
+																args => [
+																],
+																module => "ptd",
+																name => "int",
+															}),
+														},
+													},
+												]),
+											},
+										},
+									],
+									module => "ptd",
+									name => "rec",
+								}),
+							}),
+							value => ov::mk("value", {
+								debug => {
+									begin => {
+										line => "2",
+										position => "152",
+									},
+									end => {
+										line => "2",
+										position => "170",
+									},
+								},
+								type => ov::mk("tct_rec", {
+									b => ov::mk("tct_int"),
+								}),
+								value => ov::mk("hash_decl", [
+									{
+										key => {
+											debug => {
+												begin => {
+													line => "2",
+													position => "153",
+												},
+												end => {
+													line => "2",
+													position => "155",
+												},
+											},
+											type => ov::mk("tct_string"),
+											value => ov::mk("hash_key", "b"),
+										},
+										val => {
+											debug => {
+												begin => {
+													line => "2",
+													position => "158",
+												},
+												end => {
+													line => "2",
+													position => "167",
+												},
+											},
+											type => ov::mk("tct_int"),
+											value => ov::mk("parenthesis", {
+												debug => {
+													begin => {
+														line => "2",
+														position => "163",
+													},
+													end => {
+														line => "2",
+														position => "166",
+													},
+												},
+												type => ov::mk("tct_int"),
+												value => ov::mk("bin_op", {
+													left => {
+														debug => {
+															begin => {
+																line => "2",
+																position => "160",
+															},
+															end => {
+																line => "2",
+																position => "163",
+															},
+														},
+														type => ov::mk("tct_own_rec", {
+															b => ov::mk("tct_int"),
+														}),
+														value => ov::mk("var", "arg"),
+													},
+													op => "->",
+													right => {
+														debug => {
+															begin => {
+																line => "2",
+																position => "165",
+															},
+															end => {
+																line => "2",
+																position => "166",
+															},
+														},
+														type => ov::mk("tct_string"),
+														value => ov::mk("hash_key", "b"),
+													},
+												}),
+											}),
+										},
+									},
+								]),
+							}),
+						}),
+						debug => {
+							begin => {
+								line => "2",
+								position => "112",
+							},
+							end => {
+								line => "2",
+								position => "171",
+							},
+						},
+					},
+					{
+						cmd => ov::mk("return", {
+							debug => {
+								begin => {
+									line => "2",
+									position => "179",
+								},
+								end => {
+									line => "2",
+									position => "180",
+								},
+							},
+							type => ov::mk("tct_rec", {
+								b => ov::mk("tct_int"),
+							}),
+							value => ov::mk("var", "r"),
+						}),
+						debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				]),
+				debug => {
+					begin => {
+						line => "2",
+						position => "111",
+					},
+					end => {
+						line => "2",
+						position => "182",
+					},
+				},
+			},
+			defines_type => ov::mk("no"),
+			line => "2",
+			name => "conv_to_im0RBanon_type00int0b0RE",
+			ret_type => {
+				tct_type => ov::mk("tct_rec", {
+					b => ov::mk("tct_int"),
+				}),
+				type => ov::mk("type", {
+					debug => {
+						begin => {
+							line => "2",
+							position => "81",
+						},
+						end => {
+							line => "2",
+							position => "111",
+						},
+					},
+					type => ov::mk("tct_empty"),
+					value => ov::mk("fun_val", {
+						args => [
+							{
+								expected_type => ov::mk("tct_im"),
+								mod => ov::mk("none"),
+								val => {
+									debug => {
+										begin => {
+											line => "2",
+											position => "90",
+										},
+										end => {
+											line => "2",
+											position => "109",
+										},
+									},
+									type => ov::mk("tct_empty"),
+									value => ov::mk("hash_decl", [
+										{
+											key => {
+												debug => {
+													begin => {
+														line => "2",
+														position => "91",
+													},
+													end => {
+														line => "2",
+														position => "93",
+													},
+												},
+												type => ov::mk("tct_empty"),
+												value => ov::mk("hash_key", "b"),
+											},
+											val => {
+												debug => {
+													begin => {
+														line => "2",
+														position => "96",
+													},
+													end => {
+														line => "2",
+														position => "106",
+													},
+												},
+												type => ov::mk("tct_empty"),
+												value => ov::mk("fun_val", {
+													args => [
+													],
+													module => "ptd",
+													name => "int",
+												}),
+											},
+										},
+									]),
+								},
+							},
+						],
+						module => "ptd",
+						name => "rec",
+					}),
+				}),
+			},
+		},
+	],
+	import => [
+		{
+			line => "1",
+			name => "ptd",
+		},
+		{
+			line => "2",
+			name => "own",
+		},
+		{
+			line => "3",
+			name => "nl",
+		},
+		{
+			line => "4",
+			name => "string",
+		},
+	],
+	name => "main",
+	stamp => "",
+}

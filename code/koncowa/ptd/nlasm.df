@@ -1,0 +1,1068 @@
+{
+	functions => [
+		{
+			access => ov::mk("pub"),
+			annotation => ov::mk("math"),
+			args_type => [
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+						],
+						dest => "3",
+						fun_name => "sim",
+						mod => "ptd",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("hash_decl", {
+						dest => "2",
+						src => [
+							{
+								key => "b",
+								val => "3",
+							},
+						],
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", "2"),
+						],
+						dest => "1",
+						fun_name => "rec",
+						mod => "ptd",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "2"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", "1"),
+						],
+						dest => "0",
+						fun_name => "arr",
+						mod => "ptd",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "1"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("val", "0")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "0"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "7",
+								position => "9",
+							},
+							end => {
+								line => "7",
+								position => "19",
+							},
+						},
+					},
+				},
+			],
+			name => "type",
+			reg_size => "4",
+		},
+		{
+			access => ov::mk("pub"),
+			annotation => ov::mk("state"),
+			args_type => [
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("arr_decl", {
+						dest => "0",
+						src => [
+						],
+					}),
+					debug => {
+						declarations => {
+							a => "0",
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "12",
+								position => "24",
+							},
+							end => {
+								line => "12",
+								position => "26",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "1",
+						val => "10000000",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "2",
+						val => "0",
+					}),
+					debug => {
+						declarations => {
+							i => "2",
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "3",
+						val => "1",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "4"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => "4",
+						left => "2",
+						op => ">=",
+						right => "1",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("if_goto", {
+						dest => "28",
+						src => "4",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "13",
+								position => "13",
+							},
+							end => {
+								line => "13",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("hash_decl", {
+						dest => "5",
+						src => [
+							{
+								key => "b",
+								val => "2",
+							},
+						],
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "9",
+							},
+							end => {
+								line => "14",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("ref", "0"),
+							ov::mk("val", "5"),
+						],
+						dest => "",
+						fun_name => "array_push",
+						mod => "c_rt_lib",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "9",
+							},
+							end => {
+								line => "14",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "5"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "9",
+							},
+							end => {
+								line => "14",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("get_frm_idx", {
+						dest => "5",
+						idx => "2",
+						src => "0",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "8",
+							},
+							end => {
+								line => "15",
+								position => "11",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("get_val", {
+						dest => "5",
+						key => "b",
+						src => "5",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "8",
+							},
+							end => {
+								line => "15",
+								position => "11",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "6",
+						val => "100000",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "17",
+							},
+							end => {
+								line => "15",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => "5",
+						left => "5",
+						op => "%",
+						right => "6",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "17",
+							},
+							end => {
+								line => "15",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "6"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "17",
+							},
+							end => {
+								line => "15",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "6",
+						val => "0",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "27",
+							},
+							end => {
+								line => "15",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => "5",
+						left => "5",
+						op => "==",
+						right => "6",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "27",
+							},
+							end => {
+								line => "15",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "6"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "27",
+							},
+							end => {
+								line => "15",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("una_op", {
+						dest => "5",
+						op => "!",
+						src => "5",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "27",
+							},
+							end => {
+								line => "15",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("if_goto", {
+						dest => "24",
+						src => "5",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "27",
+							},
+							end => {
+								line => "15",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => "6",
+						val => "=",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "14",
+							},
+							end => {
+								line => "16",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", "6"),
+						],
+						dest => "",
+						fun_name => "print",
+						mod => "nl",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "14",
+							},
+							end => {
+								line => "16",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "6"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "14",
+							},
+							end => {
+								line => "16",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("goto", "24"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "3",
+							},
+							end => {
+								line => "17",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "24"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "3",
+							},
+							end => {
+								line => "17",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "5"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "3",
+							},
+							end => {
+								line => "17",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => "2",
+						left => "2",
+						op => "+",
+						right => "3",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("goto", "4"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "28"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "1"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "2"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "4"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "2",
+							},
+							end => {
+								line => "18",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+						],
+						dest => "1",
+						fun_name => "lf",
+						mod => "string",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "12",
+							},
+							end => {
+								line => "19",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", "1"),
+						],
+						dest => "",
+						fun_name => "print",
+						mod => "nl",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "12",
+							},
+							end => {
+								line => "19",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "1"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "12",
+							},
+							end => {
+								line => "19",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", "0"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "12",
+							},
+							end => {
+								line => "19",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "12",
+							},
+							end => {
+								line => "19",
+								position => "24",
+							},
+						},
+					},
+				},
+			],
+			name => "main",
+			reg_size => "7",
+		},
+	],
+	imports => [
+		"ptd",
+		"nl",
+		"string",
+	],
+	module_name => "main",
+}

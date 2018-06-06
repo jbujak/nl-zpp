@@ -1,0 +1,3638 @@
+{
+	functions => [
+		{
+			access => ov::mk("pub"),
+			annotation => ov::mk("none"),
+			args_type => [
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("im"),
+						},
+						fun_name => "int",
+						mod => "ptd",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("hash_decl", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("im"),
+						},
+						src => [
+							{
+								key => "b",
+								val => {
+									access_type => ov::mk("value"),
+									reg_no => "3",
+									type => ov::mk("im"),
+								},
+							},
+						],
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", {
+								access_type => ov::mk("value"),
+								reg_no => "2",
+								type => ov::mk("im"),
+							}),
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("im"),
+						},
+						fun_name => "rec",
+						mod => "own",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", {
+								access_type => ov::mk("value"),
+								reg_no => "1",
+								type => ov::mk("im"),
+							}),
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("im"),
+						},
+						fun_name => "arr",
+						mod => "own",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("val", {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("im"),
+					})),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "8",
+								position => "9",
+							},
+							end => {
+								line => "8",
+								position => "19",
+							},
+						},
+					},
+				},
+			],
+			defines_type => ov::mk("yes", ov::mk("tct_own_arr", ov::mk("tct_own_rec", {
+				b => ov::mk("tct_int"),
+			}))),
+			name => "type",
+			registers => [
+				{
+					access_type => ov::mk("value"),
+					reg_no => "0",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "1",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "2",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "3",
+					type => ov::mk("im"),
+				},
+			],
+			ret_type => ov::mk("tct_im"),
+			variables => [
+			],
+		},
+		{
+			access => ov::mk("pub"),
+			annotation => ov::mk("none"),
+			args_type => [
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("int"),
+						},
+						val => "10000000",
+					}),
+					debug => {
+						declarations => {
+							a => {
+								access_type => ov::mk("value"),
+								reg_no => "0",
+								type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+							},
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						val => "0",
+					}),
+					debug => {
+						declarations => {
+							i => {
+								access_type => ov::mk("value"),
+								reg_no => "2",
+								type => ov::mk("int"),
+							},
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						val => "1",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "5",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						op => ">=",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "4",
+							type => ov::mk("bool"),
+						},
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "5",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("if_goto", {
+						dest => "1",
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "4",
+							type => ov::mk("bool"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "14",
+								position => "13",
+							},
+							end => {
+								line => "14",
+								position => "21",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("hash_decl", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "6",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+						src => [
+							{
+								key => "b",
+								val => {
+									access_type => ov::mk("value"),
+									reg_no => "2",
+									type => ov::mk("int"),
+								},
+							},
+						],
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "9",
+							},
+							end => {
+								line => "15",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("array_push", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+						},
+						val => {
+							access_type => ov::mk("value"),
+							reg_no => "6",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "9",
+							},
+							end => {
+								line => "15",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "6",
+						type => ov::mk("rec", ov::mk("tct_own_rec", {
+							b => ov::mk("tct_int"),
+						})),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "15",
+								position => "9",
+							},
+							end => {
+								line => "15",
+								position => "18",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("use_index", {
+						index => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						new_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "10",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+						old_owner => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "11",
+							},
+							end => {
+								line => "16",
+								position => "15",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("use_field", {
+						field_name => "b",
+						new_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "11",
+							type => ov::mk("int"),
+						},
+						old_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "10",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "11",
+							},
+							end => {
+								line => "16",
+								position => "15",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "9",
+							type => ov::mk("int"),
+						},
+						src => {
+							access_type => ov::mk("reference"),
+							reg_no => "11",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "11",
+							},
+							end => {
+								line => "16",
+								position => "15",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("release_field", {
+						current_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "11",
+							type => ov::mk("int"),
+						},
+						field_name => "b",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "11",
+							},
+							end => {
+								line => "16",
+								position => "15",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("release_index", {
+						current_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "10",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+						index => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "11",
+							},
+							end => {
+								line => "16",
+								position => "15",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "12",
+							type => ov::mk("int"),
+						},
+						val => "100000",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "17",
+							},
+							end => {
+								line => "16",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "8",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "9",
+							type => ov::mk("int"),
+						},
+						op => "%",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "12",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "17",
+							},
+							end => {
+								line => "16",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "9",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "17",
+							},
+							end => {
+								line => "16",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "12",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "17",
+							},
+							end => {
+								line => "16",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "13",
+							type => ov::mk("int"),
+						},
+						val => "0",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "14",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "8",
+							type => ov::mk("int"),
+						},
+						op => "==",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "13",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("bool"),
+						},
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "14",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "9",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "12",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "13",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "14",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("una_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("bool"),
+						},
+						op => "!",
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("bool"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("if_goto", {
+						dest => "5",
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("bool"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "16",
+								position => "27",
+							},
+							end => {
+								line => "16",
+								position => "28",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "15",
+							type => ov::mk("im"),
+						},
+						val => "=",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "14",
+							},
+							end => {
+								line => "17",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", {
+								access_type => ov::mk("value"),
+								reg_no => "15",
+								type => ov::mk("im"),
+							}),
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "-1",
+							type => ov::mk("im"),
+						},
+						fun_name => "print",
+						mod => "nl",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "14",
+							},
+							end => {
+								line => "17",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "15",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "8",
+						nast_debug => {
+							begin => {
+								line => "17",
+								position => "14",
+							},
+							end => {
+								line => "17",
+								position => "17",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("goto", "4"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "5"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "4"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "7",
+						type => ov::mk("bool"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "9",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "12",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "13",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "14",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "15",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "2"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "9",
+						nast_debug => {
+							begin => {
+								line => "18",
+								position => "3",
+							},
+							end => {
+								line => "18",
+								position => "4",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						op => "+",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "2",
+							},
+							end => {
+								line => "19",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("goto", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "2",
+							},
+							end => {
+								line => "19",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "1"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "10",
+						nast_debug => {
+							begin => {
+								line => "19",
+								position => "2",
+							},
+							end => {
+								line => "19",
+								position => "3",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "16",
+							type => ov::mk("im"),
+						},
+						fun_name => "lf",
+						mod => "string",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("val", {
+								access_type => ov::mk("value"),
+								reg_no => "16",
+								type => ov::mk("im"),
+							}),
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "-1",
+							type => ov::mk("im"),
+						},
+						fun_name => "print",
+						mod => "nl",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "16",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("bool"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "5",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "6",
+						type => ov::mk("rec", ov::mk("tct_own_rec", {
+							b => ov::mk("tct_int"),
+						})),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "7",
+						type => ov::mk("bool"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "9",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "12",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "13",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "14",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "15",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "16",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "11",
+						nast_debug => {
+							begin => {
+								line => "20",
+								position => "12",
+							},
+							end => {
+								line => "20",
+								position => "24",
+							},
+						},
+					},
+				},
+			],
+			defines_type => ov::mk("no"),
+			name => "main",
+			registers => [
+				{
+					access_type => ov::mk("value"),
+					reg_no => "0",
+					type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "1",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "2",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "3",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "4",
+					type => ov::mk("bool"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "5",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "6",
+					type => ov::mk("rec", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "7",
+					type => ov::mk("bool"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "8",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "9",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("reference"),
+					reg_no => "10",
+					type => ov::mk("rec", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+				{
+					access_type => ov::mk("reference"),
+					reg_no => "11",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "12",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "13",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "14",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "15",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "16",
+					type => ov::mk("im"),
+				},
+			],
+			ret_type => ov::mk("tct_im"),
+			variables => [
+				{
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+					},
+					type => ov::mk("tct_ref", "main::type"),
+				},
+				{
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("int"),
+					},
+					type => ov::mk("tct_int"),
+				},
+			],
+		},
+		{
+			access => ov::mk("pub"),
+			annotation => ov::mk("none"),
+			args_type => [
+				{
+					by => ov::mk("ref"),
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+					},
+					type => ov::mk("type", ov::mk("tct_ref", "main::type")),
+				},
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("arr_decl", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("im"),
+						},
+						src => [
+						],
+					}),
+					debug => {
+						declarations => {
+							a => {
+								access_type => ov::mk("value"),
+								reg_no => "1",
+								type => ov::mk("im"),
+							},
+							arg => {
+								access_type => ov::mk("value"),
+								reg_no => "0",
+								type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+							},
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "142",
+							},
+							end => {
+								line => "1",
+								position => "144",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						val => "0",
+					}),
+					debug => {
+						declarations => {
+							elem => {
+								access_type => ov::mk("reference"),
+								reg_no => "2",
+								type => ov::mk("rec", ov::mk("tct_own_rec", {
+									b => ov::mk("tct_int"),
+								})),
+							},
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("load_const", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "4",
+							type => ov::mk("int"),
+						},
+						val => "1",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("array_len", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "5",
+							type => ov::mk("int"),
+						},
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						op => ">=",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "5",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "6",
+							type => ov::mk("bool"),
+						},
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "7",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("if_goto", {
+						dest => "1",
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "6",
+							type => ov::mk("bool"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("use_index", {
+						index => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						new_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "2",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+						old_owner => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "145",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("call", {
+						args => [
+							ov::mk("ref", {
+								access_type => ov::mk("reference"),
+								reg_no => "2",
+								type => ov::mk("rec", ov::mk("tct_own_rec", {
+									b => ov::mk("tct_int"),
+								})),
+							}),
+						],
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "8",
+							type => ov::mk("im"),
+						},
+						fun_name => "conv_to_im0RBanon_type00int0b0RE",
+						mod => "",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "172",
+							},
+							end => {
+								line => "1",
+								position => "214",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("array_push", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("im"),
+						},
+						val => {
+							access_type => ov::mk("value"),
+							reg_no => "8",
+							type => ov::mk("im"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "172",
+							},
+							end => {
+								line => "1",
+								position => "214",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "172",
+							},
+							end => {
+								line => "1",
+								position => "214",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "2"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "5",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "172",
+							},
+							end => {
+								line => "1",
+								position => "214",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("bin_op", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						left => {
+							access_type => ov::mk("value"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						op => "+",
+						right => {
+							access_type => ov::mk("value"),
+							reg_no => "4",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "215",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("goto", "3"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "215",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("prt_lbl", "1"),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "6",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "215",
+							},
+							end => {
+								line => "1",
+								position => "216",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "5",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "6",
+						type => ov::mk("bool"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "7",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("val", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					})),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "3",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "5",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "6",
+						type => ov::mk("bool"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "7",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "8",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "7",
+						nast_debug => {
+							begin => {
+								line => "1",
+								position => "217",
+							},
+							end => {
+								line => "1",
+								position => "226",
+							},
+						},
+					},
+				},
+			],
+			defines_type => ov::mk("no"),
+			name => "conv_to_im0type",
+			registers => [
+				{
+					access_type => ov::mk("value"),
+					reg_no => "0",
+					type => ov::mk("arr", ov::mk("tct_ref", "main::type")),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "1",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("reference"),
+					reg_no => "2",
+					type => ov::mk("rec", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "3",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "4",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "5",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "6",
+					type => ov::mk("bool"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "7",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "8",
+					type => ov::mk("im"),
+				},
+			],
+			ret_type => ov::mk("tct_arr", ov::mk("tct_rec", {
+				b => ov::mk("tct_int"),
+			})),
+			variables => [
+				{
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					},
+					type => ov::mk("tct_arr", ov::mk("tct_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+				{
+					register => {
+						access_type => ov::mk("reference"),
+						reg_no => "2",
+						type => ov::mk("rec", ov::mk("tct_own_rec", {
+							b => ov::mk("tct_int"),
+						})),
+					},
+					type => ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					}),
+				},
+			],
+		},
+		{
+			access => ov::mk("priv"),
+			annotation => ov::mk("none"),
+			args_type => [
+				{
+					by => ov::mk("ref"),
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "0",
+						type => ov::mk("rec", ov::mk("tct_own_rec", {
+							b => ov::mk("tct_int"),
+						})),
+					},
+					type => ov::mk("type", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+			],
+			commands => [
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("use_field", {
+						field_name => "b",
+						new_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						old_owner => {
+							access_type => ov::mk("value"),
+							reg_no => "0",
+							type => ov::mk("rec", ov::mk("tct_own_rec", {
+								b => ov::mk("tct_int"),
+							})),
+						},
+					}),
+					debug => {
+						declarations => {
+							arg => {
+								access_type => ov::mk("value"),
+								reg_no => "0",
+								type => ov::mk("rec", ov::mk("tct_own_rec", {
+									b => ov::mk("tct_int"),
+								})),
+							},
+							r => {
+								access_type => ov::mk("value"),
+								reg_no => "1",
+								type => ov::mk("im"),
+							},
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+						src => {
+							access_type => ov::mk("reference"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("release_field", {
+						current_owner => {
+							access_type => ov::mk("reference"),
+							reg_no => "3",
+							type => ov::mk("int"),
+						},
+						field_name => "b",
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("move", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "4",
+							type => ov::mk("im"),
+						},
+						src => {
+							access_type => ov::mk("value"),
+							reg_no => "2",
+							type => ov::mk("int"),
+						},
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("hash_decl", {
+						dest => {
+							access_type => ov::mk("value"),
+							reg_no => "1",
+							type => ov::mk("im"),
+						},
+						src => [
+							{
+								key => "b",
+								val => {
+									access_type => ov::mk("value"),
+									reg_no => "4",
+									type => ov::mk("im"),
+								},
+							},
+						],
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "2",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "163",
+							},
+							end => {
+								line => "2",
+								position => "166",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("val", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					})),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "2",
+						type => ov::mk("int"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("clear", {
+						access_type => ov::mk("value"),
+						reg_no => "4",
+						type => ov::mk("im"),
+					}),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+				{
+					annotation => ov::mk("none"),
+					cmd => ov::mk("return", ov::mk("emp")),
+					debug => {
+						declarations => {
+						},
+						instruction_nr => "3",
+						nast_debug => {
+							begin => {
+								line => "2",
+								position => "172",
+							},
+							end => {
+								line => "2",
+								position => "181",
+							},
+						},
+					},
+				},
+			],
+			defines_type => ov::mk("no"),
+			name => "conv_to_im0RBanon_type00int0b0RE",
+			registers => [
+				{
+					access_type => ov::mk("value"),
+					reg_no => "0",
+					type => ov::mk("rec", ov::mk("tct_own_rec", {
+						b => ov::mk("tct_int"),
+					})),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "1",
+					type => ov::mk("im"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "2",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("reference"),
+					reg_no => "3",
+					type => ov::mk("int"),
+				},
+				{
+					access_type => ov::mk("value"),
+					reg_no => "4",
+					type => ov::mk("im"),
+				},
+			],
+			ret_type => ov::mk("tct_rec", {
+				b => ov::mk("tct_int"),
+			}),
+			variables => [
+				{
+					register => {
+						access_type => ov::mk("value"),
+						reg_no => "1",
+						type => ov::mk("im"),
+					},
+					type => ov::mk("tct_rec", {
+						b => ov::mk("tct_int"),
+					}),
+				},
+			],
+		},
+	],
+	imports => [
+		"ptd",
+		"own",
+		"nl",
+		"string",
+	],
+	module_name => "main",
+}

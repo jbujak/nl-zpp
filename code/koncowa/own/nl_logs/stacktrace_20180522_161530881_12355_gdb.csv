@@ -1,0 +1,29 @@
+#0  0x00007f3ef2b39567 in waitpid () from /usr/lib/libc.so.6
+#1  0x000055f45fefb4fd in gdb_die (msg=0x7ffc68b28130 "nianio lang die failed: \narray 0[]; ") at native_lib_c/c_rt_lib.c:1795
+#2  0x000055f45fef76e4 in nl_die_internal (format=0x55f45ff054fd "nianio lang die failed: \n%s") at native_lib_c/c_rt_lib.c:821
+#3  0x000055f45fef773b in nl_die_arg (___nl__0=0x55f461c1d320) at native_lib_c/c_rt_lib.c:830
+#4  0x000055f45fe45d8d in translator_priv0print_get_value (___nl__im__0=0x55f46238d990, ___nl__im__1=0x55f462389d10, ___nl__im__2=0x55f461e81110, ___ref___im__3=0x7ffc68b2b180) at translator.nl:1014
+#5  0x000055f45fe30819 in translator_priv0print_bin_op (___nl__im__0=0x55f4620eb020, ___nl__im__1=0x55f46238d990, ___ref___im__2=0x7ffc68b2b180) at translator.nl:408
+#6  0x000055f45fe2ac09 in translator_priv0print_val (___nl__im__0=0x55f4620eb020, ___nl__im__1=0x55f46238d990, ___ref___im__2=0x7ffc68b2b180) at translator.nl:291
+#7  0x000055f45fe54a36 in translator_priv0calc_val (___nl__im__0=0x55f4620eb020, ___ref___im__1=0x7ffc68b2b180) at translator.nl:1327
+#8  0x000055f45fe281f8 in translator_priv0print_fun_val (___nl__im__0=0x55f4620ebbb0, ___nl__im__1=0x55f46238d4e0, ___nl__im__2=0x55f4620dc2b0, ___ref___im__3=0x7ffc68b2b180) at translator.nl:236
+#9  0x000055f45fe2ad37 in translator_priv0print_val (___nl__im__0=0x55f4620eeba0, ___nl__im__1=0x55f46238d4e0, ___ref___im__2=0x7ffc68b2b180) at translator.nl:295
+#10 0x000055f45fe54a36 in translator_priv0calc_val (___nl__im__0=0x55f4620eeba0, ___ref___im__1=0x7ffc68b2b180) at translator.nl:1327
+#11 0x000055f45fe32adb in translator_priv0print_bin_op (___nl__im__0=0x55f4620e7a40, ___nl__im__1=0x55f46238d360, ___ref___im__2=0x7ffc68b2b180) at translator.nl:456
+#12 0x000055f45fe2ac09 in translator_priv0print_val (___nl__im__0=0x55f4620e7a40, ___nl__im__1=0x55f46238d360, ___ref___im__2=0x7ffc68b2b180) at translator.nl:291
+#13 0x000055f45fe54a36 in translator_priv0calc_val (___nl__im__0=0x55f4620e7a40, ___ref___im__1=0x7ffc68b2b180) at translator.nl:1327
+#14 0x000055f45fe281f8 in translator_priv0print_fun_val (___nl__im__0=0x55f4620e8390, ___nl__im__1=0x55f46238d270, ___nl__im__2=0x55f46203f220, ___ref___im__3=0x7ffc68b2b180) at translator.nl:236
+#15 0x000055f45fe2ad37 in translator_priv0print_val (___nl__im__0=0x55f4620e8970, ___nl__im__1=0x55f46238d270, ___ref___im__2=0x7ffc68b2b180) at translator.nl:295
+#16 0x000055f45fe37016 in translator_priv0print_cmd (___nl__im__0=0x55f46208e930, ___ref___im__1=0x7ffc68b2b180) at translator.nl:531
+#17 0x000055f45fe341f4 in translator_priv0print_cmd_array (___nl__im__0=0x55f4620e11a0, ___ref___im__1=0x7ffc68b2b180) at translator.nl:464
+#18 0x000055f45fe370c6 in translator_priv0print_cmd (___nl__im__0=0x55f4620a6450, ___ref___im__1=0x7ffc68b2b180) at translator.nl:533
+#19 0x000055f45fe3b00b in translator_priv0print_fora (___nl__im__0=0x55f4620eb560, ___ref___im__1=0x7ffc68b2b180) at translator.nl:679
+#20 0x000055f45fe36c1d in translator_priv0print_cmd (___nl__im__0=0x55f4620e62c0, ___ref___im__1=0x7ffc68b2b180) at translator.nl:518
+#21 0x000055f45fe341f4 in translator_priv0print_cmd_array (___nl__im__0=0x55f4620e8120, ___ref___im__1=0x7ffc68b2b180) at translator.nl:464
+#22 0x000055f45fe370c6 in translator_priv0print_cmd (___nl__im__0=0x55f4620e5650, ___ref___im__1=0x7ffc68b2b180) at translator.nl:533
+#23 0x000055f45fe22893 in translator_priv0print_fun_def (___nl__im__0=0x55f4620ec600, ___ref___im__1=0x7ffc68b2b180) at translator.nl:119
+#24 0x000055f45fe213d3 in translator0translate (___nl__im__0=0x55f4620d6cc0, ___nl__im__1=0x55f4621c7000) at translator.nl:100
+#25 0x000055f45fb784b8 in compiler_priv0translate (___nl__im__0=0x55f462060860, ___ref___im__1=0x7ffc68b2b528) at compiler.nl:639
+#26 0x000055f45fb746f6 in compiler_priv0compile_strict_file (___nl__im__0=0x55f461c341a0) at compiler.nl:543
+#27 0x000055f45fb65e1e in compiler0compile (___nl__im__0=0x55f461c33e80) at compiler.nl:144
+#28 0x000055f45fb4c5fc in main (argc=6, argv=0x7ffc68b2b8a8) at mk_cache.c:26

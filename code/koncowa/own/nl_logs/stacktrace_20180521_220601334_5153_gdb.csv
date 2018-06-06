@@ -1,0 +1,21 @@
+#0  0x00007fc6b7976567 in waitpid () from /usr/lib/libc.so.6
+#1  0x0000561c3b0354fd in gdb_die (msg=0x7ffe2c91c000 "nianio lang die failed: \narray 0[]; ") at native_lib_c/c_rt_lib.c:1795
+#2  0x0000561c3b0316e4 in nl_die_internal (format=0x561c3b03f4fd "nianio lang die failed: \n%s") at native_lib_c/c_rt_lib.c:821
+#3  0x0000561c3b03173b in nl_die_arg (___nl__0=0x561c3cfbe320) at native_lib_c/c_rt_lib.c:830
+#4  0x0000561c3af7fd8d in translator_priv0print_get_value (___nl__im__0=0x561c3d72b6a0, ___nl__im__1=0x561c3d727e50, ___nl__im__2=0x561c3d276f20, ___ref___im__3=0x7ffe2c91dbb0) at translator.nl:1014
+#5  0x0000561c3af6a819 in translator_priv0print_bin_op (___nl__im__0=0x561c3d487c30, ___nl__im__1=0x561c3d72b6a0, ___ref___im__2=0x7ffe2c91dbb0) at translator.nl:408
+#6  0x0000561c3af64c09 in translator_priv0print_val (___nl__im__0=0x561c3d487c30, ___nl__im__1=0x561c3d72b6a0, ___ref___im__2=0x7ffe2c91dbb0) at translator.nl:291
+#7  0x0000561c3af60c61 in translator_priv0print_var_decl (___nl__im__0=0x561c3d485090, ___ref___im__1=0x7ffe2c91dbb0, ___nl__im__2=0x561c3d72b600) at translator.nl:205
+#8  0x0000561c3af7156d in translator_priv0print_cmd (___nl__im__0=0x561c3d48c910, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:549
+#9  0x0000561c3af6e1f4 in translator_priv0print_cmd_array (___nl__im__0=0x561c3d44bc20, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:464
+#10 0x0000561c3af710c6 in translator_priv0print_cmd (___nl__im__0=0x561c3d489050, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:533
+#11 0x0000561c3af7500b in translator_priv0print_fora (___nl__im__0=0x561c3d486370, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:679
+#12 0x0000561c3af70c1d in translator_priv0print_cmd (___nl__im__0=0x561c3d48a9e0, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:518
+#13 0x0000561c3af6e1f4 in translator_priv0print_cmd_array (___nl__im__0=0x561c3d455980, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:464
+#14 0x0000561c3af710c6 in translator_priv0print_cmd (___nl__im__0=0x561c3d486b60, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:533
+#15 0x0000561c3af5c893 in translator_priv0print_fun_def (___nl__im__0=0x561c3d485700, ___ref___im__1=0x7ffe2c91dbb0) at translator.nl:119
+#16 0x0000561c3af5b3d3 in translator0translate (___nl__im__0=0x561c3d488430, ___nl__im__1=0x561c3d55c1e0) at translator.nl:100
+#17 0x0000561c3acb24b8 in compiler_priv0translate (___nl__im__0=0x561c3d40a330, ___ref___im__1=0x7ffe2c91df58) at compiler.nl:639
+#18 0x0000561c3acae6f6 in compiler_priv0compile_strict_file (___nl__im__0=0x561c3cfd51a0) at compiler.nl:543
+#19 0x0000561c3ac9fe1e in compiler0compile (___nl__im__0=0x561c3cfd4e80) at compiler.nl:144
+#20 0x0000561c3ac865fc in main (argc=6, argv=0x7ffe2c91e2d8) at mk_cache.c:26

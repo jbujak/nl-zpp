@@ -1,0 +1,7 @@
+#0  0x00007fc6b7976567 in waitpid () from /usr/lib/libc.so.6
+#1  0x0000561c3b0354fd in gdb_die (msg=0x7ffe2c918320 "signal received") at native_lib_c/c_rt_lib.c:1795
+#2  0x0000561c3b0316e4 in nl_die_internal (format=0x561c3b03f2e0 "signal received") at native_lib_c/c_rt_lib.c:821
+#3  0x0000561c3b02e8db in nl_die_signal () at native_lib_c/c_rt_lib.c:104
+#4  <signal handler called>
+#5  0x00007ffe2c918baf in ?? ()
+#6  0x0000000000000000 in ?? ()

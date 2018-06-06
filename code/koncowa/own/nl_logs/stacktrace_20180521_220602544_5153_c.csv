@@ -1,0 +1,9 @@
+0	waitpid	m /usr/lib/libc.so.6	6
+nianio_lang compiler
+"signal received"
+1	gdb_die	native_lib_c/c_rt_lib.c	1795	p0 msg=0x7ffe2c918320
+2	nl_die_internal	native_lib_c/c_rt_lib.c	821	p0 format=0x561c3b03f2e0
+3	nl_die_signal	native_lib_c/c_rt_lib.c	104
+4			0
+5			0
+6			0
