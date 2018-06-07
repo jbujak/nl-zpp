@@ -461,7 +461,7 @@ danym wierzchołku na podstawie podwyrażeń. Na przykład dla wyrażeń arytmet
 stosujemy komendę \texttt{bin\_op}, która dla danych trzech rejestrów: docelowego, lewej strony i prawej strony wyrażenia, a także operatora, oblicza 
 wartość i zapisuje w odpowiednim rejestrze. Dla operacji posiadających skutki uboczne (np. zapisanie wartości do zmiennej) stosujemy tzw. obliczanie 
 z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia, która w takim przypadku powinna być zmienną bądź ciągiem 
-dostępów do elementów talic/haszy/rekordów kończącym się wartością, obliczany jest ciąg zstępujący odwołań do elementów kolekcji. Translator realizuje to za
+dostępów do elementów tablic/haszy/rekordów kończącym się wartością, obliczany jest ciąg zstępujący odwołań do elementów kolekcji. Translator realizuje to za
 pomocą wywołań określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
 komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funkcje te tworzą kopię elementu kolekcji, którą zapisują w 
 odpowiednim rejestrze. Po zapisaniu nowej wartości translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
