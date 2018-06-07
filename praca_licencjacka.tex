@@ -197,7 +197,7 @@ stronie projektu\cite{nianiolang_org}.
 
 \section{Typy w NianioLangu}
 W NianioLangu mamy do czynienia z kilkoma wbudowanymi typami. Wszelkie typy tworzone przez użytkownika to w rzeczywistości aliasy na typy wbudowane,
-co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudowanych typów: 
+co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest sześć wbudowanych typów: 
 \begin{itemize}
   \item \texttt{ptd::sim} -- liczby całkowite, zmiennoprzecinkowe oraz ciągi znaków
   \item \texttt{ptd::rec} -- rekordy, czyli odpowiedniki struktur znanych np. z C
@@ -205,6 +205,7 @@ co pomaga w zarządzaniu abstrakcją w programie. Dostępnych jest pięć wbudow
   \item \texttt{ptd::var} -- typ wariantowy, który reprezentuje obiekty, mogące być w dokładnie jednym z określonego zbioru stanów i dodatkowo
   zawierać dane o typie właściwym dla danego stanu
   \item \texttt{ptd::arr} -- tablice danych tego samego typu
+  \item \texttt{ptd::im} -- typ ogólny, każda zmienna jednego z powyższych typów jest też typu \texttt{ptd::im}
 \end{itemize}
 
 Typy te mogą być ze sobą łączone w bardziej skompilowane konstrukcje, na przykład \texttt{ptd::arr(ptd::sim())} definiuje
@@ -260,6 +261,7 @@ podanymi w książce\cite{dragonbook}. W przypadku poniższych pojęć posługuj
   oraz zbierania informacji potrzebnych na kolejnych etapach
   \item[] \textbf{translacja} -- proces tłumaczenia drzewa AST na język pośredni
   \item[] \textbf{generowanie} -- proces tłumaczenia języka pośredniego na język docelowy
+  \item[] \textbf{zgodność typów} -- dwa typy są zgodne, jeśli są (być może różnymi) reprezentacjami tego samego typu
 \end{itemize}
 
 \chapter{Metodyka pracy}
@@ -296,6 +298,7 @@ wcześniej z systemem kontroli wersji Git, został on użyty w tym projekcie.
 Dodatkowym atutem tego systemu kontroli wersji jest szeroka dostępność darmowych
 publicznych repozytoriów kodu online. Kod projektu umieszczony został na portalu
 GitHub, który jest największym serwisem pozwalającym na hostowanie kodu online.
+Repozytorium, na którym toczyły się prace, znajduje się pod adresem \cite{repo_dev}.
 
 Początkowo każdy w zespole miał swoją gałąź w repozytorium, oznaczoną jego imieniem,
 na której wprowadzał swoje zmiany. Jednak w trakcie pracy za praktyczniejsze podejście
@@ -319,7 +322,7 @@ wraz z możliwością dodawania komentarzy do konkretnych fragmentów kodu. Moż
 był dialog między recenzentem kodu a jego twórcą, tak aby ostatecznie zatwierdzone
 zmiany spełniały oczekiwania obu stron.
 
-\section{Testowanie i ciągła integracja}
+\section{Ciągła integracja}
 W projekcie została wykorzystana praktyka ciągłej integracji z wykorzystaniem systemu Travis.
 Został on wybrany, ponieważ jest dostępny bez dodatkowych kosztów i umożliwia łatwą integrację z repozytorium kodu
 na platformie GitHub.
@@ -354,7 +357,7 @@ szczegółów planu pracy przez kolejny tydzień, a w przypadku pytań lub probl
 \section{Budowanie drzewa AST}
 Pierwszym etapem kompilacji jest parsowanie programu wejściowego do drzewa AST. Takie drzewo jest strukturą przechowującą informacje o składniowej
 roli wyrażeń, które przetwarzać można na dalszych etapach kompilacji. Celem jest przetworzenie tekstu programu do postaci przypominającej derywację
-gramatyki języka. Chociaż książkowa definicja drzewa AST mówi wyłącznie o składni, kompilator NianioLanga już na tym etapie dokonuje pewnej
+gramatyki języka. Chociaż standardowa definicja drzewa AST mówi wyłącznie o składni, kompilator NianioLanga już na tym etapie dokonuje pewnej
 podstawowej analizy semantycznej, gdyż wydzielenie tych czynności spowodowałoby dużą duplikację kodu związanego z czynnością obchodzenia drzewa.
 
 \begin{figure}[h]
@@ -396,16 +399,17 @@ sprawdzające czy i w jakim zakresie dwa typy są zgodne. Przykładowo jeżeli \
 \texttt{ptd::hash}. Jeżeli zaś funkcja oczekuje \texttt{ptd::sim} a podawany jest \texttt{ptd::array}, to zgłaszany jest błąd. W czasie działania tej części kompilatora o typach myśleć można
 jako o zbiorach możliwych wartości, na których wykonywane są operacje, przede wszystkim przecięcia.
 
-Drugie rozumienie, które stosuje type checker, jest podobne do pierwszego, lecz w kontekście wnioskowania typów na podstawie wykonywanych na nich
+Drugi rodzaj analizy stosowanej przez type checker, jest podobny do poprzedniego, lecz w kontekście wnioskowania typów
+na podstawie wykonywanych na nich
 operacji. Jeżeli dana zmienna inicjalizowana jest jako \texttt{ptd::sim}, a następnie używana jako \texttt{ptd::hash}, to zgłaszany jest błąd. Warto zaznaczyć,
 że operacje na typach wywnioskowanych są subtelniejsze, gdyż wiele typów jest konwertowalnych na \texttt{ptd::im}, oraz w drugą stronę, przez co nie jest
 możliwa całkowita, ścisła kontrola typów, ta ma miejsce dopiero podczas wykonywania programu. Ponownie, wydzielone są funkcje operujące na typach w analogii do zbiorów.
 
-Samą budowę type checker ma podobną w pewnym sensie do parsera. W rekurencyjny sposób sprawdzamy, jakie typy mają poszczególne elementy drzewa oraz
+Samą budowę type checker ma podobną w pewnym sensie do parsera. W sposób rekurencyjny sprawdzamy, jakie typy mają poszczególne elementy drzewa oraz
 czy są one poprawne. Tak jak w parserze zapisane jest, że operator \texttt{+} zawiera słowo kluczowe \texttt{+}, tak odpowiednia funkcja w type
 checkerze wie, że argumenty tego operatora muszą zwracać liczbę całkowitą. Ponownie pozwala to na podział funkcji w taki sposób, by każda
 dotyczyła jednego, jasno wyszczególnionego elementu.
-\section{Architektura nlasma}
+\section{Język nlasm}
 nlasm to język stosowany w kompilatorze jako język pośredni pomiędzy NianioLangiem a językiem docelowy.
 Został wprowadzony, gdyż bezpośrednia kompilacja NianioLanga do C, lub
 też innego języka, może okazać się trudna, ponieważ używane struktury językowe znacząco od siebie odbiegają. Umożliwia to w łatwy sposób tworzenie
@@ -440,7 +444,7 @@ zignorować. W przypadku generowania języka z manualnym zarządzaniem pamięci�
 Przykładowe komendy nlasma:
 \begin{itemize}
 \item \texttt{if\_goto} -- sprawdza wartość w rejestrze. Jeżeli prawda, wykonuje skok pod etykietę
-\item \texttt{clear} -- sygnalizuje, że wartość licznika referencji powinna spaść
+\item \texttt{clear} -- sygnalizuje, że wartość licznika referencji powinna zostać zmniejszona o 1
 \item \texttt{call} -- wywołuje funkcję o danej nazwie z danymi rejestrami jako argumentami, zapisuje wynik w danym rejestrze
 \item \texttt{move} -- kopiuje wartość między dwoma rejestrami
 \end{itemize}
@@ -459,7 +463,7 @@ wartość i zapisuje w odpowiednim rejestrze. Dla operacji posiadających skutki
 z powrotem: jeśli obliczany operator zapisuje pewną wartość do lewej części wyrażenia, która w takim przypadku powinna być zmienną bądź ciągiem 
 dostępów do elementów talic/haszy/rekordów kończącym się wartością, obliczany jest ciąg zstępujący odwołań do elementów kolekcji. Translator realizuje to za
 pomocą wywołań określonych funkcji bibliotecznych: \texttt{get\_ref\_arr}, \texttt{get\_ref\_hash}, wywołując je z odpowiednimi parametrami za pomocą 
-komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funcje te tworzą kopię elementu kolekcji, którą zapisują w 
+komendy \texttt{call}, bądź, w przypadku rekordów, za pomocą komendy \texttt{key}. Funkcje te tworzą kopię elementu kolekcji, którą zapisują w 
 odpowiednim rejestrze. Po zapisaniu nowej wartości translator generuje ciąg przypisań elementów do ich pozycji w kolekcji za pomocą komend 
 \texttt{set\_at\_idx}, \texttt{set\_val}. Na przykład, tłumacząc operatory arytmetyczne, przypisujące wynik do lewej strony (np. \texttt{+=}), na 
 początek obliczamy ciąg dostępów do wartości lewej strony, obliczamy prawą stronę, wynik, po czym generuje się ciąg przypisań nowych wartości dla odpowiednich elementów kolejnych 
@@ -557,7 +561,7 @@ z uwagi na łatwość integracji programów napisanych w NianioLangu z programam
 liczb zmiennoprzecinkowych może zostać w razie potrzeby dodana w formie biblioteki.
 
 \section{Typy \texttt{own}}
-\subsection{Powody wprowadzenia typów \texttt{own}}
+\subsection{Uzasadnienie wprowadzenia typów \texttt{own}}
 Drugą dużą zmianą wprowadzoną w systemie typów było dodanie całkiem nowej przestrzeni typów \texttt{own} obok
 istniejącej przestrzeni \texttt{ptd}. Celem nowych typów jest możliwość efektywnej kompilacji do
 prostych konstrukcji języka C, co pozwala na generowanie efektywniejszych programów wynikowych.
@@ -667,7 +671,7 @@ dodanie rejestrów typowanych wymagało zdefiniowania zachowania typów na pozio
 Pierwszym elementem, który należało uwzględnić, była kwestia wykonywania operacji na rejestrach różnych typów.
 W celu uproszczenia semantyki nlasma została podjęta decyzja, żeby jedyną instrukcją, która może powodować
 rzutowanie pomiędzy różnymi typami, była instrukcja \texttt{move}.
-Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator trafi na instrukcję z argumentem
+Wszystkie inne instrukcje mają ściśle określone typy argumentów i jeśli generator natrafi na instrukcję z argumentem
 o niepoprawnym typie, zgłosi błąd.
 
 Drugą ważną kwestią była decyzja przeniesienia opcjonalności typów
@@ -681,7 +685,7 @@ Polecenie \texttt{get\_frm\_idx}, które służy do dostępu do elementu tablicy
 że rejestr, w którym przechowywany jest indeks, będzie typu \texttt{int}.
 Jeśli rejestr z indeksem jest innego typu, należy wcześniej wykonać rzutowanie.
 
-\noindent\begin{minipage}[t]{.45\textwidth}
+\noindent\begin{minipage}{.45\textwidth}
 \begin{lstlisting}[caption={Niepoprawny typowo kod nlasm},label={lst:reg_types_1}]
 [
     :get_frm_idx({
@@ -701,7 +705,7 @@ Jeśli rejestr z indeksem jest innego typu, należy wcześniej wykonać rzutowan
 ]
 \end{lstlisting}
 \end{minipage}\hfill
-\begin{minipage}[t]{.45\textwidth}
+\begin{minipage}{.45\textwidth}
 \begin{lstlisting}[caption={Poprawny kod nlasm z rzutowaniem},label={lst:reg_types_2}]
 [
     :move({
@@ -795,17 +799,33 @@ spełnia jedynie funkcję wnioskowania o poprawności kodu nlasm i nie powoduje 
 Jednocześnie zachowana jest możliwość zignorowania typów rejestrów i traktowania wszystkich jako rejestry
 typu \texttt{im}.
 
-Przykład modyfikacji zmiennej typu \texttt{own} przetłumaczonej na nowe polecenia nlasma znajduje się na listingu 
+Przykład modyfikacji zmiennej typu \texttt{own}, przedstawionej na listingu \ref{lst:own_access_nl},
+przetłumaczonej na nowe polecenia nlasma znajduje się na listingu 
 \ref{lst:own_access_nlasm}.
 
-\noindent\begin{minipage}[t]{.45\textwidth}
-\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} w NianioLangu},language=nl]
+\noindent\begin{minipage}[t]{.50\textwidth}
+\begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} w NianioLangu},language=nl,label={lst:own_access_nl}]
 # a : own::rec({
 #    b => own::arr(ptd::int()),
 # })
 
 a->b[0] = 1;
 \end{lstlisting}
+\vspace{1em}
+W kodzie nlasma z listingu \ref{lst:own_access_nlasm} występuje założenie, że początkowo wartość zmiennej \texttt{a} znajduje się
+w rejestrze \texttt{0} i ten rejestr jest jej właścicielem.
+W pierwszej kolejności, poprzez polecenie \texttt{:use\_field}, uzyskiwany jest dostęp do pola \texttt{b} w strukturze \texttt{a},
+referencja do tego pola umieszczana jest w rejestrze \texttt{2} i ten rejestr staje się nowym właścicelem zmiennej \texttt{a}.
+
+Następnie w analogiczny sposób, przy użyciu poleceń \texttt{:load\_const} i \texttt{:use\_index},
+w rejestrze \texttt{4} umieszczana jest referencja do
+zerowego elementu tablicy i znów przenoszona jest własność zmiennej \texttt{a}.
+
+Po powyższych operacjach, właścicielem zmiennej \texttt{a} jest rejestr \texttt{4}, który zawiera referencję do modyfikowanej
+wartości. Kolejne polecenie, \texttt{:load\_const} umieszcza w nim stałą \texttt{1}.
+
+Ostatnie dwa polecenia \texttt{:release\_*} powodują przeniesienie własności zmiennej \texttt{a} w odwrotnej kolejności.
+W ich wyniku właścicielem zmiennej \texttt{a} ponownie zostaje rejestr \texttt{0}.
 \end{minipage}\hfill
 \begin{minipage}[t]{.45\textwidth}
 \begin{lstlisting}[caption={Modyfikacja zmiennej typu \texttt{own} przetłumaczona na nlasm},label={lst:own_access_nlasm}]
@@ -861,7 +881,7 @@ a->b[0] = 1;
 \end{minipage}
 
 \section{Statyczne sprawdzanie poprawności}
-Decyzja o wprowadzeniu pojęcia referencji i własności zmiennej do nlasma wiązała się z ryzykiem generowania
+Decyzja o wprowadzeniu pojęcia referencji i właściciela zmiennej do nlasma wiązała się z ryzykiem generowania
 kodu nlasm, którego semantyka nie odpowiada semantyce zmiennych NianioLanga.
 Może to prowadzić do trudnych do wykrycia błędów oraz naruszeń bezpieczeństwa, które przed wprowadzeniem
 typów \texttt{own} było zagwarantowane na poziomie składni nlasma.
@@ -915,7 +935,7 @@ na dalszym etapie kompilacji (na przykład umożliwia ewaluację stałych w czas
 \subsection{Łańcuchów znaków}
 Implementacja łańcuchów znaków nie została zmieniona w stosunku do istniejącej wcześniej.
 Decyzja ta była spowodowana efektywnością już istniejącej implementacji -- łańcuchy znaków
-są kompilowane to tablic typu \texttt{char[]}, opakowanych w struktury zawierające
+są kompilowane do tablic typu \texttt{char[]}, opakowanych w struktury zawierające
 rozmiar i pojemność tablicy. Dostęp do takich zmiennych odbywa się poprzez specjalne funkcje,
 zapewniające utrzymanie poprawnego stanu całej struktury. Jest to minimalny narzut, potrzebny by
 zachować bezpieczeństwo języka i uchronić programistę przed błędami, takimi jak przepełnienie bufora.
@@ -1320,7 +1340,10 @@ def main::element() {
 }
 \end{lstlisting}
 \begin{lstlisting}[caption={Algorytm merge sort w NianioLangu},label={lst:sort_nl},language=nl]
-def merge_sort(ref arr : @main::arr, l : ptd::int(), r : ptd::int()) {
+def merge_sort(ref arr : @main::arr) {
+	merge_sort_aux(ref arr, 0, own_array::len(ref arr) - 1);
+}
+def merge_sort_aux(ref arr : @main::arr, l : ptd::int(), r : ptd::int()) {
 	return if (l == r);
 	var mid = (l + r) / 2;
 	merge_sort_aux(ref arr, l, mid);
@@ -1355,6 +1378,9 @@ struct element {
 	int x;
 	int y;
 };
+void merge_sort(struct element *arr, int len) {
+	merge_sort_aux(arr, 0, len - 1);
+}
 void merge_sort_aux(struct element *arr, int l, int r) {
 	if (l == r) return;
 	int mid = (l + r) / 2;
@@ -1395,12 +1421,23 @@ gdy dla typów \texttt{own} czas ten skrócił się aż siedmiokrotnie.
 
 Ten wynik nie jest jednak możliwy do osiągnięcia w każdej sytuacji.
 Ograniczenia typów \texttt{own} sprawiają, że nie ma sensu ich stosować, kiedy potrzebne jest częste kopiowanie danych
-pomiędzy różnymi zmiennnymi -- wtedy lepiej sprawdzą się typy \texttt{ptd}.
+pomiędzy różnymi zmiennnymi -- wtedy lepiej sprawdzą się typy \texttt{ptd} ze względu na prostotę i efektywność leniwego kopiowania.
 
-\chapter{Wkład poszczególnych członków zespołu}
-Ze względu na charakter projektu nie występował jednoznaczny podział pracy na części możliwe do przypisania konkretnym członkom.
-Kod programu oraz treść pracy pisane i korygowane były przez wszystkich członków zespołu. Poniżej wymienione są jedynie zadania,
-w których praca wykonana została w większości przez jedną osobę.
+\section{Podsumowanie pracy}
+W wyniku przeprowadzonego projektu, do NianioLanga zostały dodane nowe typy, dzięki którym możliwe stało się pisanie w nim efektywnych
+programów. Jednocześnie, dzięki włożonej pracy członkowie zespołu poprawili swoje zrozumienie działania kompilatorów
+i umiejętności pracy w grupie, takie jak podział zadań i code review.
+
+W trakcie pracy zostały także popełnione błędy. Jednym z nich było zbyt późne i zbyt niedokładne zaprojektowanie mechanizmu zarządzania
+pamięcią dla nowych typów. Spowodowało to opóźnienia na ostatnich etapach projektu i wiele problemów ze zwalnianiem pamięci.
+Jednak, dzięki wnioskom wyciągniętym z tego projektu, członkom zespołu łatwiej będzie unikać podobnych błędów w przyszłości.
+
+Nowa wersja kompilatora, która powstała w ramach niniejszej pracy, spotkała się z uznaniem ze strony zamawiającej firmy i
+ostała umieszczona w oficjalnym repozytorium NianioLanga \cite{repo_prod} jako nowa, badawcza wersja \texttt{nl2}.
+W chwili pisania pracy trwają przygotowania do przeniesienia niektórych elementów produkcyjnego oprogramowania napisanego
+w NianioLangu, tak żeby wykorzystywały typy \texttt{own}.
+
+\chapter{Wkład poszczególnych osób}
 \begin{itemize}
   \item[] \textbf{Michał Borkowski}
   \begin{itemize}
@@ -1433,6 +1470,12 @@ w których praca wykonana została w większości przez jedną osobę.
      z zasięgu
    \item Opis w pracy licencjackiej translacji drzewa AST do kodu nlasma
   \end{itemize}
+
+  \item[] \textbf{Wszyscy członkowie zespołu}
+  \begin{itemize}
+   \item Korekta pracy licencjackiej
+   \item Inpekcja kodu
+  \end{itemize}
 \end{itemize}
 
 
@@ -1449,6 +1492,8 @@ data dostępu 17.05.2018
 \bibitem{dragonbook} Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman \textit{Kompilatory. Reguły, metody i narzędzia}
 \bibitem{autobus}\href{https://main.edu.pl/pl/archive/oi/12/aut}{https://main.edu.pl/pl/archive/oi/12/aut},
 data dostępu 22.05.2018
+\bibitem{repo_dev} \href{https://github.com/jbujak/nl-zpp}{https://github.com/jbujak/nl-zpp}, data dostępu 07.06.2018
+\bibitem{repo_prod} \href{https://github.com/nianiolang/nl2}{https://github.com/nianiolang/nl2}, data dostępu 07.06.2018
 
 
 \end{thebibliography}
